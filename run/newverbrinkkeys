@@ -105,6 +105,9 @@ EOS
 /usr/bin/mkdir -p /srv/sns/${NAMESPACE}-${VerbTLD}/.ssh /srv/sns/${NAMESPACE}-${VerbTLD}/calls /srv/sns/${NAMESPACE}-${VerbTLD}/domains
 /usr/bin/usermod -d /srv/sns/${NAMESPACE}-${VerbTLD} ${NAMESPACE}-${VerbTLD}
 /usr/bin/cat <<EOF > /srv/sns/${NAMESPACE}-${VerbTLD}/conf
+VerbHostID="${VerbHostID}"
+VerbName="${VerbName}"
+VerbTLD="${VerbTLD}"
 VerbIPv4="${VerbIPv4}"
 VerbIPv6="${VerbIPv6}"
 VerbIPv6Exp="${VerbIPv6Exp}"
@@ -121,6 +124,9 @@ EOS
 /usr/bin/mkdir -p /srv/sns/${NAMESPACE}-${VerbTLD}/.ssh /srv/sns/${NAMESPACE}-${VerbTLD}/calls /srv/sns/${NAMESPACE}-${VerbTLD}/domains
 /usr/bin/usermod -d /srv/sns/${NAMESPACE}-${VerbTLD} ${NAMESPACE}-${VerbTLD}
 /usr/bin/cat <<EOF > /srv/sns/${NAMESPACE}-${VerbTLD}/conf
+VerbHostID="${VerbHostID}"
+VerbName="${VerbName}"
+VerbTLD="${VerbTLD}"
 VerbIPv4="${VerbIPv4}"
 VerbIPv6="${VerbIPv6}"
 VerbIPv6Exp="${VerbIPv6Exp}"

@@ -182,6 +182,9 @@ fi
 /usr/bin/ssh ${NS1Name}.${RinkVerbTLD} <<EOS
 /usr/bin/mkdir -p /srv/sns/${RinkName}-${RinkVerbTLD}/domains /srv/sns/${RinkName}-${RinkVerbTLD}/calls
 /usr/bin/cat <<EOF > /srv/sns/${RinkName}-${RinkVerbTLD}/conf
+VerbHostID="${ServerHost}"
+VerbName="${ServerName}"
+VerbTLD="${ServerTLD}"
 VerbIPv4="${ServerIPv4}"
 VerbIPv6="${ServerIPv6}"
 VerbIPv6Exp="${ServerExpIPv6}"
@@ -194,6 +197,9 @@ EOS
 /usr/bin/ssh ${NS1Name}.${RinkVerbTLD} <<EOS
 /usr/bin/mkdir -p /srv/sns/${NS2Name}-${RinkVerbTLD}/domains /srv/sns/${NS2Name}-${RinkVerbTLD}/calls
 /usr/bin/cat <<EOF > /srv/sns/${NS2Name}-${RinkVerbTLD}/conf
+VerbHostID="${VerbHostID}"
+VerbName="${VerbName}"
+VerbTLD="${VerbTLD}"
 VerbIPv4="${VerbIPv4}"
 VerbIPv6="${VerbIPv6}"
 VerbIPv6Exp="${VerbIPv6Exp}"
@@ -205,6 +211,9 @@ EOS
 /usr/bin/ssh ${NS2Name}.${RinkVerbTLD} <<EOS
 /usr/bin/mkdir -p /srv/sns/${RinkName}-${RinkVerbTLD}/domains /srv/sns/${RinkName}-${RinkVerbTLD}/calls
 /usr/bin/cat <<EOF > /srv/sns/${RinkName}-${RinkVerbTLD}/conf
+VerbHostID="${ServerHost}"
+VerbName="${ServerName}"
+VerbTLD="${ServerTLD}"
 VerbIPv4="${ServerIPv4}"
 VerbIPv6="${ServerIPv6}"
 VerbIPv6Exp="${ServerExpIPv6}"
@@ -217,6 +226,9 @@ EOS
 /usr/bin/ssh ${NS2Name}.${RinkVerbTLD} <<EOS
 /usr/bin/mkdir -p /srv/sns/${NS1Name}-${RinkVerbTLD}/domains /srv/sns/${NS1Name}-${RinkVerbTLD}/calls
 /usr/bin/cat <<EOF > /srv/sns/${NS1Name}-${RinkVerbTLD}/conf
+VerbHostID="${VerbHostID}"
+VerbName="${VerbName}"
+VerbTLD="${VerbTLD}"
 VerbIPv4="${VerbIPv4}"
 VerbIPv6="${VerbIPv6}"
 VerbIPv6Exp="${VerbIPv6Exp}"
@@ -228,6 +240,9 @@ EOS
 . /opt/rink/conf/vrb.${NS1Name}.${RinkVerbTLD}.conf
 /usr/bin/mkdir -p /srv/sns/${NS1Name}-${RinkVerbTLD}/domains /srv/sns/${NS1Name}-${RinkVerbTLD}/calls
 /usr/bin/cat <<EOF > /srv/sns/${NS1Name}-${RinkVerbTLD}/conf
+VerbHostID="${VerbHostID}"
+VerbName="${VerbName}"
+VerbTLD="${VerbTLD}"
 VerbIPv4="${VerbIPv4}"
 VerbIPv6="${VerbIPv6}"
 VerbIPv6Exp="${VerbIPv6Exp}"
@@ -238,6 +253,9 @@ EOF
 . /opt/rink/conf/vrb.${NS2Name}.${RinkVerbTLD}.conf
 /usr/bin/mkdir -p /srv/sns/${NS2Name}-${RinkVerbTLD}/domains /srv/sns/${NS2Name}-${RinkVerbTLD}/calls
 /usr/bin/cat <<EOF > /srv/sns/${NS2Name}-${RinkVerbTLD}/conf
+VerbHostID="${VerbHostID}"
+VerbName="${VerbName}"
+VerbTLD="${VerbTLD}"
 VerbIPv4="${VerbIPv4}"
 VerbIPv6="${VerbIPv6}"
 VerbIPv6Exp="${VerbIPv6Exp}"
