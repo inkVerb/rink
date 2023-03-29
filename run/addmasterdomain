@@ -23,30 +23,57 @@ if [ "$RinkConfigured" != "rink" ]; then
 	exit 6
 fi
 
-# Check for conflicts (imported code from rinkcheck)
-## NS1
-i=1
-already="false"
-/usr/bin/ssh -q ${NS1Name}.${RinkVerbTLD} [[ -f "/srv/sns/${ServerName}-${ServerTLD}/calls/inkdnsaddslave" ]] || [[ -f "/srv/sns/${ServerName}-${ServerTLD}/calls/killinkdnsslavedns" ]] && already="true"
-while [ $already = "true" ]; do
-	if [ "$i" -ge "20" ]; then /usr/bin/echo "Call for ${checkserf} is already pending on ${NS1Name} for over 1 minute. Try later."; exit 0; fi
-	/usr/bin/ssh -q ${NS1Name}.${RinkVerbTLD} [[ -f "/srv/sns/${ServerName}-${ServerTLD}/calls/inkdnsaddslave" ]] || [[ -f "/srv/sns/${ServerName}-${ServerTLD}/calls/killinkdnsslavedns" ]] || already="false"
-	/usr/bin/sleep 3
-	i=$(( i + 1 ))
-  if [ "$i" -ge "60" ]; then /usr/bin/echo "This is taking too long. Domain not listed on NS nameservers"; exit 4; fi
-done
-## NS2
-i=1
-already="false"
-/usr/bin/ssh -q ${NS2Name}.${RinkVerbTLD} [[ -f "/srv/sns/${ServerName}-${ServerTLD}/calls/inkdnsaddslave" ]] || [[ -f "/srv/sns/${ServerName}-${ServerTLD}/calls/killinkdnsslavedns" ]] && already="true"
-while [ $already = "true" ]; do
-	if [ "$i" -ge "20" ]; then /usr/bin/echo "Call for ${checkserf} is already pending on ${NS2Name} for over 1 minute. Try later."; exit 0; fi
-	/usr/bin/ssh -q ${NS2Name}.${RinkVerbTLD} [[ -f "/srv/sns/${ServerName}-${ServerTLD}/calls/inkdnsaddslave" ]] || [[ -f "/srv/sns/${ServerName}-${ServerTLD}/calls/killinkdnsslavedns" ]] || already="false"
-	/usr/bin/sleep 3
-	i=$(( i + 1 ))
-  if [ "$i" -ge "60" ]; then /usr/bin/echo "This is taking too long. Domain not listed on NS nameservers"; exit 4; fi
-done
+# Make the NS nameserver entries
+/usr/bin/ssh ${NS1Name}.${RinkVerbTLD} /opt/verb/serfs/inkdnsaddslave ${RinkName}-${RinkVerbTLD} ${masterdomain} -n
+/usr/bin/ssh ${NS2Name}.${RinkVerbTLD} /opt/verb/serfs/inkdnsaddslave ${RinkName}-${RinkVerbTLD} ${masterdomain} -n
 
-# Insert the function statements
-/usr/bin/ssh ${NS1Name}.${RinkVerbTLD} "/usr/bin/echo 'inkdnsaddslave ${ServerName}-${ServerTLD} ${masterdomain} -n' > /srv/sns/${ServerName}-${ServerTLD}/calls/inkdnsaddslave"
-/usr/bin/ssh ${NS2Name}.${RinkVerbTLD} "/usr/bin/echo 'inkdnsaddslave ${ServerName}-${ServerTLD} ${masterdomain} -n' > /srv/sns/${ServerName}-${ServerTLD}/calls/inkdnsaddslave"
+#DEV Alternate version of above
+# /usr/bin/ssh ${NS1Name}.${RinkVerbTLD} <<EOS
+# /usr/bin/cat <<EOF > /srv/sns/${ServerName}-${ServerTLD}/domains/${slavedomain}
+# sdnsDomain="${slavedomain}"
+# sdnsIPv4="${ServerIPv4}"
+# sdnsIPv4ARPA="${ServerARPAIPv4}"
+# sdnsIPv6Exp="${ServerExpIPv6}"
+# sdnsIPv6Cmp="${ServerIPv6}"
+# sdnsIPv6ARPA="${ServerARPAIPv6}"
+# EOF
+# EOS
+# /usr/bin/ssh ${NS2Name}.${RinkVerbTLD} <<EOS
+# /usr/bin/cat <<EOF > /srv/sns/${ServerName}-${ServerTLD}/domains/${slavedomain}
+# sdnsDomain="${slavedomain}"
+# sdnsIPv4="${ServerIPv4}"
+# sdnsIPv4ARPA="${ServerARPAIPv4}"
+# sdnsIPv6Exp="${ServerExpIPv6}"
+# sdnsIPv6Cmp="${ServerIPv6}"
+# sdnsIPv6ARPA="${ServerARPAIPv6}"
+# EOF
+# EOS
+
+#DEV Below is obsolete because we simply list the domain configs in the sns/VERBER/domains/ folder, then inkdnsrefreshbind loops through them to create the entries
+# # Check for conflicts (imported code from rinkcheck)
+# ## NS1
+# i=1
+# already="false"
+# /usr/bin/ssh -q ${NS1Name}.${RinkVerbTLD} [[ -f "/srv/sns/${ServerName}-${ServerTLD}/calls/inkdnsaddslave" ]] || [[ -f "/srv/sns/${ServerName}-${ServerTLD}/calls/killinkdnsslavedns" ]] && already="true"
+# while [ $already = "true" ]; do
+# 	if [ "$i" -ge "20" ]; then /usr/bin/echo "Call for ${checkserf} is already pending on ${NS1Name} for over 1 minute. Try later."; exit 0; fi
+# 	/usr/bin/ssh -q ${NS1Name}.${RinkVerbTLD} [[ -f "/srv/sns/${ServerName}-${ServerTLD}/calls/inkdnsaddslave" ]] || [[ -f "/srv/sns/${ServerName}-${ServerTLD}/calls/killinkdnsslavedns" ]] || already="false"
+# 	/usr/bin/sleep 3
+# 	i=$(( i + 1 ))
+#   if [ "$i" -ge "60" ]; then /usr/bin/echo "This is taking too long. Domain not listed on NS nameservers"; exit 4; fi
+# done
+# ## NS2
+# i=1
+# already="false"
+# /usr/bin/ssh -q ${NS2Name}.${RinkVerbTLD} [[ -f "/srv/sns/${ServerName}-${ServerTLD}/calls/inkdnsaddslave" ]] || [[ -f "/srv/sns/${ServerName}-${ServerTLD}/calls/killinkdnsslavedns" ]] && already="true"
+# while [ $already = "true" ]; do
+# 	if [ "$i" -ge "20" ]; then /usr/bin/echo "Call for ${checkserf} is already pending on ${NS2Name} for over 1 minute. Try later."; exit 0; fi
+# 	/usr/bin/ssh -q ${NS2Name}.${RinkVerbTLD} [[ -f "/srv/sns/${ServerName}-${ServerTLD}/calls/inkdnsaddslave" ]] || [[ -f "/srv/sns/${ServerName}-${ServerTLD}/calls/killinkdnsslavedns" ]] || already="false"
+# 	/usr/bin/sleep 3
+# 	i=$(( i + 1 ))
+#   if [ "$i" -ge "60" ]; then /usr/bin/echo "This is taking too long. Domain not listed on NS nameservers"; exit 4; fi
+# done
+
+# # Insert the function statements
+# /usr/bin/ssh ${NS1Name}.${RinkVerbTLD} "/usr/bin/echo 'inkdnsaddslave ${ServerName}-${ServerTLD} ${masterdomain} -n' > /srv/sns/${ServerName}-${ServerTLD}/calls/inkdnsaddslave"
+# /usr/bin/ssh ${NS2Name}.${RinkVerbTLD} "/usr/bin/echo 'inkdnsaddslave ${ServerName}-${ServerTLD} ${masterdomain} -n' > /srv/sns/${ServerName}-${ServerTLD}/calls/inkdnsaddslave"

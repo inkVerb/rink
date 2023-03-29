@@ -1,7 +1,7 @@
 #!/bin/bash
 #inkVerbRunner! verb.ink
 
-# This de-lists the NS records for a verber from the inkisaverb.com nameservers, which were listed in addvps by the rink ordering the verber to run rinkupdateallverbs
+# This de-lists the NS records for a verber from the NS nameservers, which were listed in addvps by the rink ordering the verber to run rinkupdateallverbs
 # How to use:
 ## ./killdns [ verb-namespace ] [ verb-tld ] [ user ]
 
@@ -60,20 +60,20 @@ else
 fi
 
 # De-list the NS records
-/usr/bin/ssh -o StrictHostKeyChecking=yes ${NS1Name}.ink /opt/verb/serfs/killinkdnsslavedns ${emailURI}
-/usr/bin/ssh -o StrictHostKeyChecking=yes ${NS2Name}.ink /opt/verb/serfs/killinkdnsslavedns ${emailURI}
-/usr/bin/ssh -o StrictHostKeyChecking=yes ${NS1Name}.ink /opt/verb/serfs/killinkdnsslavedns ${oneURI}
-/usr/bin/ssh -o StrictHostKeyChecking=yes ${NS2Name}.ink /opt/verb/serfs/killinkdnsslavedns ${oneURI}
-/usr/bin/ssh -o StrictHostKeyChecking=yes ${NS1Name}.ink /opt/verb/serfs/killinkdnsslavedns ${inkURI}
-/usr/bin/ssh -o StrictHostKeyChecking=yes ${NS2Name}.ink /opt/verb/serfs/killinkdnsslavedns ${inkURI}
-/usr/bin/ssh -o StrictHostKeyChecking=yes ${NS1Name}.ink /opt/verb/serfs/killinkdnsslavedns ${blueURI}
-/usr/bin/ssh -o StrictHostKeyChecking=yes ${NS2Name}.ink /opt/verb/serfs/killinkdnsslavedns ${blueURI}
-/usr/bin/ssh -o StrictHostKeyChecking=yes ${NS1Name}.ink /opt/verb/serfs/killinkdnsslavedns ${vipURI}
-/usr/bin/ssh -o StrictHostKeyChecking=yes ${NS2Name}.ink /opt/verb/serfs/killinkdnsslavedns ${vipURI}
-/usr/bin/ssh -o StrictHostKeyChecking=yes ${NS1Name}.ink /opt/verb/serfs/killinkdnsslavedns ${kiwiURI}
-/usr/bin/ssh -o StrictHostKeyChecking=yes ${NS2Name}.ink /opt/verb/serfs/killinkdnsslavedns ${kiwiURI}
-/usr/bin/ssh -o StrictHostKeyChecking=yes ${NS1Name}.ink /opt/verb/serfs/killinkdnsslavedns ${redURI}
-/usr/bin/ssh -o StrictHostKeyChecking=yes ${NS2Name}.ink /opt/verb/serfs/killinkdnsslavedns ${redURI}
+/usr/bin/ssh -o StrictHostKeyChecking=yes ${NS1Name}.${RinkVerbTLD} /opt/verb/serfs/killinkdnsslavedns ${emailURI}
+/usr/bin/ssh -o StrictHostKeyChecking=yes ${NS2Name}.${RinkVerbTLD} /opt/verb/serfs/killinkdnsslavedns ${emailURI}
+/usr/bin/ssh -o StrictHostKeyChecking=yes ${NS1Name}.${RinkVerbTLD} /opt/verb/serfs/killinkdnsslavedns ${oneURI}
+/usr/bin/ssh -o StrictHostKeyChecking=yes ${NS2Name}.${RinkVerbTLD} /opt/verb/serfs/killinkdnsslavedns ${oneURI}
+/usr/bin/ssh -o StrictHostKeyChecking=yes ${NS1Name}.${RinkVerbTLD} /opt/verb/serfs/killinkdnsslavedns ${inkURI}
+/usr/bin/ssh -o StrictHostKeyChecking=yes ${NS2Name}.${RinkVerbTLD} /opt/verb/serfs/killinkdnsslavedns ${inkURI}
+/usr/bin/ssh -o StrictHostKeyChecking=yes ${NS1Name}.${RinkVerbTLD} /opt/verb/serfs/killinkdnsslavedns ${blueURI}
+/usr/bin/ssh -o StrictHostKeyChecking=yes ${NS2Name}.${RinkVerbTLD} /opt/verb/serfs/killinkdnsslavedns ${blueURI}
+/usr/bin/ssh -o StrictHostKeyChecking=yes ${NS1Name}.${RinkVerbTLD} /opt/verb/serfs/killinkdnsslavedns ${vipURI}
+/usr/bin/ssh -o StrictHostKeyChecking=yes ${NS2Name}.${RinkVerbTLD} /opt/verb/serfs/killinkdnsslavedns ${vipURI}
+/usr/bin/ssh -o StrictHostKeyChecking=yes ${NS1Name}.${RinkVerbTLD} /opt/verb/serfs/killinkdnsslavedns ${kiwiURI}
+/usr/bin/ssh -o StrictHostKeyChecking=yes ${NS2Name}.${RinkVerbTLD} /opt/verb/serfs/killinkdnsslavedns ${kiwiURI}
+/usr/bin/ssh -o StrictHostKeyChecking=yes ${NS1Name}.${RinkVerbTLD} /opt/verb/serfs/killinkdnsslavedns ${redURI}
+/usr/bin/ssh -o StrictHostKeyChecking=yes ${NS2Name}.${RinkVerbTLD} /opt/verb/serfs/killinkdnsslavedns ${redURI}
 
 # Set the Serial No
 #DEV This may be legacy dev and not necessary since ns*.inkisaverb.com NS servers are handled manually
