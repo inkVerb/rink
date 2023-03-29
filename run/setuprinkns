@@ -20,12 +20,10 @@ if [ -f "/opt/rink/.configured" ]; then
   exit 0
 fi
 
-# Get our Rink-NS name settings
+# Configs
+. /opt/verb/conf/servernameip
 . /opt/rink/rinknames
 . /opt/rink/portnum
-
-# Custom NS regions?
-
 
 # In progress or from start?
 if [ ! -f "/opt/rink/waitnsfinish" ]; then
@@ -76,9 +74,9 @@ if [ ! -f "/opt/rink/ns1done" ]; then
   #   fi
   # done
   ## Setup
-  /usr/bin/ssh ${NS1Name}.${VerbTLD} /opt/verb/inst/make-dns ${NS1Host} ${RinkDomain}
+  /usr/bin/ssh ${NS1Name}.${RinkVerbTLD} /opt/verb/inst/make-dns ${NS1Host} ${RinkDomain}
   wait
-  /usr/bin/ssh ${NS1Name}.${VerbTLD} /opt/verb/serfs/setup ${NS1Name} ${RinkVerbTLD} email vip ${NS1Host} ${VerbIPv4} ${VerbIPv6} cb@${RinkDomain} 100 1000 ${TimeZone1} ${VerbPort} boss "$(/usr/bin/pwgen -s -1 16)" ${UpdateRepo} ${UpdateOrg}
+  /usr/bin/ssh ${NS1Name}.${RinkVerbTLD} /opt/verb/serfs/setup ${NS1Name} ${RinkVerbTLD} email vip ${NS1Host} ${VerbIPv4} ${VerbIPv6} cb@${RinkDomain} 100 1000 ${TimeZone1} ${VerbPort} boss "$(/usr/bin/pwgen -s -1 16)" ${UpdateRepo} ${UpdateOrg}
   wait
   if [ "$?" = "0" ]; then
     /usr/bin/touch /opt/rink/ns1done
@@ -106,9 +104,9 @@ if [ ! -f "/opt/rink/ns2done" ]; then
   #   fi
   # done
   ## Setup
-  /usr/bin/ssh ${NS2Name}.${VerbTLD} /opt/verb/inst/make-dns ${NA2Host} ${RinkDomain}
+  /usr/bin/ssh ${NS2Name}.${RinkVerbTLD} /opt/verb/inst/make-dns ${NA2Host} ${RinkDomain}
   wait
-  /usr/bin/ssh ${NS2Name}.${VerbTLD} /opt/verb/serfs/setup ${NS2Name} ${RinkVerbTLD} email vip ${NA2Host} ${VerbIPv4} ${VerbIPv6} cb@${RinkDomain} 100 1000 ${TimeZone2} ${VerbPort} boss "$(/usr/bin/pwgen -s -1 16)" ${UpdateRepo} ${UpdateOrg}
+  /usr/bin/ssh ${NS2Name}.${RinkVerbTLD} /opt/verb/serfs/setup ${NS2Name} ${RinkVerbTLD} email vip ${NA2Host} ${VerbIPv4} ${VerbIPv6} cb@${RinkDomain} 100 1000 ${TimeZone2} ${VerbPort} boss "$(/usr/bin/pwgen -s -1 16)" ${UpdateRepo} ${UpdateOrg}
   wait
   if [ "$?" = "0" ]; then
     /usr/bin/touch /opt/rink/ns2done
@@ -127,11 +125,11 @@ NS2ip4="$VerbIPv4"
 NS2ip6="$VerbIPv6"
 ## Point the NS servers to each other
 ### NS1
-/usr/bin/ssh ${NS1Name}.${VerbTLD} /opt/verb/serfs/inkdnssetrink "${NA2Host}.${RinkDomain}" "${NS2ip4}" "${NS2ip6}"
-/usr/bin/ssh ${NS1Name}.${VerbTLD} /opt/verb/serfs/inkdnssetrink2 "${RinkHost}.${RinkDomain}" "${RinkIPv4}" "${RinkIPv6}"
+/usr/bin/ssh ${NS1Name}.${RinkVerbTLD} /opt/verb/serfs/inkdnssetrink "${NA2Host}.${RinkDomain}" "${NS2ip4}" "${NS2ip6}"
+/usr/bin/ssh ${NS1Name}.${RinkVerbTLD} /opt/verb/serfs/inkdnssetrink2 "${RinkHost}.${RinkDomain}" "${RinkIPv4}" "${RinkIPv6}"
 ### NS2
-/usr/bin/ssh ${NS2Name}.${VerbTLD} /opt/verb/serfs/inkdnssetrink "${NS1Host}.${RinkDomain}" "${NS1ip4}" "${NS1ip6}"
-/usr/bin/ssh ${NS2Name}.${VerbTLD} /opt/verb/serfs/inkdnssetrink2 "${RinkHost}.${RinkDomain}" "${RinkIPv4}" "${RinkIPv6}"
+/usr/bin/ssh ${NS2Name}.${RinkVerbTLD} /opt/verb/serfs/inkdnssetrink "${NS1Host}.${RinkDomain}" "${NS1ip4}" "${NS1ip6}"
+/usr/bin/ssh ${NS2Name}.${RinkVerbTLD} /opt/verb/serfs/inkdnssetrink2 "${RinkHost}.${RinkDomain}" "${RinkIPv4}" "${RinkIPv6}"
 ### This nameserver uses the normal other two, but must be set manually because it is a NS server via make-dns
 /opt/verb/serfs/inkdnssetrink "${NS1Host}.${RinkDomain}" "${NS1ip4}" "${NS1ip6}"
 /opt/verb/serfs/inkdnssetrink2 "${NA2Host}.${RinkDomain}" "${NS2ip4}" "${NS2ip6}"
@@ -142,13 +140,13 @@ NS2ip6="$VerbIPv6"
 /opt/verb/serfs/inkcertinstall; wait
 /opt/verb/serfs/setsecure; wait
 ## NS1
-/usr/bin/ssh ${NS1Name}.${VerbTLD} /opt/verb/serfs/inkdnsinstall; wait
-/usr/bin/ssh ${NS1Name}.${VerbTLD} /opt/verb/serfs/inkcertinstall; wait
-/usr/bin/ssh ${NS1Name}.${VerbTLD} /opt/verb/serfs/setsecure; wait
+/usr/bin/ssh ${NS1Name}.${RinkVerbTLD} /opt/verb/serfs/inkdnsinstall; wait
+/usr/bin/ssh ${NS1Name}.${RinkVerbTLD} /opt/verb/serfs/inkcertinstall; wait
+/usr/bin/ssh ${NS1Name}.${RinkVerbTLD} /opt/verb/serfs/setsecure; wait
 ## NS2
-/usr/bin/ssh ${NS2Name}.${VerbTLD} /opt/verb/serfs/inkdnsinstall; wait
-/usr/bin/ssh ${NS2Name}.${VerbTLD} /opt/verb/serfs/inkcertinstall; wait
-/usr/bin/ssh ${NS2Name}.${VerbTLD} /opt/verb/serfs/setsecure; wait
+/usr/bin/ssh ${NS2Name}.${RinkVerbTLD} /opt/verb/serfs/inkdnsinstall; wait
+/usr/bin/ssh ${NS2Name}.${RinkVerbTLD} /opt/verb/serfs/inkcertinstall; wait
+/usr/bin/ssh ${NS2Name}.${RinkVerbTLD} /opt/verb/serfs/setsecure; wait
 ## Servers up?
 /opt/rink/run/waitvpsanswer ${NS1Name} ${VerbTLD}
 /opt/rink/run/waitvpsanswer ${NS2Name} ${VerbTLD}
@@ -181,22 +179,21 @@ fi
 
 ## Dirs used by inkdnsaddslave
 ### Rink on NS1
-. /opt/verb/conf/servernameip
-/usr/bin/ssh ${NS1Name}.${VerbTLD} <<EOS
-/usr/bin/mkdir -p /srv/sns/${RinkName}-${VerbTLD}/domains
-/usr/bin/cat <<EOF > /srv/sns/${RinkName}-${VerbTLD}/conf
-VerbIPv4="${VerbIPv4}"
-VerbIPv6="${VerbIPv6}"
-VerbIPv6Exp="${VerbIPv6Exp}"
-VerbARPAIPv4="${VerbARPAIPv4}"
-VerbARPAIPv6="${VerbARPAIPv6}"
+/usr/bin/ssh ${NS1Name}.${RinkVerbTLD} <<EOS
+/usr/bin/mkdir -p /srv/sns/${RinkName}-${RinkVerbTLD}/domains /srv/sns/${RinkName}-${RinkVerbTLD}/calls
+/usr/bin/cat <<EOF > /srv/sns/${RinkName}-${RinkVerbTLD}/conf
+VerbIPv4="${ServerIPv4}"
+VerbIPv6="${ServerIPv6}"
+VerbIPv6Exp="${ServerExpIPv6}"
+VerbARPAIPv4="${ServerARPAIPv4}"
+VerbARPAIPv6="${ServerARPAIPv6}
 EOF
 EOS
 ### NS2 on NS1
 . /opt/rink/conf/vrb.${NS2Name}.${RinkVerbTLD}.conf
-/usr/bin/ssh ${NS1Name}.${VerbTLD} <<EOS
-/usr/bin/mkdir -p /srv/sns/${NS2Name}-${VerbTLD}/domains
-/usr/bin/cat <<EOF > /srv/sns/${NS2Name}-${VerbTLD}/conf
+/usr/bin/ssh ${NS1Name}.${RinkVerbTLD} <<EOS
+/usr/bin/mkdir -p /srv/sns/${NS2Name}-${RinkVerbTLD}/domains /srv/sns/${NS2Name}-${RinkVerbTLD}/calls
+/usr/bin/cat <<EOF > /srv/sns/${NS2Name}-${RinkVerbTLD}/conf
 VerbIPv4="${VerbIPv4}"
 VerbIPv6="${VerbIPv6}"
 VerbIPv6Exp="${VerbIPv6Exp}"
@@ -205,22 +202,21 @@ VerbARPAIPv6="${VerbARPAIPv6}"
 EOF
 EOS
 ### Rink on NS2
-. /opt/verb/conf/servernameip
-/usr/bin/ssh ${NS2Name}.${VerbTLD} <<EOS
-/usr/bin/mkdir -p /srv/sns/${RinkName}-${VerbTLD}/domains
-/usr/bin/cat <<EOF > /srv/sns/${RinkName}-${VerbTLD}/conf
-VerbIPv4="${VerbIPv4}"
-VerbIPv6="${VerbIPv6}"
-VerbIPv6Exp="${VerbIPv6Exp}"
-VerbARPAIPv4="${VerbARPAIPv4}"
-VerbARPAIPv6="${VerbARPAIPv6}"
+/usr/bin/ssh ${NS2Name}.${RinkVerbTLD} <<EOS
+/usr/bin/mkdir -p /srv/sns/${RinkName}-${RinkVerbTLD}/domains /srv/sns/${RinkName}-${RinkVerbTLD}/calls
+/usr/bin/cat <<EOF > /srv/sns/${RinkName}-${RinkVerbTLD}/conf
+VerbIPv4="${ServerIPv4}"
+VerbIPv6="${ServerIPv6}"
+VerbIPv6Exp="${ServerExpIPv6}"
+VerbARPAIPv4="${ServerARPAIPv4}"
+VerbARPAIPv6="${ServerARPAIPv6}"
 EOF
 EOS
 ### NS1 on NS2 
 . /opt/rink/conf/vrb.${NS1Name}.${RinkVerbTLD}.conf
-/usr/bin/ssh ${NS2Name}.${VerbTLD} <<EOS
-/usr/bin/mkdir -p /srv/sns/${NS1Name}-${VerbTLD}/domains
-/usr/bin/cat <<EOF > /srv/sns/${NS1Name}-${VerbTLD}/conf
+/usr/bin/ssh ${NS2Name}.${RinkVerbTLD} <<EOS
+/usr/bin/mkdir -p /srv/sns/${NS1Name}-${RinkVerbTLD}/domains /srv/sns/${NS1Name}-${RinkVerbTLD}/calls
+/usr/bin/cat <<EOF > /srv/sns/${NS1Name}-${RinkVerbTLD}/conf
 VerbIPv4="${VerbIPv4}"
 VerbIPv6="${VerbIPv6}"
 VerbIPv6Exp="${VerbIPv6Exp}"
@@ -230,8 +226,8 @@ EOF
 EOS
 ### NS1 on this local Rink
 . /opt/rink/conf/vrb.${NS1Name}.${RinkVerbTLD}.conf
-/usr/bin/mkdir -p /srv/sns/${NS1Name}-${VerbTLD}/domains
-/usr/bin/cat <<EOF > /srv/sns/${NS1Name}-${VerbTLD}/conf
+/usr/bin/mkdir -p /srv/sns/${NS1Name}-${RinkVerbTLD}/domains /srv/sns/${NS1Name}-${RinkVerbTLD}/calls
+/usr/bin/cat <<EOF > /srv/sns/${NS1Name}-${RinkVerbTLD}/conf
 VerbIPv4="${VerbIPv4}"
 VerbIPv6="${VerbIPv6}"
 VerbIPv6Exp="${VerbIPv6Exp}"
@@ -240,8 +236,8 @@ VerbARPAIPv6="${VerbARPAIPv6}"
 EOF
 ### NS2 on this local Rink
 . /opt/rink/conf/vrb.${NS2Name}.${RinkVerbTLD}.conf
-/usr/bin/mkdir -p /srv/sns/${NS2Name}-${VerbTLD}/domains
-/usr/bin/cat <<EOF > /srv/sns/${NS2Name}-${VerbTLD}/conf
+/usr/bin/mkdir -p /srv/sns/${NS2Name}-${RinkVerbTLD}/domains /srv/sns/${NS2Name}-${RinkVerbTLD}/calls
+/usr/bin/cat <<EOF > /srv/sns/${NS2Name}-${RinkVerbTLD}/conf
 VerbIPv4="${VerbIPv4}"
 VerbIPv6="${VerbIPv6}"
 VerbIPv6Exp="${VerbIPv6Exp}"
@@ -251,92 +247,104 @@ EOF
 
 ## Configs
 ### Fetch from all
-/usr/bin/ssh ${NS1Name}.${VerbTLD} /usr/bin/cat /opt/verb/conf/servertldstatus > /opt/rink/tmp/servertldstatus_${NS1Name}_${VerbTLD}
-/usr/bin/ssh ${NS2Name}.${VerbTLD} /usr/bin/cat /opt/verb/conf/servertldstatus > /opt/rink/tmp/servertldstatus_${NS2Name}_${VerbTLD}
-/usr/bin/cat /opt/verb/conf/servertldstatus > /opt/rink/tmp/servertldstatus_${RinkName}_${VerbTLD}
+/usr/bin/ssh ${NS1Name}.${RinkVerbTLD} /usr/bin/cat /opt/verb/conf/servertldstatus > /opt/rink/tmp/servertldstatus_${NS1Name}_${RinkVerbTLD}
+/usr/bin/ssh ${NS2Name}.${RinkVerbTLD} /usr/bin/cat /opt/verb/conf/servertldstatus > /opt/rink/tmp/servertldstatus_${NS2Name}_${RinkVerbTLD}
+/usr/bin/cat /opt/verb/conf/servertldstatus > /opt/rink/tmp/servertldstatus_${RinkName}_${RinkVerbTLD}
 ### Write to all
-/usr/bin/cat /opt/rink/tmp/servertldstatus_${NS2Name}_${VerbTLD} | /usr/bin/ssh ${NS1Name}.${VerbTLD} "/usr/bin/cat > /srv/sns/${NS2Name}-${VerbTLD}/servertldstatus"
-/usr/bin/cat /opt/rink/tmp/servertldstatus_${RinkName}_${VerbTLD} | /usr/bin/ssh ${NS1Name}.${VerbTLD} "/usr/bin/cat > /srv/sns/${RinkName}-${VerbTLD}/servertldstatus"
-/usr/bin/cat /opt/rink/tmp/servertldstatus_${NS1Name}_${VerbTLD} | /usr/bin/ssh ${NS2Name}.${VerbTLD} "/usr/bin/cat > /srv/sns/${NS1Name}-${VerbTLD}/servertldstatus"
-/usr/bin/cat /opt/rink/tmp/servertldstatus_${RinkName}_${VerbTLD} | /usr/bin/ssh ${NS2Name}.${VerbTLD} "/usr/bin/cat > /srv/sns/${RinkName}-${VerbTLD}/servertldstatus"
-/usr/bin/cat /opt/rink/tmp/servertldstatus_${NS1Name}_${VerbTLD} > /srv/sns/${NS1Name}-${VerbTLD}/servertldstatus
-/usr/bin/cat /opt/rink/tmp/servertldstatus_${NS2Name}_${VerbTLD} > /srv/sns/${NS2Name}-${VerbTLD}/servertldstatus
+/usr/bin/cat /opt/rink/tmp/servertldstatus_${NS2Name}_${RinkVerbTLD} | /usr/bin/ssh ${NS1Name}.${RinkVerbTLD} "/usr/bin/cat > /srv/sns/${NS2Name}-${RinkVerbTLD}/servertldstatus"
+/usr/bin/cat /opt/rink/tmp/servertldstatus_${RinkName}_${RinkVerbTLD} | /usr/bin/ssh ${NS1Name}.${RinkVerbTLD} "/usr/bin/cat > /srv/sns/${RinkName}-${RinkVerbTLD}/servertldstatus"
+/usr/bin/cat /opt/rink/tmp/servertldstatus_${NS1Name}_${RinkVerbTLD} | /usr/bin/ssh ${NS2Name}.${RinkVerbTLD} "/usr/bin/cat > /srv/sns/${NS1Name}-${RinkVerbTLD}/servertldstatus"
+/usr/bin/cat /opt/rink/tmp/servertldstatus_${RinkName}_${RinkVerbTLD} | /usr/bin/ssh ${NS2Name}.${RinkVerbTLD} "/usr/bin/cat > /srv/sns/${RinkName}-${RinkVerbTLD}/servertldstatus"
+/usr/bin/cat /opt/rink/tmp/servertldstatus_${NS1Name}_${RinkVerbTLD} > /srv/sns/${NS1Name}-${RinkVerbTLD}/servertldstatus
+/usr/bin/cat /opt/rink/tmp/servertldstatus_${NS2Name}_${RinkVerbTLD} > /srv/sns/${NS2Name}-${RinkVerbTLD}/servertldstatus
 /usr/bin/rm -f /opt/rink/tmp/*
 
 ## NS1
 ### Add slave domains for Rink
-/usr/bin/ssh ${NS1Name}.${VerbTLD} /usr/bin/systemctl stop named
-/usr/bin/ssh ${NS1Name}.${VerbTLD} /opt/verb/serfs/inkdnsaddslave ${RinkName}-${VerbTLD} ${RinkName}.${inkBASE} -n
-/usr/bin/ssh ${NS1Name}.${VerbTLD} /opt/verb/serfs/inkdnsaddslave ${RinkName}-${VerbTLD} ${RinkName}.${emailBASE} -n
-/usr/bin/ssh ${NS1Name}.${VerbTLD} /opt/verb/serfs/inkdnsaddslave ${RinkName}-${VerbTLD} ${RinkName}.${oneBASE} -n
-/usr/bin/ssh ${NS1Name}.${VerbTLD} /opt/verb/serfs/inkdnsaddslave ${RinkName}-${VerbTLD} ${RinkName}.${blueBASE} -n
-/usr/bin/ssh ${NS1Name}.${VerbTLD} /opt/verb/serfs/inkdnsaddslave ${RinkName}-${VerbTLD} ${RinkName}.${vipBASE} -n
-/usr/bin/ssh ${NS1Name}.${VerbTLD} /opt/verb/serfs/inkdnsaddslave ${RinkName}-${VerbTLD} ${RinkName}.${redBASE} -n
-/usr/bin/ssh ${NS1Name}.${VerbTLD} /opt/verb/serfs/inkdnsaddslave ${RinkName}-${VerbTLD} ${RinkName}.${kiwiBASE} -n
+/usr/bin/ssh ${NS1Name}.${RinkVerbTLD} /usr/bin/systemctl stop named
+/usr/bin/ssh ${NS1Name}.${RinkVerbTLD} /opt/verb/serfs/inkdnsaddslave ${RinkName}-${RinkVerbTLD} ${RinkName}.${inkBASE} -n
+/usr/bin/ssh ${NS1Name}.${RinkVerbTLD} /opt/verb/serfs/inkdnsaddslave ${RinkName}-${RinkVerbTLD} ${RinkName}.${emailBASE} -n
+/usr/bin/ssh ${NS1Name}.${RinkVerbTLD} /opt/verb/serfs/inkdnsaddslave ${RinkName}-${RinkVerbTLD} ${RinkName}.${oneBASE} -n
+/usr/bin/ssh ${NS1Name}.${RinkVerbTLD} /opt/verb/serfs/inkdnsaddslave ${RinkName}-${RinkVerbTLD} ${RinkName}.${blueBASE} -n
+/usr/bin/ssh ${NS1Name}.${RinkVerbTLD} /opt/verb/serfs/inkdnsaddslave ${RinkName}-${RinkVerbTLD} ${RinkName}.${vipBASE} -n
+/usr/bin/ssh ${NS1Name}.${RinkVerbTLD} /opt/verb/serfs/inkdnsaddslave ${RinkName}-${RinkVerbTLD} ${RinkName}.${redBASE} -n
+/usr/bin/ssh ${NS1Name}.${RinkVerbTLD} /opt/verb/serfs/inkdnsaddslave ${RinkName}-${RinkVerbTLD} ${RinkName}.${kiwiBASE} -n
 ### Add slave domains for NS2
-/usr/bin/ssh ${NS1Name}.${VerbTLD} /opt/verb/serfs/inkdnsaddslave ${NS2Name}-${VerbTLD} ${NS2Name}.${inkBASE} -n
-/usr/bin/ssh ${NS1Name}.${VerbTLD} /opt/verb/serfs/inkdnsaddslave ${NS2Name}-${VerbTLD} ${NS2Name}.${emailBASE} -n
-/usr/bin/ssh ${NS1Name}.${VerbTLD} /opt/verb/serfs/inkdnsaddslave ${NS2Name}-${VerbTLD} ${NS2Name}.${oneBASE} -n
-/usr/bin/ssh ${NS1Name}.${VerbTLD} /opt/verb/serfs/inkdnsaddslave ${NS2Name}-${VerbTLD} ${NS2Name}.${blueBASE} -n
-/usr/bin/ssh ${NS1Name}.${VerbTLD} /opt/verb/serfs/inkdnsaddslave ${NS2Name}-${VerbTLD} ${NS2Name}.${vipBASE} -n
-/usr/bin/ssh ${NS1Name}.${VerbTLD} /opt/verb/serfs/inkdnsaddslave ${NS2Name}-${VerbTLD} ${NS2Name}.${redBASE} -n
-/usr/bin/ssh ${NS1Name}.${VerbTLD} /opt/verb/serfs/inkdnsaddslave ${NS2Name}-${VerbTLD} ${NS2Name}.${kiwiBASE} -n
-/usr/bin/ssh ${NS1Name}.${VerbTLD} /usr/bin/systemctl start named
-if /usr/bin/ssh ${NS1Name}.${VerbTLD} /usr/bin/systemctl is-active --quiet named; then
+/usr/bin/ssh ${NS1Name}.${RinkVerbTLD} /opt/verb/serfs/inkdnsaddslave ${NS2Name}-${RinkVerbTLD} ${NS2Name}.${inkBASE} -n
+/usr/bin/ssh ${NS1Name}.${RinkVerbTLD} /opt/verb/serfs/inkdnsaddslave ${NS2Name}-${RinkVerbTLD} ${NS2Name}.${emailBASE} -n
+/usr/bin/ssh ${NS1Name}.${RinkVerbTLD} /opt/verb/serfs/inkdnsaddslave ${NS2Name}-${RinkVerbTLD} ${NS2Name}.${oneBASE} -n
+/usr/bin/ssh ${NS1Name}.${RinkVerbTLD} /opt/verb/serfs/inkdnsaddslave ${NS2Name}-${RinkVerbTLD} ${NS2Name}.${blueBASE} -n
+/usr/bin/ssh ${NS1Name}.${RinkVerbTLD} /opt/verb/serfs/inkdnsaddslave ${NS2Name}-${RinkVerbTLD} ${NS2Name}.${vipBASE} -n
+/usr/bin/ssh ${NS1Name}.${RinkVerbTLD} /opt/verb/serfs/inkdnsaddslave ${NS2Name}-${RinkVerbTLD} ${NS2Name}.${redBASE} -n
+/usr/bin/ssh ${NS1Name}.${RinkVerbTLD} /opt/verb/serfs/inkdnsaddslave ${NS2Name}-${RinkVerbTLD} ${NS2Name}.${kiwiBASE} -n
+/usr/bin/ssh ${NS1Name}.${RinkVerbTLD} /usr/bin/systemctl start named
+if /usr/bin/ssh ${NS1Name}.${RinkVerbTLD} /usr/bin/systemctl is-active --quiet named; then
   echo "NS1 DNS service is working, you may ignore any above 'named' error messages"
 fi
-/usr/bin/ssh ${NS1Name}.${VerbTLD} /opt/verb/serfs/inkdnsrefreshbind
+/usr/bin/ssh ${NS1Name}.${RinkVerbTLD} /opt/verb/serfs/inkdnsrefreshbind
 
 ## NS2
 ### Add slave domains for Rink
-/usr/bin/ssh ${NS2Name}.${VerbTLD} /usr/bin/systemctl stop named
-/usr/bin/ssh ${NS2Name}.${VerbTLD} /opt/verb/serfs/inkdnsaddslave ${RinkName}-${VerbTLD} ${RinkName}.${inkBASE} -n
-/usr/bin/ssh ${NS2Name}.${VerbTLD} /opt/verb/serfs/inkdnsaddslave ${RinkName}-${VerbTLD} ${RinkName}.${emailBASE} -n
-/usr/bin/ssh ${NS2Name}.${VerbTLD} /opt/verb/serfs/inkdnsaddslave ${RinkName}-${VerbTLD} ${RinkName}.${oneBASE} -n
-/usr/bin/ssh ${NS2Name}.${VerbTLD} /opt/verb/serfs/inkdnsaddslave ${RinkName}-${VerbTLD} ${RinkName}.${blueBASE} -n
-/usr/bin/ssh ${NS2Name}.${VerbTLD} /opt/verb/serfs/inkdnsaddslave ${RinkName}-${VerbTLD} ${RinkName}.${vipBASE} -n
-/usr/bin/ssh ${NS2Name}.${VerbTLD} /opt/verb/serfs/inkdnsaddslave ${RinkName}-${VerbTLD} ${RinkName}.${redBASE} -n
-/usr/bin/ssh ${NS2Name}.${VerbTLD} /opt/verb/serfs/inkdnsaddslave ${RinkName}-${VerbTLD} ${RinkName}.${kiwiBASE} -n
+/usr/bin/ssh ${NS2Name}.${RinkVerbTLD} /usr/bin/systemctl stop named
+/usr/bin/ssh ${NS2Name}.${RinkVerbTLD} /opt/verb/serfs/inkdnsaddslave ${RinkName}-${RinkVerbTLD} ${RinkName}.${inkBASE} -n
+/usr/bin/ssh ${NS2Name}.${RinkVerbTLD} /opt/verb/serfs/inkdnsaddslave ${RinkName}-${RinkVerbTLD} ${RinkName}.${emailBASE} -n
+/usr/bin/ssh ${NS2Name}.${RinkVerbTLD} /opt/verb/serfs/inkdnsaddslave ${RinkName}-${RinkVerbTLD} ${RinkName}.${oneBASE} -n
+/usr/bin/ssh ${NS2Name}.${RinkVerbTLD} /opt/verb/serfs/inkdnsaddslave ${RinkName}-${RinkVerbTLD} ${RinkName}.${blueBASE} -n
+/usr/bin/ssh ${NS2Name}.${RinkVerbTLD} /opt/verb/serfs/inkdnsaddslave ${RinkName}-${RinkVerbTLD} ${RinkName}.${vipBASE} -n
+/usr/bin/ssh ${NS2Name}.${RinkVerbTLD} /opt/verb/serfs/inkdnsaddslave ${RinkName}-${RinkVerbTLD} ${RinkName}.${redBASE} -n
+/usr/bin/ssh ${NS2Name}.${RinkVerbTLD} /opt/verb/serfs/inkdnsaddslave ${RinkName}-${RinkVerbTLD} ${RinkName}.${kiwiBASE} -n
 ### Add slave domains for NS1
-/usr/bin/ssh ${NS2Name}.${VerbTLD} /opt/verb/serfs/inkdnsaddslave ${NS1Name}-${VerbTLD} ${NS1Name}.${inkBASE} -n
-/usr/bin/ssh ${NS2Name}.${VerbTLD} /opt/verb/serfs/inkdnsaddslave ${NS1Name}-${VerbTLD} ${NS1Name}.${emailBASE} -n
-/usr/bin/ssh ${NS2Name}.${VerbTLD} /opt/verb/serfs/inkdnsaddslave ${NS1Name}-${VerbTLD} ${NS1Name}.${oneBASE} -n
-/usr/bin/ssh ${NS2Name}.${VerbTLD} /opt/verb/serfs/inkdnsaddslave ${NS1Name}-${VerbTLD} ${NS1Name}.${blueBASE} -n
-/usr/bin/ssh ${NS2Name}.${VerbTLD} /opt/verb/serfs/inkdnsaddslave ${NS1Name}-${VerbTLD} ${NS1Name}.${vipBASE} -n
-/usr/bin/ssh ${NS2Name}.${VerbTLD} /opt/verb/serfs/inkdnsaddslave ${NS1Name}-${VerbTLD} ${NS1Name}.${redBASE} -n
-/usr/bin/ssh ${NS2Name}.${VerbTLD} /opt/verb/serfs/inkdnsaddslave ${NS1Name}-${VerbTLD} ${NS1Name}.${kiwiBASE} -n
-/usr/bin/ssh ${NS2Name}.${VerbTLD} /usr/bin/systemctl start named
-if /usr/bin/ssh ${NS2Name}.${VerbTLD} /usr/bin/systemctl is-active --quiet named; then
+/usr/bin/ssh ${NS2Name}.${RinkVerbTLD} /opt/verb/serfs/inkdnsaddslave ${NS1Name}-${RinkVerbTLD} ${NS1Name}.${inkBASE} -n
+/usr/bin/ssh ${NS2Name}.${RinkVerbTLD} /opt/verb/serfs/inkdnsaddslave ${NS1Name}-${RinkVerbTLD} ${NS1Name}.${emailBASE} -n
+/usr/bin/ssh ${NS2Name}.${RinkVerbTLD} /opt/verb/serfs/inkdnsaddslave ${NS1Name}-${RinkVerbTLD} ${NS1Name}.${oneBASE} -n
+/usr/bin/ssh ${NS2Name}.${RinkVerbTLD} /opt/verb/serfs/inkdnsaddslave ${NS1Name}-${RinkVerbTLD} ${NS1Name}.${blueBASE} -n
+/usr/bin/ssh ${NS2Name}.${RinkVerbTLD} /opt/verb/serfs/inkdnsaddslave ${NS1Name}-${RinkVerbTLD} ${NS1Name}.${vipBASE} -n
+/usr/bin/ssh ${NS2Name}.${RinkVerbTLD} /opt/verb/serfs/inkdnsaddslave ${NS1Name}-${RinkVerbTLD} ${NS1Name}.${redBASE} -n
+/usr/bin/ssh ${NS2Name}.${RinkVerbTLD} /opt/verb/serfs/inkdnsaddslave ${NS1Name}-${RinkVerbTLD} ${NS1Name}.${kiwiBASE} -n
+/usr/bin/ssh ${NS2Name}.${RinkVerbTLD} /usr/bin/systemctl start named
+if /usr/bin/ssh ${NS2Name}.${RinkVerbTLD} /usr/bin/systemctl is-active --quiet named; then
   echo "NS2 DNS service is working, you may ignore any above 'named' error messages"
 fi
-/usr/bin/ssh ${NS2Name}.${VerbTLD} /opt/verb/serfs/inkdnsrefreshbind
+/usr/bin/ssh ${NS2Name}.${RinkVerbTLD} /opt/verb/serfs/inkdnsrefreshbind
 
 ## This local Rink server
 /usr/bin/systemctl stop named
 ### Add slave domains for NS1
-/opt/verb/serfs/inkdnsaddslave ${NS1Name}-${VerbTLD} ${NS1Name}.${inkBASE} -n
-/opt/verb/serfs/inkdnsaddslave ${NS1Name}-${VerbTLD} ${NS1Name}.${emailBASE} -n
-/opt/verb/serfs/inkdnsaddslave ${NS1Name}-${VerbTLD} ${NS1Name}.${oneBASE} -n
-/opt/verb/serfs/inkdnsaddslave ${NS1Name}-${VerbTLD} ${NS1Name}.${blueBASE} -n
-/opt/verb/serfs/inkdnsaddslave ${NS1Name}-${VerbTLD} ${NS1Name}.${vipBASE} -n
-/opt/verb/serfs/inkdnsaddslave ${NS1Name}-${VerbTLD} ${NS1Name}.${redBASE} -n
-/opt/verb/serfs/inkdnsaddslave ${NS1Name}-${VerbTLD} ${NS1Name}.${kiwiBASE} -n
+/opt/verb/serfs/inkdnsaddslave ${NS1Name}-${RinkVerbTLD} ${NS1Name}.${inkBASE} -n
+/opt/verb/serfs/inkdnsaddslave ${NS1Name}-${RinkVerbTLD} ${NS1Name}.${emailBASE} -n
+/opt/verb/serfs/inkdnsaddslave ${NS1Name}-${RinkVerbTLD} ${NS1Name}.${oneBASE} -n
+/opt/verb/serfs/inkdnsaddslave ${NS1Name}-${RinkVerbTLD} ${NS1Name}.${blueBASE} -n
+/opt/verb/serfs/inkdnsaddslave ${NS1Name}-${RinkVerbTLD} ${NS1Name}.${vipBASE} -n
+/opt/verb/serfs/inkdnsaddslave ${NS1Name}-${RinkVerbTLD} ${NS1Name}.${redBASE} -n
+/opt/verb/serfs/inkdnsaddslave ${NS1Name}-${RinkVerbTLD} ${NS1Name}.${kiwiBASE} -n
 ### Add slave domains for NS2
-/opt/verb/serfs/inkdnsaddslave ${NS2Name}-${VerbTLD} ${NS2Name}.${inkBASE} -n
-/opt/verb/serfs/inkdnsaddslave ${NS2Name}-${VerbTLD} ${NS2Name}.${emailBASE} -n
-/opt/verb/serfs/inkdnsaddslave ${NS2Name}-${VerbTLD} ${NS2Name}.${oneBASE} -n
-/opt/verb/serfs/inkdnsaddslave ${NS2Name}-${VerbTLD} ${NS2Name}.${blueBASE} -n
-/opt/verb/serfs/inkdnsaddslave ${NS2Name}-${VerbTLD} ${NS2Name}.${vipBASE} -n
-/opt/verb/serfs/inkdnsaddslave ${NS2Name}-${VerbTLD} ${NS2Name}.${redBASE} -n
-/opt/verb/serfs/inkdnsaddslave ${NS2Name}-${VerbTLD} ${NS2Name}.${kiwiBASE} -n
+/opt/verb/serfs/inkdnsaddslave ${NS2Name}-${RinkVerbTLD} ${NS2Name}.${inkBASE} -n
+/opt/verb/serfs/inkdnsaddslave ${NS2Name}-${RinkVerbTLD} ${NS2Name}.${emailBASE} -n
+/opt/verb/serfs/inkdnsaddslave ${NS2Name}-${RinkVerbTLD} ${NS2Name}.${oneBASE} -n
+/opt/verb/serfs/inkdnsaddslave ${NS2Name}-${RinkVerbTLD} ${NS2Name}.${blueBASE} -n
+/opt/verb/serfs/inkdnsaddslave ${NS2Name}-${RinkVerbTLD} ${NS2Name}.${vipBASE} -n
+/opt/verb/serfs/inkdnsaddslave ${NS2Name}-${RinkVerbTLD} ${NS2Name}.${redBASE} -n
+/opt/verb/serfs/inkdnsaddslave ${NS2Name}-${RinkVerbTLD} ${NS2Name}.${kiwiBASE} -n
 /usr/bin/systemctl start named
 if /usr/bin/systemctl is-active --quiet named; then
   echo "The Rink DNS service is working, you may ignore any above 'named' error messages"
 fi
 /opt/verb/serfs/inkdnsrefreshbind
 
+# Set the configured status on this rink and the NS nameservers
+/usr/bin/sed -i '/RinkConfigured=.*/d' /opt/verb/conf/servernameip
+/usr/bin/echo 'RinkConfigured="rink"' >> /opt/verb/conf/servernameip
+/usr/bin/ssh ${NS1Name}.${RinkVerbTLD} <<EOS
+/usr/bin/sed -i '/RinkConfigured=.*/d' /opt/verb/conf/servernameip
+/usr/bin/echo 'RinkConfigured="nameserver"' >> /opt/verb/conf/servernameip
+EOS
+/usr/bin/ssh ${NS2Name}.${RinkVerbTLD} <<EOS
+/usr/bin/sed -i '/RinkConfigured=.*/d' /opt/verb/conf/servernameip
+/usr/bin/echo 'RinkConfigured="nameserver"' >> /opt/verb/conf/servernameip
+EOS
+
 # Display what the inklist file should be
-/usr/bin/cat <<EOF > /opt/verb/conf/inklists/inkdnsrinks
+/usr/bin/cat <<EOF > /opt/verb/conf/inklists/inkdnsnameservers
 BaseHostNS="${RinkDomain}"
 DefaultNS1="${NS1Host}.${RinkDomain}"
 RinkNS1IPv4="${NS1ip4}"
@@ -347,18 +355,18 @@ RinkNS2IPv6="${NS2ip6}"
 EOF
 
 # Reboot NS servers
-/usr/bin/ssh ${NS1Name}.${VerbTLD} reboot
-/usr/bin/ssh ${NS2Name}.${VerbTLD} reboot
+/usr/bin/ssh ${NS1Name}.${RinkVerbTLD} reboot
+/usr/bin/ssh ${NS2Name}.${RinkVerbTLD} reboot
 
 # Finish
 /usr/bin/echo "
 The inkDNS nameservers are now set. This should be updated in the public verb repo...
 
-verb/conf/inklists/inkdnsrinks :
+verb/conf/inklists/inkdnsnameservers :
 "
 
-/usr/bin/cat /opt/verb/conf/inklists/inkdnsrinks
-cp /opt/verb/conf/inklists/inkdnsrinks /opt/rink/inkdnsrinks
+/usr/bin/cat /opt/verb/conf/inklists/inkdnsnameservers
+cp /opt/verb/conf/inklists/inkdnsnameservers /opt/rink/inkdnsnameservers
 
 /usr/bin/echo "
 ###

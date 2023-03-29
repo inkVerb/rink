@@ -6,8 +6,8 @@ Prerequisites:
 2. Those snapshots must have SSH keys created on this server
   - Instructions for these can be found in steps 0-4 in the [Official Cheat Sheet](https://github.com/inkVerb/verb/blob/main/dev/official-cheat-sheet.md)
 3. You need to create a rink server, then two rink-auto-created NS servers (three servers total)
-  - On the rink server: The original file `verb/conf/inklists/inkdnsrinks` should be replaced with `rink/inst/inkdnsrinks`
-    - `verb/conf/inklists/inkdnsrinks` will remain unique on each of the three rink servers
+  - On the rink server: The original file `verb/conf/inklists/inkdnsnameservers` should be replaced with `rink/inst/inkdnsnameservers`
+    - `verb/conf/inklists/inkdnsnameservers` will remain unique on each of the three rink servers
   - Only go as far to install `verb/inst/make-preverber` on the main "Rink" server, then complete setup and the other two nameservers by properly installing this `rink` repo
   - Instructions for the final `rink` installation can be found from step 5 in the [Official Cheat Sheet](https://github.com/inkVerb/verb/blob/main/dev/official-cheat-sheet.md)
 

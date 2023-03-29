@@ -63,7 +63,7 @@ exit 0; fi
 
 # Echo the records
 ## NS records
-. /opt/verb/conf/inklists/inkdnsrinks
+. /opt/verb/conf/inklists/inkdnsnameservers
 /bin/echo "${emailURI}.  IN  NS  ${DefaultNS1}." >> /opt/verb/conf/inkdns/zones/db.${hostURI}
 /bin/echo "${emailURI}.  IN  NS  ${DefaultNS2}." >> /opt/verb/conf/inkdns/zones/db.${hostURI}
 /bin/echo "${oneURI}.  IN  NS  ${DefaultNS1}." >> /opt/verb/conf/inkdns/zones/db.${hostURI}

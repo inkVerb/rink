@@ -1,6 +1,13 @@
 #!/bin/bash
 #inkVerbRunner! verb.ink
 
+##DEV IMPORTANT!
+## This incompletely performs the same tastk as importvps
+## However, this does some things more efficiently, such as via readvps
+## This does not take into consideration that verb/conf/server*286 files have already been instantiated by setup
+## TO-DO: Keep this for reference, eview and squash this with importvps, then delete this
+##DEV IMPORTANT!
+
 # This is the master command to add an existing Verber to be controlled by this Rink, complete with all requirements
 ## The Verber must have the Rink control keyes installed in authorized_keys and already have setup run
 ## The verb namespace or domain mod is irrelevant

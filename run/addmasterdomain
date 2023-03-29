@@ -1,0 +1,53 @@
+#!/bin/bash
+#inkVerbRunner! verb.ink
+
+# This is the master command to add an existing Verber to be controlled by this Rink, complete with all requirements
+## The Verber must have the Rink control keyes installed in authorized_keys and already have setup run
+## The verb namespace or domain mod is irrelevant
+## This merely adds the verber to the basic nameserver control Rink so that its DNS zone will be published through this NS Rink cluster
+
+# How to use:
+## ./addmodvps [nickname] [tld] [vultr instance ID] [user]
+
+# Eg:
+## ./addmodvps  name ink bla3-bla2-bla1 john
+masterdomain=$1
+
+# Configs
+. /opt/verb/conf/servernameip
+. /opt/rink/rinknames
+
+# Already configured?
+if [ "$RinkConfigured" != "true" ]; then
+	echo "Rink NS nameserver keys not configured, DNS nameserver zone files will need to be updated manually"
+	exit 0
+elif [ "$RinkConfigured" = "rink" ] && [ -f "/opt/rink/run/addmasterdomain" ]; then
+	/opt/rink/run/addmasterdomain ${masterdomain}
+	exit 0
+fi
+
+# Check for conflicts (imported code from rinkcheck)
+## NS1
+i=1
+already="false"
+/usr/bin/ssh -q ${NS1Name}.${RinkVerbTLD} [[ -f "/srv/sns/${ServerName}-${ServerTLD}/calls/inkdnsaddslave" ]] || [[ -f "/srv/sns/${ServerName}-${ServerTLD}/calls/killinkdnsslavedns" ]] && already="true"
+while [ $already = "true" ]; do
+	if [ "$i" -ge "20" ]; then echo "Call for ${checkserf} is already pending on ${NS1Name} for over 1 minute. Try later."; exit 0; fi
+	/usr/bin/ssh -q ${NS1Name}.${RinkVerbTLD} [[ -f "/srv/sns/${ServerName}-${ServerTLD}/calls/inkdnsaddslave" ]] || [[ -f "/srv/sns/${ServerName}-${ServerTLD}/calls/killinkdnsslavedns" ]] || already="false"
+	/usr/bin/sleep 3
+	i=$(( i + 1 ))
+done
+## NS2
+i=1
+already="false"
+/usr/bin/ssh -q ${NS2Name}.${RinkVerbTLD} [[ -f "/srv/sns/${ServerName}-${ServerTLD}/calls/inkdnsaddslave" ]] || [[ -f "/srv/sns/${ServerName}-${ServerTLD}/calls/killinkdnsslavedns" ]] && already="true"
+while [ $already = "true" ]; do
+	if [ "$i" -ge "20" ]; then echo "Call for ${checkserf} is already pending on ${NS2Name} for over 1 minute. Try later."; exit 0; fi
+	/usr/bin/ssh -q ${NS2Name}.${RinkVerbTLD} [[ -f "/srv/sns/${ServerName}-${ServerTLD}/calls/inkdnsaddslave" ]] || [[ -f "/srv/sns/${ServerName}-${ServerTLD}/calls/killinkdnsslavedns" ]] || already="false"
+	/usr/bin/sleep 3
+	i=$(( i + 1 ))
+done
+
+# Insert the function statements
+/usr/bin/ssh ${NS1Name}.${RinkVerbTLD} "/usr/bin/echo 'inkdnsaddslave ${ServerName}-${ServerTLD} ${masterdomain} -n' > /srv/sns/${ServerName}-${ServerTLD}/calls/inkdnsaddslave"
+/usr/bin/ssh ${NS2Name}.${RinkVerbTLD} "/usr/bin/echo 'inkdnsaddslave ${ServerName}-${ServerTLD} ${masterdomain} -n' > /srv/sns/${ServerName}-${ServerTLD}/calls/inkdnsaddslave"
