@@ -1,0 +1,65 @@
+#!/bin/bash
+#inkVerbRunner! verb.ink
+
+# This is the master command to add an existing Verber to be controlled by this Rink, complete with all requirements
+## The Verber must have the Rink control keyes installed in authorized_keys and already have setup run
+## The verb namespace or domain mod is irrelevant
+## This merely adds the verber to the basic nameserver control Rink so that its DNS zone will be published through this NS Rink cluster
+
+# How to use:
+## ./addmodvps [nickname] [tld] [vultr instance ID] [user]
+
+# Eg:
+## ./addmodvps  name ink bla3-bla2-bla1 john
+## ./addmodvps nameothername red bla0-bla0-bl4a john
+
+
+if [ -z "$4" ]; then
+  /usr/bin/echo "Needs nickname, TLD, Vultr instance ID, & user arguments, I quit."
+  exit 0
+fi
+
+# Get our Rink-NS name settings
+. /opt/rink/rinknames
+
+NICKNAME="$1"
+VerbTLD="$2"
+VultrInstanceID="$3"
+USER="$4"
+
+. /opt/rink/portnum # for Port
+
+# Read the VPS
+if [ ! -f "/opt/rink/conf/raw.${NICKNAME}.${VerbTLD}.conf" ]; then
+  /opt/rink/run/readvps "$NICKNAME" "$VerbTLD" "$VultrInstanceID" "$USER"
+  e="$?"; [[ "$e" = "0" ]] || exit "$e"
+fi
+
+# Create new SSH keys on the new verber and install their pub keys on the NS servers
+## This must go before verb/inst/setup or the server will deny access in post-setup ssh calls
+if ! grep -q '^RINKKEYS="DONE"' "/opt/rink/conf/vrb.${NICKNAME}.${VerbTLD}.conf"; then
+  /opt/rink/run/newverbrinkkeys ${NICKNAME} ${VerbTLD} ${USER}
+  e="$?"; [[ "$e" = "0" ]] || exit "$e"
+  if [ "$?" = "0" ]; then
+    /usr/bin/echo 'RINKKEYS="DONE"' >> /opt/rink/conf/vrb.${NICKNAME}.${VerbTLD}.conf
+  fi
+fi
+
+# Update to latest NS servers
+if ! grep -q 'RINKKEYS="DONE"' "/opt/rink/conf/vrb.${NICKNAME}.${VerbTLD}.conf"; then
+  /usr/bin/ssh ${NICKNAME}.${VerbTLD} /opt/verb/serfs/rinkupdatekeys
+  e="$?"; [[ "$e" = "0" ]] || exit "$e"
+  if [ "$?" = "0" ]; then
+    /usr/bin/echo 'RINKKEYS="DONE"' >> /opt/rink/conf/vrb.${NICKNAME}.${VerbTLD}.conf
+  fi
+fi
+if ! grep -q 'RINKVERBSNSLISTED="DONE"' "/opt/rink/conf/vrb.${NICKNAME}.${VerbTLD}.conf"; then
+  /usr/bin/ssh ${NICKNAME}.${VerbTLD} /opt/verb/serfs/rinkupdateallverbs
+  e="$?"; [[ "$e" = "0" ]] || exit "$e"
+  if [ "$?" = "0" ]; then
+    /usr/bin/echo 'RINKVERBSNSLISTED="DONE"' >> /opt/rink/conf/vrb.${NICKNAME}.${VerbTLD}.conf
+  fi
+fi
+
+# Restart the mod Verber
+/usr/bin/ssh ${NICKNAME}.${VerbTLD} /usr/bin/reboot

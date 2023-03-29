@@ -1,0 +1,39 @@
+#!/bin/bash
+#inkVerbRunner! verb.ink
+
+# This stops an existing Vultr VPS, based on Verber namespace and TLD
+
+# How to use:
+## ./stopvps [verb-namespace] [tld] [user]
+
+# Eg:
+## ./stopvps name ink john
+
+
+if [ -z "$3" ]; then
+  /usr/bin/echo "Needs namespace, TLD & user arguments, I quit."
+  exit 0
+fi
+
+NAMESPACE="$1"
+VerbTLD="$2"
+USER="$3"
+
+if [ ! -f "/opt/rink/conf/vrb.${NAMESPACE}.${VerbTLD}.conf" ]; then
+  /usr/bin/echo "${NAMESPACE}.${VerbTLD} does not exist! I quit."
+  exit 0
+fi
+
+if ! grep -q "VerbUser=\"$USER\"" "/opt/rink/conf/vrb.${NAMESPACE}.${VerbTLD}.conf"; then
+  /usr/bin/echo "${NAMESPACE}.${VerbTLD} not owned by user ${USER}! I quit."
+  exit 0
+fi
+
+. /opt/rink/conf/vrb.${NAMESPACE}.${VerbTLD}.conf
+
+echo "Stopping. This may take a few moments..."
+
+/usr/bin/vultr-cli instance stop ${VultrInstanceID}
+
+# Finish
+echo "${NAMESPACE}.${VerbTLD} stopped."

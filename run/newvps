@@ -1,0 +1,294 @@
+#!/bin/bash
+#inkVerbRunner! verb.ink
+
+# This creates a new Vultr VPS, sending the output to a config file that can be read, creating other configs based on output
+## Tertiary Warning: This is run by other scripts and should not be run by itself
+## Used by: addvps and setuprinkns
+
+# How to use:
+## ./newvps [verb-namespace] [tld] [user] [vultr-plan (1gb shortcut for lowest)] [snapshot-nickname] [vultr-region] [PHP-timezone - optional]
+
+# Eg:
+## ./newvps name ink john 1gb laemp
+## ./newvps name ink john 1gb laemp sjc
+## ./newvps nick red bill vc2-1c-2gb laemp sea America/Los_Angeles
+
+
+if [ -z "$5" ]; then
+  /usr/bin/echo "Needs namespace, TLD, user plan, region, & snapshot arguments, I quit."
+  exit 0
+fi
+
+# Defaults
+. /opt/rink/rinknames
+
+NAMESPACE="$1"
+VerbTLD="$2"
+USER="$3"
+VULTRPLAN="$4"
+SNAPNICK="$5"
+
+# Override defaults
+if [ -n "$6" ] && /usr/bin/grep -q "^$6" /opt/rink/VultrRegions; then
+  VultrRegion="$6" # Overrides region from rinknames
+fi
+if [ -n "$7" ] && /usr/bin/grep -q "^$7" /opt/verb/ink/PHPcities; then
+  TimeZone="$7" # Overrides timezone from rinknames
+fi
+
+# Check to see if this verber already exists by this name
+if [ -f /opt/rink/conf/vrb.${NAMESPACE}.${VerbTLD}.conf ]; then
+  /usr/bin/echo "Verber with name '${VerbTLD}' and TLD '${NAMESPACE}' already exists."
+  exit 5
+elif [ "${VerbTLD}" != "ink" ] && [ ! -f "/opt/rink/conf/vrb.${NAMESPACE}.ink.conf" ]; then
+  /usr/bin/echo "Verber with 'ink' TLD must be created for '${NAMESPACE}' before creating non-'ink' TLD verbers."
+  exit 5
+elif [ "${VerbTLD}" != "ink" ] && [ -f "/opt/rink/conf/vrb.${NAMESPACE}.ink.conf" ]; then
+  . /opt/rink/conf/vrb.${NAMESPACE}.ink.conf
+  if [ "${VerbUser}" != "${USER}" ]; then
+    /usr/bin/echo "Verb name '${NAMESPACE}' is already owned by another user."
+    exit 5
+  fi
+fi
+
+# Get the latest Verb ID number
+if [ -f "/opt/rink/lastverbid" ]; then
+  . /opt/rink/lastverbid
+  HOSTID=$(( LASTID + 1 ))
+else
+  HOSTID="1"
+fi
+## Make sure it is not in use
+### grep "-s, --no-messages suppress error messages"
+while /usr/bin/grep -qs ^VerbHostID=\"$HOSTID\" /opt/rink/conf/vrb.* > /dev/null; do
+  HOSTID=$(( HOSTID + 1 ))
+done
+
+# Spin up the VPS
+if [ -f "/opt/rink/snapshotid/${SNAPNICK}" ]; then
+  . /opt/rink/snapshotid/${SNAPNICK}
+  if ! /usr/bin/vultr-cli snapshot list | /usr/bin/grep -q "^${SnapshotID}"; then
+    /usr/bin/echo "Listed snapshot does not exist. I quit."
+    exit 5
+  fi
+else
+  /usr/bin/echo "Snapshot not listed. I quit."
+  exit 5
+fi
+
+if [ "${VULTRPLAN}" = "1gb" ]; then
+  VULTRPLAN="vc2-1c-1gb"
+elif [ "${VULTRPLAN}" = "2gb" ]; then
+  VULTRPLAN="vc2-1c-2gb"
+fi
+
+# Get $Port
+. /opt/rink/portnum
+
+# Create the instance
+/usr/bin/vultr-cli instance create --region "${VultrRegion}" --plan "${VULTRPLAN}" --snapshot "${SnapshotID}" --label "${NAMESPACE}.${VerbTLD}" --ipv6 true > /opt/rink/conf/raw.${NAMESPACE}.${VerbTLD}.conf
+
+# Exit status?
+e="$?"; if [ "$e" != "0" ]; then
+  /usr/bin/echo "VPS creation failed"
+  exit "$e"
+fi
+
+# Did it work?
+if [ -f /opt/rink/conf/raw.${NAMESPACE}.${VerbTLD}.conf ]; then
+  if ! /usr/bin/grep -q ^ID /opt/rink/conf/raw.${NAMESPACE}.${VerbTLD}.conf; then
+    /usr/bin/echo "VPS output file is not correct, start over."
+    /usr/bin/rm -f "*.${NAMESPACE}.${VerbTLD}.conf"
+    /usr/bin/sed -i "/ssh.${NAMESPACE}.${VerbTLD}.conf/d" /root/.ssh/config
+    exit 4
+  fi
+else
+  /usr/bin/echo "VPS output file does not exist, start over."
+  /usr/bin/rm -f "*.${NAMESPACE}.${VerbTLD}.conf"
+  /usr/bin/sed -i "/ssh.${NAMESPACE}.${VerbTLD}.conf/d" /root/.ssh/config
+  exit 4
+fi
+
+# Get the VPS instance ID
+VultrInstanceID="$(/usr/bin/cat /opt/rink/conf/raw.${NAMESPACE}.${VerbTLD}.conf | /usr/bin/grep ^ID | /usr/bin/sed s"/ID\t\t\t//")"
+/usr/bin/cat <<EOF > /opt/rink/conf/vrb.${NAMESPACE}.${VerbTLD}.conf
+VultrInstanceID="${VultrInstanceID}"
+VerbHostID="${HOSTID}"
+VerbName="${NAMESPACE}"
+VerbTLD="${VerbTLD}"
+VerbRegion="${VultrRegion}"
+VerbUser="${USER}"
+VerbPort="${Port}"
+EOF
+
+# Get the first IP addresses
+FIRSTIP4PLACEHOLDER="$(/usr/bin/vultr-cli instance ipv4 list $VultrInstanceID | /usr/bin/grep main_ip | /usr/bin/sed 's/\s.*$//')"
+FIRSTIP6PLACEHOLDER="$(/usr/bin/vultr-cli instance ipv6 list $VultrInstanceID | /usr/bin/grep main_ip | /usr/bin/sed 's/\s.*$//')"
+
+# IP address
+/usr/bin/echo "New VPS instance ${NAMESPACE}.${VerbTLD} initiated. Waiting a few seconds for details to populate..."
+/usr/bin/sleep 5
+
+## Check the IP4 (Default until set: 0.0.0.0)
+IP4="$(/usr/bin/vultr-cli instance ipv4 list $VultrInstanceID | /usr/bin/grep main_ip | /usr/bin/sed 's/\s.*$//')"
+while [ "$IP4" = "0.0.0.0" ] || [ "$IP4" = "$FIRSTIP4PLACEHOLDER" ]; do
+  IP4="$(/usr/bin/vultr-cli instance ipv4 list $VultrInstanceID | /usr/bin/grep main_ip | /usr/bin/sed 's/\s.*$//')"
+  /usr/bin/sleep 1
+done
+/usr/bin/echo "IPv4: $IP4"
+
+## Check the IP6 (Default until set is empty; a temp IP6 is set when the final IP4 is set, found with $FIRSTIP6PLACEHOLDER and $SECONDIP6PLACEHOLDER)
+SECONDIP6PLACEHOLDER="$(/usr/bin/vultr-cli instance ipv6 list $VultrInstanceID | /usr/bin/grep main_ip | /usr/bin/sed 's/\s.*$//')"
+IP6="$(/usr/bin/vultr-cli instance ipv6 list $VultrInstanceID | /usr/bin/grep main_ip | /usr/bin/sed 's/\s.*$//')"
+counter=1
+while [ "$IP6" = "$FIRSTIP6PLACEHOLDER" ] || [ "$IP6" = "$SECONDIP6PLACEHOLDER" ] && [ "$counter" -lt "15" ]; do
+  IP6="$(/usr/bin/vultr-cli instance ipv6 list $VultrInstanceID | /usr/bin/grep main_ip | /usr/bin/sed 's/\s.*$//')"
+  /usr/bin/sleep 1
+  counter=$[$counter +1]
+done
+/usr/bin/echo "IPv6: $IP6"
+
+## IP processing
+### Compress IPv6
+hex2dec(){
+    [ "$1" != "" ] && printf "%d" "$(( 0x$1 ))"
+}
+compress_ipv6() {
+    ip=$1
+
+    blocks=$(/bin/echo $ip | /bin/grep -o "[0-9a-f]\+")
+    set $blocks
+
+    # compress leading zeros
+    ip=$(printf "%x:%x:%x:%x:%x:%x:%x:%x\n" \
+        $(hex2dec $1) \
+        $(hex2dec $2) \
+        $(hex2dec $3) \
+        $(hex2dec $4) \
+        $(hex2dec $5) \
+        $(hex2dec $6) \
+        $(hex2dec $7) \
+        $(hex2dec $8)
+    )
+
+    # prepend : for easier matching
+    ip=:$ip
+
+    # :: must compress the longest chain
+    for pattern in :0:0:0:0:0:0:0:0 \
+            :0:0:0:0:0:0:0 \
+            :0:0:0:0:0:0 \
+            :0:0:0:0:0 \
+            :0:0:0:0 \
+            :0:0; do
+        if /bin/echo $ip | /bin/grep -qs $pattern; then
+            ip=$(/bin/echo $ip | sed "s/$pattern/::/")
+            # if the substitution occured before the end, we have :::
+            ip=$(/bin/echo $ip | sed 's/:::/::/')
+            break # only one substitution
+        fi
+    done
+
+    # remove prepending : if necessary
+    /bin/echo $ip | /bin/grep -qs "^:[^:]" && ip=$(echo $ip | sed 's/://')
+
+    /bin/echo $ip
+}
+### Expand IPv6
+expand_ipv6() {
+    ip=$1
+
+    # prepend 0 if we start with :
+    /bin/echo $ip | /bin/grep -qs "^:" && ip="0${ip}"
+
+    # expand ::
+    if /bin/echo $ip | /bin/grep -qs "::"; then
+        colons=$(/bin/echo $ip | sed 's/[^:]//g')
+        missing=$(/bin/echo ":::::::::" | sed "s/$colons//")
+        expanded=$(/bin/echo $missing | sed 's/:/:0/g')
+        ip=$(/bin/echo $ip | sed "s/::/$expanded/")
+    fi
+
+    blocks=$(/bin/echo $ip | /bin/grep -o "[0-9a-f]\+")
+    set $blocks
+
+    printf "%04x:%04x:%04x:%04x:%04x:%04x:%04x:%04x\n" \
+        $(hex2dec $1) \
+        $(hex2dec $2) \
+        $(hex2dec $3) \
+        $(hex2dec $4) \
+        $(hex2dec $5) \
+        $(hex2dec $6) \
+        $(hex2dec $7) \
+        $(hex2dec $8)
+}
+### Reverse IPv6
+rarpa_ipv6() {
+  local idx s=${1//:}
+  for (( idx=${#s} - 1; idx>=0; idx-- )); do
+    printf '%s.' "${s:$idx:1}"
+  done
+  printf 'ip6.arpa\n'
+}
+
+IP6NEW=$(compress_ipv6 ${IP6})
+IP6EXP=$(expand_ipv6 ${IP6})
+IP4ARPA=$(/usr/bin/echo ${IP4} | sed -r 's/^([0-9]{1,3}).([0-9]{1,3}).([0-9]{1,3}).([0-9]{1,3})$/\4.\3.\2.\1.in-addr.arpa/')
+IP6ARPA=$(rarpa_ipv6 ${IP6EXP})
+
+## Append IP addresses to config
+/usr/bin/cat <<EOF >> /opt/rink/conf/vrb.${NAMESPACE}.${VerbTLD}.conf
+VerbIPv4="${IP4}"
+VerbIPv6="${IP6NEW}"
+VerbIPv6Exp="${IP6EXP}"
+VerbARPAIPv4="${IP4ARPA}"
+VerbARPAIPv6="${IP6ARPA}"
+EOF
+
+# Create the .ssh/config entry
+. /opt/rink/sshkey
+/usr/bin/echo "Include /opt/rink/conf/ssh.${NAMESPACE}.${VerbTLD}.conf" >> /root/.ssh/config
+/usr/bin/cat <<EOF > /opt/rink/conf/ssh.${NAMESPACE}.${VerbTLD}.conf
+Host ${NAMESPACE}.${VerbTLD}
+Hostname ${IP4}
+User root
+Port ${Port}
+IdentityFile /root/.ssh/${SSHKey}
+EOF
+
+# Wait for powerup
+/usr/bin/echo "Waiting for final steps and power up..."
+/opt/rink/run/waitvpsanswer ${NAMESPACE} ${VerbTLD}
+e="$?"; if [ "$e" != "0" ]; then
+  /usr/bin/echo "VPS cannot be accessed. It is possible that the keys are not installed. Make sure that they key '${SSHKey}' is properly installed on this VPS, then try again."
+  /usr/bin/rm -f "*.${NAMESPACE}.${VerbTLD}.conf"
+  exit "$e"
+fi
+
+# Refresh the SSHD keys on the server (they are still original from the snapshot and will seem like a duplicate in /root/.ssh/known_hosts)
+## Do this in a loop
+/usr/bin/ssh -o StrictHostKeyChecking=no -o ConnectTimeout=3 -q ${NAMESPACE}.${VerbTLD} "/usr/bin/rm /etc/ssh/ssh_host_* && /usr/bin/ssh-keygen -A && /usr/bin/reboot"
+SSHRESETSTATUS="$?"
+while [ "$SSHRESETSTATUS" != "0" ]; do
+  /usr/bin/echo "newvps ssh-keygen loop reboot error: $SSHRESETSTATUS
+  Waiting, then trying again..."
+  sleep 3
+  /usr/bin/ssh -o StrictHostKeyChecking=no -o ConnectTimeout=3 -q ${NAMESPACE}.${VerbTLD} "/usr/bin/rm -f /etc/ssh/ssh_host_* && /usr/bin/ssh-keygen -A && /usr/bin/reboot"
+  SSHRESETSTATUS="$?"
+done
+
+# Remove the local server finkerfprint
+/usr/bin/sed -i "/${IP4}/d" /root/.ssh/known_hosts
+
+# Add the hashed key
+sleep 10 # The server needs to start its reboot
+/opt/rink/run/waitvpson ${NAMESPACE} ${VerbTLD}
+/opt/rink/run/waitvpsanswer ${NAMESPACE} ${VerbTLD}
+/opt/rink/run/keyscan ${NAMESPACE} ${VerbTLD}
+e="$?"; [[ "$e" = "0" ]] || exit "$e"
+
+# Last ID (Only when we got this far)
+/usr/bin/echo "LASTID=\"$HOSTID\"" > /opt/rink/lastverbid
+
+# Finish
+/usr/bin/echo "${NAMESPACE}.${VerbTLD} created. Wait a few minutes before accessing."

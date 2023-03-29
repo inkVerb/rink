@@ -1,0 +1,51 @@
+#!/bin/bash
+#inkVerbRunner! verb.ink
+
+# This installs the Vultr CLI API
+
+# How to use:
+## ./setup [API key]
+
+# Eg:
+## ./setup SOMELONGKEY
+
+if [ -z "$1" ]; then
+  /usr/bin/echo "Needs API key as argument, I quit."
+  exit 0
+fi
+
+if [ ! -f  "/opt/rink/inst/setup" ]; then
+  /usr/bin/echo "Not where I'm supposed to be, I quit."
+  exit 0
+fi
+
+APIKEY="$1"
+
+# Runner permissions
+/bin/chmod 750 /opt/rink/run/*
+
+# Prepare the directories
+/usr/bin/mkdir -p /opt/rink/tmp
+/usr/bin/mkdir -p /opt/rink/conf
+/usr/bin/mkdir -p /opt/rink/destroyed
+/usr/bin/mkdir -p /opt/rink/snapshotid
+/bin/ln -sfn /opt/rink ~/
+
+# API settings
+/usr/bin/pacman -S vultr-cli --noconfirm
+/usr/bin/cat <<EOF > /root/.vultr-cli.yaml
+api-key: $APIKEY
+EOF
+/usr/bin/vultr-cli instance list --config /root/.vultr-cli.yaml
+export VULTR_API_KEY="$APIKEY"
+
+# .ssh/config
+/usr/bin/cat <<EOF >> /root/.ssh/config
+# Managed automatically by inkVerb inker #
+EOF
+
+# Remove the inst directory
+/usr/bin/rm -rf /opt/rink/inst
+
+# Finish
+/usr/bin/echo "Before adding any new vps instance via newvps, you must run: setsnapshot, setport & setkey"

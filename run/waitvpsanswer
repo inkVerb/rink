@@ -1,0 +1,41 @@
+#!/bin/bash
+#inkVerbRunner! verb.ink
+
+# This waits until a VPS answers or rejects ssh calls (in case it is busy, off, or reloading sshd)
+## This script will loop until finished, whether ssh keys are either accepted or rejected, so long as the server is up and responsive
+
+# How to use:
+## ./waitvpsanswer [verb-namespace] [tld]
+
+# Eg:
+## ./waitvpsanswer name ink
+
+
+if [ -z "$2" ]; then
+  /usr/bin/echo "Needs namespace & TLDarguments, I quit."
+  exit 0
+fi
+
+NAMESPACE="$1"
+VerbTLD="$2"
+
+if [ ! -f "/opt/rink/conf/vrb.${NAMESPACE}.${VerbTLD}.conf" ]; then
+  /usr/bin/echo "${NAMESPACE}.${VerbTLD} does not exist! I quit."
+  exit 0
+fi
+
+# Wait for powerup
+/usr/bin/ssh -o StrictHostKeyChecking=yes -o ConnectTimeout=3 ${NAMESPACE}.${VerbTLD} "exit 0" 1> /opt/rink/tmp/waiton.${NAMESPACE}.${VerbTLD} 2> /opt/rink/tmp/waiton.${NAMESPACE}.${VerbTLD}
+SSHEXIT="$?"
+/usr/bin/grep -q 'key' /opt/rink/tmp/waiton.${NAMESPACE}.${VerbTLD}
+GREPTEST="$?"
+while [ "${GREPTEST}" != "0" ] && [ "${SSHEXIT}" != "0" ]; do
+  sleep 3
+  /usr/bin/ssh -o StrictHostKeyChecking=yes -o ConnectTimeout=3 ${NAMESPACE}.${VerbTLD} "exit 0" 1> /opt/rink/tmp/waiton.${NAMESPACE}.${VerbTLD} 2> /opt/rink/tmp/waiton.${NAMESPACE}.${VerbTLD}
+  SSHEXIT="$?"
+  /usr/bin/grep -q 'key' /opt/rink/tmp/waiton.${NAMESPACE}.${VerbTLD}
+  GREPTEST="$?"
+done
+
+# Cleanup
+/usr/bin/rm -f /opt/rink/tmp/waiton.${NAMESPACE}.${VerbTLD}

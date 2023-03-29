@@ -1,0 +1,72 @@
+#!/bin/bash
+#inkVerbRunner! verb.ink
+
+# This removes SSH keys created with newverbrinkkeys, both from the controlled verber and the NS rinks
+
+# How to use:
+## ./killverbrinkkeys [ verb-namespace ] [ tld ] [ user ]
+
+# Eg:
+## ./killverbrinkkeys name ink john
+
+
+if [ -z "$3" ]; then
+  /usr/bin/echo "Needs namespace, TLD & user arguments, I quit."
+  exit 0
+fi
+
+NAMESPACE="$1"
+VerbTLD="$2"
+USER="$3"
+
+if [ ! -f "/opt/rink/conf/vrb.${NAMESPACE}.${VerbTLD}.conf" ]; then
+  /usr/bin/echo "${NAMESPACE}.${VerbTLD} does not exist! I quit."
+  exit 0
+fi
+
+if ! grep -q "VerbUser=\"$USER\"" "/opt/rink/conf/vrb.${NAMESPACE}.${VerbTLD}.conf"; then
+  /usr/bin/echo "${NAMESPACE}.${VerbTLD} not owned by user ${USER}! I quit."
+  exit 0
+fi
+
+. /opt/rink/conf/vrb.${NAMESPACE}.${VerbTLD}.conf
+
+#DEV these keys should already be accepted
+# if [ -z "${FIRSTSSH}" ]; then
+#   /usr/bin/ssh -t -o StrictHostKeyChecking=accept-new ${NAMESPACE}.${VerbTLD} cat /etc/ssh/ssh_host_dsa_key.pub >> /root/.ssh/known_hosts
+#   if [ "$?" = "0" ]; then
+#     /usr/bin/echo "FIRSTSSH=\"true\"" >> /opt/rink/conf/vrb.${NAMESPACE}.${VerbTLD}.conf
+#   fi
+# fi
+
+# Include the configs
+. /opt/rink/rinknames
+. /opt/rink/portnum
+. /opt/verb/conf/servernameip
+. /opt/rink/sshkey
+
+# NS 1, NS 2, servernameip, keys
+/usr/bin/ssh -o StrictHostKeyChecking=yes ${NAMESPACE}.${VerbTLD} <<EOS
+/usr/bin/sed -i '/ssh.${NS1Name}.${RinkVerbTLD}.conf/d' /root/.ssh/config
+/usr/bin/rm /opt/rink/conf/ssh.${NS1Name}.${RinkVerbTLD}.conf
+
+/usr/bin/sed -i '/ssh.${NS2Name}.${RinkVerbTLD}.conf/d' /root/.ssh/config
+/usr/bin/rm /opt/rink/conf/ssh.${NS2Name}.${RinkVerbTLD}.conf
+
+/usr/bin/sed -i '/RinkConfigured=.*/d' /opt/verb/conf/servernameip
+
+/usr/bin/rm /root/.ssh/Rink_${VerbTLD}_${NAMESPACE}.pub
+/usr/bin/rm /root/.ssh/Rink_${VerbTLD}_${NAMESPACE}
+EOS
+
+# Delete on the NS rinks
+/usr/bin/ssh -o StrictHostKeyChecking=yes ${NS1Name}.${RinkVerbTLD} <<EOS
+/usr/bin/userdel ${NAMESPACE}-${VerbTLD}
+/usr/bin/groupdel ${NAMESPACE}-${VerbTLD}
+/usr/bin/rm -rf /srv/sns/${NAMESPACE}-${VerbTLD}
+EOS
+/usr/bin/ssh -o StrictHostKeyChecking=yes ${NS2Name}.${RinkVerbTLD} <<EOS
+/usr/bin/userdel ${NAMESPACE}-${VerbTLD}
+/usr/bin/groupdel ${NAMESPACE}-${VerbTLD}
+/usr/bin/rm -rf /srv/sns/${NAMESPACE}-${VerbTLD}
+EOS

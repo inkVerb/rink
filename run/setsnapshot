@@ -1,0 +1,23 @@
+#!/bin/bash
+#inkVerbRunner! verb.ink
+
+# This sets the new snapshot ID
+
+# How to use:
+## ./setsnapshot [ snapshotID ] [ nickname ]
+
+# Eg:
+## ./setsnapshot somelongkey laemp
+
+
+if [ -z "$2" ]; then
+  /usr/bin/echo "Needs snapshot ID & nickname as arguments, I quit."
+  exit 0
+fi
+
+NEWSnapshotID="$1"
+NICKNAME="$2"
+
+/usr/bin/cat <<EOF > /opt/rink/snapshotid/${NICKNAME}
+SnapshotID="$NEWSnapshotID"
+EOF

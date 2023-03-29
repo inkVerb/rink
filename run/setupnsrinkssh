@@ -1,0 +1,37 @@
+#!/bin/bash
+#inkVerbRunner! verb.ink
+
+# This creates ssh config entries for accessing NS rinks, and removes any old entries
+
+# How to use:
+## ./setupnsrinkssh
+
+
+# Include the configs
+. /opt/rink/portnum
+. /opt/verb/conf/servernameip
+. /opt/rink/sshkey
+
+# NS 1
+/usr/bin/sed -i '/ssh.ns1.conf/d' /root/.ssh/config
+/usr/bin/rm /opt/rink/conf/ssh.ns1.conf
+/usr/bin/echo "Include /opt/rink/conf/ssh.ns1.conf" >> /root/.ssh/config
+/usr/bin/cat <<EOF > /opt/rink/conf/ssh.ns1.conf
+host ns1 ${ServerRinkIPv4}
+hostname ${ServerRinkIPv4}
+user root
+port ${Port}
+IdentityFile /root/.ssh/${SSHKey}
+EOF
+
+# NS 2
+/usr/bin/sed -i '/ssh.ns2.conf/d' /root/.ssh/config
+/usr/bin/rm /opt/rink/conf/ssh.ns2.conf
+/usr/bin/echo "Include /opt/rink/conf/ssh.ns2.conf" >> /root/.ssh/config
+/usr/bin/cat <<EOF > /opt/rink/conf/ssh.ns2.conf
+host ns2 ${Server2RinkIPv4}
+hostname ${Server2RinkIPv4}
+user root
+port ${Port}
+IdentityFile /root/.ssh/${SSHKey}
+EOF

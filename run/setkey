@@ -1,0 +1,22 @@
+#!/bin/bash
+#inkVerbRunner! verb.ink
+
+# This sets the key used in accessing new servers
+
+# How to use:
+## ./setkey [key_name]
+
+# Eg:
+## ./setkey some_key
+
+
+if [ -z "$1" ]; then
+  /usr/bin/echo "Needs ssh key name as argument, I quit."
+  exit 0
+fi
+
+NEWKEY="$1"
+
+/usr/bin/cat <<EOF > /opt/rink/sshkey
+SSHKey="$NEWKEY"
+EOF

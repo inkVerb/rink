@@ -1,0 +1,96 @@
+#!/bin/bash
+#inkVerbRunner! verb.ink
+
+# This lists the NS records for a verber on the inkisaverb.com nameservers
+#DEV This should be deleted if everything works
+
+# How to use:
+## ./listdns [ verb-namespace ] [ verb-tld ] [ user ]
+
+# Eg:
+## ./listdns some_name ink john
+
+
+if [ -z "$3" ]; then
+  /usr/bin/echo "Needs namespace, TLD & user arguments, I quit."
+  exit 0
+fi
+
+NAMESPACE="$1"
+VerbTLD="$2"
+USER="$3"
+
+if [ ! -f "/opt/rink/conf/vrb.${NAMESPACE}.${VerbTLD}.conf" ]; then
+  /usr/bin/echo "${NAMESPACE}.${VerbTLD} does not exist! I quit."
+  exit 0
+fi
+
+if ! grep -q "VerbUser=\"$USER\"" "/opt/rink/conf/vrb.${NAMESPACE}.${VerbTLD}.conf"; then
+  /usr/bin/echo "${NAMESPACE}.${VerbTLD} not owned by user ${USER}! I quit."
+  exit 0
+fi
+
+# Verber config
+. /opt/rink/conf/vrb.${NAMESPACE}.${VerbTLD}.conf
+
+# Site config
+. /opt/verb/conf/siteurilist # Only for $hostURI
+if [ -f "/opt/verb/inst/domain.mod.conf" ]; then
+  . /opt/verb/inst/domain.mod.conf
+  VERBNSID="${VerbHostID}.${VerbTLD}.${DomModBase}"
+  emailURI="${NAMESPACE}.email.${DModBase}"
+  oneURI="${NAMESPACE}.one.${DModBase}"
+  inkURI="${NAMESPACE}.ink.${DModBase}"
+  blueURI="${NAMESPACE}.blue.${DModBase}"
+  vipURI="${NAMESPACE}.vip.${DModBase}"
+  kiwiURI="${NAMESPACE}.kiwi.${DModBase}"
+  redURI="${NAMESPACE}.red.${DModBase}"
+else
+  VERBNSID="${VerbHostID}.verb.${VerbTLD}"
+  emailURI="${NAMESPACE}.verb.email"
+  oneURI="${NAMESPACE}.verb.one"
+  inkURI="${NAMESPACE}.verb.ink"
+  blueURI="${NAMESPACE}.verb.blue"
+  vipURI="${NAMESPACE}.verb.vip"
+  kiwiURI="${NAMESPACE}.verb.kiwi"
+  redURI="${NAMESPACE}.verb.red"
+fi
+
+# Check if already added
+if /bin/grep -Fq "${VERBNSID}" /opt/verb/conf/inkdns/zones/db.${hostURI}; then
+/bin/echo "'${NAMESPACE}' has already been listed."
+exit 0; fi
+
+# Echo the records
+## NS records
+. /opt/verb/conf/inklists/inkdnsrinks
+/bin/echo "${emailURI}.  IN  NS  ${DefaultNS1}." >> /opt/verb/conf/inkdns/zones/db.${hostURI}
+/bin/echo "${emailURI}.  IN  NS  ${DefaultNS2}." >> /opt/verb/conf/inkdns/zones/db.${hostURI}
+/bin/echo "${oneURI}.  IN  NS  ${DefaultNS1}." >> /opt/verb/conf/inkdns/zones/db.${hostURI}
+/bin/echo "${oneURI}.  IN  NS  ${DefaultNS2}." >> /opt/verb/conf/inkdns/zones/db.${hostURI}
+/bin/echo "${inkURI}.  IN  NS  ${DefaultNS1}." >> /opt/verb/conf/inkdns/zones/db.${hostURI}
+/bin/echo "${inkURI}.  IN  NS  ${DefaultNS2}." >> /opt/verb/conf/inkdns/zones/db.${hostURI}
+/bin/echo "${blueURI}.  IN  NS  ${DefaultNS1}." >> /opt/verb/conf/inkdns/zones/db.${hostURI}
+/bin/echo "${blueURI}.  IN  NS  ${DefaultNS2}." >> /opt/verb/conf/inkdns/zones/db.${hostURI}
+/bin/echo "${vipURI}.  IN  NS  ${DefaultNS1}." >> /opt/verb/conf/inkdns/zones/db.${hostURI}
+/bin/echo "${vipURI}.  IN  NS  ${DefaultNS2}." >> /opt/verb/conf/inkdns/zones/db.${hostURI}
+/bin/echo "${kiwiURI}.  IN  NS  ${DefaultNS1}." >> /opt/verb/conf/inkdns/zones/db.${hostURI}
+/bin/echo "${kiwiURI}.  IN  NS  ${DefaultNS2}." >> /opt/verb/conf/inkdns/zones/db.${hostURI}
+/bin/echo "${redURI}.  IN  NS  ${DefaultNS1}." >> /opt/verb/conf/inkdns/zones/db.${hostURI}
+/bin/echo "${redURI}.  IN  NS  ${DefaultNS2}." >> /opt/verb/conf/inkdns/zones/db.${hostURI}
+#
+# ## db.DOM
+# /bin/echo "${VERBNSID}   IN  A      ${VerbIPv4}" >> /opt/verb/conf/inkdns/zones/db.${hostURI}
+# /bin/echo "${VERBNSID}   IN  AAAA   ${VerbIPv6}" >> /opt/verb/conf/inkdns/zones/db.${hostURI}
+# ## nv.DOM
+# /bin/echo "${VerbARPAIPv4}		IN  PTR  ${VERBNSID}" >> /opt/verb/conf/inkdns/zones/nv.${hostURI}
+# /bin/echo "${VerbARPAIPv6}		IN  PTR  ${VERBNSID}" >> /opt/verb/conf/inkdns/zones/nv.${hostURI}
+
+# Set the Serial No
+/opt/verb/serfs/inkdnsserial ${hostURI}
+
+# Refresh zones
+if [ -f "/opt/verb/conf/inkdnsconf" ]; then
+  . /opt/verb/conf/inkdnsconf
+  if [ "${InkDNSStat}" = "INSTALLED" ]; then
+/opt/verb/serfs/inkdnsrefreshbind; fi; fi

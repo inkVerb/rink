@@ -1,0 +1,51 @@
+#!/bin/bash
+#inkVerbRunner! verb.ink
+
+# This sends an ssh command an existing Vultr VPS, based on Verber namespace and TLD
+
+# How to use:
+## ./sshrun [ verb-namespace ] [ tld ] [ user ] [ BASH command - optional ]
+
+# Eg:
+## ./sshrun name ink john some long bash command
+## ./sshrun name ink john 'some command && next command'
+## ./sshrun name ink john "some command && next command"
+
+
+if [ -z "$3" ]; then
+  /usr/bin/echo "Needs namespace, TLD & user arguments, I quit."
+  exit 0
+fi
+
+NAMESPACE="$1"
+VerbTLD="$2"
+USER="$3"
+shift 3
+
+if [ ! -f "/opt/rink/conf/vrb.${NAMESPACE}.${VerbTLD}.conf" ]; then
+  /usr/bin/echo "${NAMESPACE}.${VerbTLD} does not exist! I quit."
+  exit 0
+fi
+
+if ! grep -q "VerbUser=\"$USER\"" "/opt/rink/conf/vrb.${NAMESPACE}.${VerbTLD}.conf"; then
+  /usr/bin/echo "${NAMESPACE}.${VerbTLD} not owned by user ${USER}! I quit."
+  exit 0
+fi
+
+if ! grep -q "Include /opt/rink/conf/ssh.${NAMESPACE}.${VerbTLD}.conf" /root/.ssh/config; then
+  /usr/bin/echo "Something is wrong. ${NAMESPACE}.${VerbTLD} config exists, but the entry is not made in the SSH config! I quit."
+  exit 0
+fi
+
+. /opt/rink/conf/vrb.${NAMESPACE}.${VerbTLD}.conf
+
+#DEV these keys should already be accepted
+# if [ -z "${FIRSTSSH}" ]; then
+#   /usr/bin/ssh -o StrictHostKeyChecking=accept-new ${NAMESPACE}.${VerbTLD} /usr/bin/cat /etc/ssh/ssh_host_dsa_key.pub >> /root/.ssh/known_hosts
+#   if [ "$?" = "0" ]; then
+#     /usr/bin/echo "FIRSTSSH=\"true\"" >> /opt/rink/conf/vrb.${NAMESPACE}.${VerbTLD}.conf
+#   fi
+# fi
+
+# Run the actual command
+/usr/bin/ssh -o StrictHostKeyChecking=yes ${NAMESPACE}.${VerbTLD} $*

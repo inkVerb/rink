@@ -1,0 +1,142 @@
+#!/bin/bash
+#inkVerbRunner! verb.ink
+
+# This creates SSH keys on a newly-creaed controlled verber and adds them to the NS rinks
+## This must be run AFTER verb/inst/preverboff (if applicable), but BEFORE verb/inst/setup on the new verber
+## This is used by addvps
+
+# How to use:
+## ./newverbrinkkeys [verb-namespace] [tld] [user]
+
+# Eg:
+## ./newverbrinkkeys name ink john
+
+
+if [ -z "$3" ]; then
+  /usr/bin/echo "Needs namespace, TLD & user arguments, I quit."
+  exit 0
+fi
+
+# Rink config
+. /opt/rink/rinknames
+
+NAMESPACE="$1"
+VerbTLD="$2"
+USER="$3"
+
+if [ ! -f "/opt/rink/conf/vrb.${NAMESPACE}.${VerbTLD}.conf" ]; then
+  /usr/bin/echo "${NAMESPACE}.${VerbTLD} does not exist! I quit."
+  exit 0
+fi
+
+if ! grep -q "VerbUser=\"$USER\"" "/opt/rink/conf/vrb.${NAMESPACE}.${VerbTLD}.conf"; then
+  /usr/bin/echo "${NAMESPACE}.${VerbTLD} not owned by user ${USER}! I quit."
+  exit 0
+fi
+
+. /opt/rink/conf/vrb.${NAMESPACE}.${VerbTLD}.conf
+
+#DEV these keys should already be accepted
+# if [ -z "${FIRSTSSH}" ]; then
+#   /usr/bin/-o StrictHostKeyChecking=accept-new ${NAMESPACE}.${VerbTLD} cat /etc/ssh/ssh_host_dsa_key.pub >> ~/.ssh/known_hosts
+#   if [ "$?" = "0" ]; then
+#     /usr/bin/echo "FIRSTSSH=\"true\"" >> /opt/rink/conf/vrb.${NAMESPACE}.${VerbTLD}.conf
+#   fi
+# fi
+
+# Setup on the controlled verber
+/usr/bin/ssh ${NAMESPACE}.${VerbTLD} "/usr/bin/ssh-keygen -t rsa -N '' -f /root/.ssh/Rink_${VerbTLD}_${NAMESPACE} -C Rink_${VerbTLD}_${NAMESPACE}"
+/usr/bin/ssh ${NAMESPACE}.${VerbTLD} /usr/bin/cat /root/.ssh/Rink_${VerbTLD}_${NAMESPACE}.pub > /opt/rink/tmp/Rink_${VerbTLD}_${NAMESPACE}.pub
+/usr/bin/ssh ${NAMESPACE}.${VerbTLD} /usr/bin/cat /opt/verb/conf/servertldstatus286 > /opt/rink/tmp/servertldstatus_${VerbTLD}_${NAMESPACE}
+
+## Include the configs
+. /opt/rink/portnum
+. /opt/verb/conf/servernameip
+. /opt/rink/sshkey
+. /opt/rink/conf/vrb.${NAMESPACE}.${VerbTLD}.conf
+
+## NS 1, NS 2, servernameip
+/usr/bin/ssh ${NAMESPACE}.${VerbTLD} <<EOS
+/usr/bin/touch /root/.ssh/config
+
+/usr/bin/sed -i '/ssh.ns1.conf/d' /root/.ssh/config
+/usr/bin/rm -f /root/.ssh/ssh.ns1.conf
+/usr/bin/echo 'Include /root/.ssh/ssh.ns1.conf' >> /root/.ssh/config
+/usr/bin/cat <<EOF > /root/.ssh/ssh.ns1.conf
+Host ns1
+Hostname ${ServerRinkIPv4}
+User ${NAMESPACE}-${VerbTLD}
+Port ${Port}
+IdentityFile /root/.ssh/Rink_${VerbTLD}_${NAMESPACE}
+EOF
+/usr/bin/echo "#ns1" >> /root/.ssh/known_hosts
+/usr/bin/ssh-keyscan -H -p ${Port} ${ServerRinkIPv4} >> /root/.ssh/known_hosts
+/usr/bin/echo "###ns1" >> /root/.ssh/known_hosts
+
+/usr/bin/sed -i '/ssh.ns2.conf/d' /root/.ssh/config
+/usr/bin/rm -f /root/.ssh/ssh.ns2.conf
+/usr/bin/echo 'Include /root/.ssh/ssh.ns2.conf' >> /root/.ssh/config
+/usr/bin/cat <<EOF > /root/.ssh/ssh.ns2.conf
+Host ns2
+Hostname ${Server2RinkIPv4}
+User ${NAMESPACE}-${VerbTLD}
+Port ${Port}
+IdentityFile /root/.ssh/Rink_${VerbTLD}_${NAMESPACE}
+EOF
+/usr/bin/echo "#ns2" >> /root/.ssh/known_hosts
+/usr/bin/ssh-keyscan -H -p ${Port} ${Server2RinkIPv4} >> /root/.ssh/known_hosts
+/usr/bin/echo "###ns2" >> /root/.ssh/known_hosts
+
+/usr/bin/chmod 700 /root/.ssh
+/usr/bin/chmod 644 /root/.ssh/Rink_${VerbTLD}_${NAMESPACE}.pub
+/usr/bin/chmod 600 /root/.ssh/Rink_${VerbTLD}_${NAMESPACE}
+/usr/bin/chmod 600 /root/.ssh/config
+/usr/bin/chmod 600 /root/.ssh/ssh.ns1.conf
+/usr/bin/chmod 600 /root/.ssh/ssh.ns2.conf
+
+/usr/bin/sed -i '/RinkConfigured=.*/d' /opt/verb/conf/servernameip286
+/usr/bin/echo 'RinkConfigured="true"' >> /opt/verb/conf/servernameip286
+EOS
+
+# Setup on the NS nameservers
+/usr/bin/ssh ${NS1Name}.ink <<EOS
+/usr/bin/groupadd ${NAMESPACE}-${VerbTLD}
+/usr/bin/useradd -g ${NAMESPACE}-${VerbTLD} ${NAMESPACE}-${VerbTLD}
+/usr/bin/mkdir -p /srv/sns/${NAMESPACE}-${VerbTLD}/.ssh /srv/sns/${NAMESPACE}-${VerbTLD}/calls /srv/sns/${NAMESPACE}-${VerbTLD}/domains
+/usr/bin/usermod -d /srv/sns/${NAMESPACE}-${VerbTLD} ${NAMESPACE}-${VerbTLD}
+/usr/bin/cat <<EOF > /srv/sns/${NAMESPACE}-${VerbTLD}/conf
+VerbIPv4="${VerbIPv4}"
+VerbIPv6="${VerbIPv6}"
+VerbIPv6Exp="${VerbIPv6Exp}"
+VerbARPAIPv4="${VerbARPAIPv4}"
+VerbARPAIPv6="${VerbARPAIPv6}"
+EOF
+/usr/bin/chown -R ${NAMESPACE}-${VerbTLD}:${NAMESPACE}-${VerbTLD} /srv/sns/${NAMESPACE}-${VerbTLD}
+/usr/bin/chmod 700 /srv/sns/${NAMESPACE}-${VerbTLD}/.ssh
+/usr/bin/chmod 600 /srv/sns/${NAMESPACE}-${VerbTLD}/.ssh/*
+EOS
+/usr/bin/ssh ${NS2Name}.ink <<EOS
+/usr/bin/groupadd ${NAMESPACE}-${VerbTLD}
+/usr/bin/useradd -g ${NAMESPACE}-${VerbTLD} ${NAMESPACE}-${VerbTLD}
+/usr/bin/mkdir -p /srv/sns/${NAMESPACE}-${VerbTLD}/.ssh /srv/sns/${NAMESPACE}-${VerbTLD}/calls /srv/sns/${NAMESPACE}-${VerbTLD}/domains
+/usr/bin/usermod -d /srv/sns/${NAMESPACE}-${VerbTLD} ${NAMESPACE}-${VerbTLD}
+/usr/bin/cat <<EOF > /srv/sns/${NAMESPACE}-${VerbTLD}/conf
+VerbIPv4="${VerbIPv4}"
+VerbIPv6="${VerbIPv6}"
+VerbIPv6Exp="${VerbIPv6Exp}"
+VerbARPAIPv4="${VerbARPAIPv4}"
+VerbARPAIPv6="${VerbARPAIPv6}"
+EOF
+/usr/bin/chown -R ${NAMESPACE}-${VerbTLD}:${NAMESPACE}-${VerbTLD} /srv/sns/${NAMESPACE}-${VerbTLD}
+/usr/bin/chmod 700 /srv/sns/${NAMESPACE}-${VerbTLD}/.ssh
+/usr/bin/chmod 600 /srv/sns/${NAMESPACE}-${VerbTLD}/.ssh/*
+EOS
+# we can't use ~/.ssh/authorized_keys because that is a relative file location set in sshd settings; the ~/.ssh/*.pub file will still work tho
+/usr/bin/cat /opt/rink/tmp/Rink_${VerbTLD}_${NAMESPACE}.pub | /usr/bin/ssh ${NS1Name}.ink "/usr/bin/cat > /srv/sns/${NAMESPACE}-${VerbTLD}/.ssh/Rink_${VerbTLD}_${NAMESPACE}.pub"
+/usr/bin/cat /opt/rink/tmp/Rink_${VerbTLD}_${NAMESPACE}.pub | /usr/bin/ssh ${NS2Name}.ink "/usr/bin/cat > /srv/sns/${NAMESPACE}-${VerbTLD}/.ssh/Rink_${VerbTLD}_${NAMESPACE}.pub"
+/usr/bin/cat /opt/rink/tmp/servertldstatus_${VerbTLD}_${NAMESPACE} | /usr/bin/ssh ${NS1Name}.ink "/usr/bin/cat > /srv/sns/${NAMESPACE}-${VerbTLD}/servertldstatus"
+/usr/bin/cat /opt/rink/tmp/servertldstatus_${VerbTLD}_${NAMESPACE} | /usr/bin/ssh ${NS2Name}.ink "/usr/bin/cat > /srv/sns/${NAMESPACE}-${VerbTLD}/servertldstatus"
+/usr/bin/ssh ${NS1Name}.ink "/usr/bin/chown -R ${NAMESPACE}-${VerbTLD}:${NAMESPACE}-${VerbTLD} /srv/sns/${NAMESPACE}-${VerbTLD}"
+/usr/bin/ssh ${NS2Name}.ink "/usr/bin/chown -R ${NAMESPACE}-${VerbTLD}:${NAMESPACE}-${VerbTLD} /srv/sns/${NAMESPACE}-${VerbTLD}"
+/usr/bin/rm -f /opt/rink/tmp/Rink_${VerbTLD}_${NAMESPACE}.pub
+/usr/bin/rm -f /opt/rink/tmp/servertldstatus_${VerbTLD}_${NAMESPACE}

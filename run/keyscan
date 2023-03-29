@@ -1,0 +1,60 @@
+#!/bin/bash
+#inkVerbRunner! verb.ink
+
+# This accepts and stores the remote key signature of a new IP
+## Run this just after creating a new server
+
+# How to use:
+## ./keyscan [ verb-namespace ] [ verb-tld ] [ -r - optional re-scan (if scan is already complete, but keys changed) ]
+
+# Eg:
+## ./keyscan name ink
+## ./keyscan name ink -r
+
+
+if [ -z "$1" ]; then
+  /usr/bin/echo "Need to know namespace and verb tld, I quit."
+  exit 0
+fi
+
+NAMESPACE="$1"
+VerbTLD="$2"
+
+if [ -f /opt/rink/conf/vrb.${NAMESPACE}.${VerbTLD}.conf ]; then
+  . /opt/rink/conf/vrb.${NAMESPACE}.${VerbTLD}.conf
+  # Re-scanning?
+  if [ -n "$3" ] && [ "$3" = "-r" ]; then
+    RESCAN="true"
+    # Remove any old identity keys based on our comment system (not necessary, but removes junk)
+    /usr/bin/sed -i "/${VerbIPv4}/d" /root/.ssh/known_hosts
+    /usr/bin/sed -i "/${VerbIPv6}/d" /root/.ssh/known_hosts
+    /usr/bin/sed -i "/^#${NAMESPACE}.${VerbTLD}/,/###${NAMESPACE}.${VerbTLD}/d" /root/.ssh/known_hosts
+  fi
+else
+  /usr/bin/echo "No such verber!"
+  exit 0
+fi
+
+if [ -z "${Keyscan}" ] || [ "${Keyscan}" != "DONE" ] || [ -n "${RESCAN}" ]; then
+  while [ ! -f "/opt/rink/conf/keyscanned.${NAMESPACE}.${VerbTLD}.conf" ]; do
+    # Use our comment system
+    /usr/bin/echo "#${NAMESPACE}.${VerbTLD}" >> /root/.ssh/known_hosts
+    # Three hashes is the writer's "final cookie"
+    /usr/bin/echo "$(/usr/bin/ssh-keyscan -H -p ${VerbPort} ${VerbIPv4}) ###${NAMESPACE}.${VerbTLD}" >> /root/.ssh/known_hosts
+    if [ "$?" != "0" ]; then
+      /usr/bin/sleep 1
+    else
+      /usr/bin/ssh -o StrictHostKeyChecking=yes -o ConnectTimeout=3 -q ${NAMESPACE}.${VerbTLD} "exit 0"
+      if [ "$?" != "0" ]; then
+        /usr/bin/sleep 1
+      else
+        /usr/bin/touch "/opt/rink/conf/keyscanned.${NAMESPACE}.${VerbTLD}.conf"
+      fi
+    fi
+  done
+  /usr/bin/rm "/opt/rink/conf/keyscanned.${NAMESPACE}.${VerbTLD}.conf"
+  /usr/bin/sed -i '/Keyscan=/d' /opt/rink/conf/vrb.${NAMESPACE}.${VerbTLD}.conf
+  /usr/bin/echo 'Keyscan="DONE"' >> /opt/rink/conf/vrb.${NAMESPACE}.${VerbTLD}.conf
+else
+  /usr/bin/echo "SSH keyscan already complete."
+fi

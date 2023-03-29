@@ -1,0 +1,34 @@
+#!/bin/bash
+#inkVerbRunner! verb.ink
+
+# This waits until a VPS is powered on according to the POWER STATUS from vultr-cli instance get
+
+# How to use:
+## ./waitvpson [verb-namespace] [tld]
+
+# Eg:
+## ./waitvpson name ink
+
+
+if [ -z "$2" ]; then
+  /usr/bin/echo "Needs namespace & TLDarguments, I quit."
+  exit 0
+fi
+
+NAMESPACE="$1"
+VerbTLD="$2"
+
+if [ ! -f "/opt/rink/conf/vrb.${NAMESPACE}.${VerbTLD}.conf" ]; then
+  /usr/bin/echo "${NAMESPACE}.${VerbTLD} does not exist! I quit."
+  exit 0
+fi
+
+
+. /opt/rink/conf/vrb.${NAMESPACE}.${VerbTLD}.conf
+
+# Wait for powerup
+POWERSTATUS="$(/usr/bin/vultr-cli instance get $VultrInstanceID | /usr/bin/grep '^POWER STATUS' | /usr/bin/sed s"/POWER STATUS\t\t//")"
+while [ "$POWERSTATUS" != "running" ]; do
+  sleep 5
+  POWERSTATUS="$(/usr/bin/vultr-cli instance get $VultrInstanceID | /usr/bin/grep '^POWER STATUS' | /usr/bin/sed s"/POWER STATUS\t\t//")"
+done

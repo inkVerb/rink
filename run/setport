@@ -1,0 +1,22 @@
+#!/bin/bash
+#inkVerbRunner! verb.ink
+
+# This sets the default port if it is not being argued
+
+# How to use:
+## ./setport [port]
+
+# Eg:
+## ./setport 1222
+
+
+if [ -z "$1" ]; then
+  /usr/bin/echo "Needs snapshot port number as argument, I quit."
+  exit 0
+fi
+
+NEWPort="$1"
+
+/usr/bin/cat <<EOF > /opt/rink/portnum
+Port="$NEWPort"
+EOF

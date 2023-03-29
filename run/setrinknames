@@ -1,0 +1,116 @@
+#!/bin/bash
+#inkVerbRunner! verb.ink
+
+# This sets the domains and hosts for the Rink and NS servers
+## The host for the Rink must be the same as the actual server or this won't work
+
+# How to use:
+## ./setrinknames [ domain.tld ] [ rink_host ] [ rink_host ] [ ns1_host ] [ ns2_host ] [ Rink_IP4 ] [ Rink_IP6 ] [ Rink_namespace ] [ NS1_namespace ] [ NS2_namespace ] [ PHP Timezone ] [ Default Vultr region ] [ update repo - optional default inkverb/verb-update ]
+
+# Eg:
+## ./setrinknames inkisaverb.com ink rink ns1 ns2 444.444.444.444 11:0:0:11 rink1 name1 name2 America/Los_Angeles sjc # Rink: rink.inkisaverb.com NS1: ns1.inkisaverb.com NS2: ns2.inkisaverb.com
+## Note rink.inkisaverb.com must be the FQDN for the Rink server!
+
+
+if [ -z "${11}" ]; then
+  /usr/bin/echo "Must have all arguments set, read instructions"
+  exit 0
+fi
+
+RinkDomain="$1"
+RinkVerbTLD="$2"
+RinkHost="$3"
+NS1Host="$4"
+NA2Host="$5"
+RinkIPv4="$6"
+RinkIPv6="$7"
+RinkName="$8"
+NS1Name="$9"
+NS2Name="${10}"
+TimeZone="${11}"
+TimeZone1="${12}"
+TimeZone2="${13}"
+VultrRegion="${14}"
+VultrRegion1="${15}"
+VultrRegion2="${16}"
+DfaultNSSnapshotID="${17}"
+UpdateRepo="${18}"
+UpdateOrg="${19}"
+
+if  /usr/bin/grep -q "^${TimeZone}" /opt/verb/ink/PHPcities && /usr/bin/grep -q "^${TimeZone1}" /opt/verb/ink/PHPcities && /usr/bin/grep -q "^${TimeZone2}" /opt/verb/ink/PHPcities; then
+  /usr/bin/echo "Timezones: NS1 = ${TimeZone1}; NS2 = ${TimeZone2}; NS3 = ${TimeZone}"
+else
+  /usr/bin/echo "Must set timezone for PHP, read instructions
+To see available timezones, run: cat /opt/verb/ink/PHPcities"
+  exit 0
+fi
+if /usr/bin/grep -q "^${VultrRegion}" /opt/rink/VultrRegions && /usr/bin/grep -q "^${VultrRegion1}" /opt/rink/VultrRegions && /usr/bin/grep -q "^${VultrRegion2}" /opt/rink/VultrRegions; then
+  /usr/bin/echo "Regions: NS1 = ${VultrRegion1}; NS2 = ${VultrRegion2}; NS3 = ${VultrRegion}"
+else
+  /usr/bin/echo "Must set region for Vultr, read instructions
+To see available Vultr regions, run: cat /opt/rink/run/VultrRegions"
+  exit 0
+fi
+if [ -f "/opt/rink/snapshotid/${DfaultNSSnapshotID}"  ]; then
+  /usr/bin/echo "NS snapshot: ${DfaultNSSnapshotID}"
+else
+   /usr/bin/echo "Must set default NS snapshot for Vultr, read instructions
+To see available Vultr rink snapshots, run: ls /opt/rink/snapshotid
+Set default snapshot with: /opt/rink/run/setsnapshot"
+  exit 0
+fi
+
+# Defaults for repo
+if [ -z "${18}" ]; then
+  UpdateRepo="verb-update"
+fi
+
+if [ -z "${19}" ]; then
+  UpdateOrg="inkverb"
+fi
+
+# Validate VerbTLD
+VerbTLDs=( one ink email blue kiwi red vip )
+isVerbTLD() {
+local verbTLD="$1"
+local vvar="$2"
+if [[ "${VerbTLDs[*]}" =~ "${verbTLD}" ]]; then
+isVerbTLD="true"; else
+isVerbTLD="false"; fi
+
+if [ "$3" != "n" ] && [ "${isVerbTLD}" = "false" ]; then
+/bin/echo "${vvar} must a valid verb TLD: ${VerbTLDs[*]}"
+exit 0; fi
+}
+isVerbTLD "${RinkVerbTLD}" "Nameserver verb TLD"
+
+# Create config
+/usr/bin/cat <<EOF > /opt/rink/rinknames
+RinkDomain="$RinkDomain"
+RinkVerbTLD="$RinkVerbTLD"
+RinkHost="$RinkHost"
+NS1Host="$NS1Host"
+NA2Host="$NA2Host"
+RinkIPv4="$RinkIPv4"
+RinkIPv6="$RinkIPv6"
+RinkName="$RinkName"
+NS1Name="$NS1Name"
+NS2Name="$NS2Name"
+TimeZone="$TimeZone"
+TimeZone1="$TimeZone1"
+TimeZone2="$TimeZone2"
+VultrRegion="$VultrRegion"
+VultrRegion1="$VultrRegion1"
+VultrRegion2="$VultrRegion2"
+DfaultNSSnapshotID="$DfaultNSSnapshotID"
+UpdateRepo="$UpdateRepo"
+UpdateOrg="$UpdateOrg"
+EOF
+
+# Finish
+if [ "$?" = "0" ]; then
+  /usr/bin/echo "Everything is set up"
+else
+  /usr/bin/echo "COuld not write 'rinknames' setting file"
+  exit 0
+fi

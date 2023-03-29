@@ -1,0 +1,87 @@
+#!/bin/bash
+#inkVerbRunner! verb.ink
+
+# This de-lists the NS records for a verber from the inkisaverb.com nameservers, which were listed in addvps by the rink ordering the verber to run rinkupdateallverbs
+# How to use:
+## ./killdns [ verb-namespace ] [ verb-tld ] [ user ]
+
+# Eg:
+## ./killdns name ink john
+
+
+if [ -z "$3" ]; then
+  /usr/bin/echo "Needs namespace, TLD & user arguments, I quit."
+  exit 0
+fi
+
+NAMESPACE="$1"
+VerbTLD="$2"
+USER="$3"
+
+if [ ! -f "/opt/rink/conf/vrb.${NAMESPACE}.${VerbTLD}.conf" ]; then
+  /usr/bin/echo "${NAMESPACE}.${VerbTLD} does not exist! I quit."
+  exit 0
+fi
+
+if ! grep -q "VerbUser=\"$USER\"" "/opt/rink/conf/vrb.${NAMESPACE}.${VerbTLD}.conf"; then
+  /usr/bin/echo "${NAMESPACE}.${VerbTLD} not owned by user ${USER}! I quit."
+  exit 0
+fi
+
+if [ ! -f "/opt/rink/rinknames" ]; then
+  echo "Must be setup with setuprinkns first"
+  exit 0
+fi
+
+# Get our Rink-NS name settings
+. /opt/rink/rinknames
+
+# Verber config
+. /opt/rink/conf/vrb.${NAMESPACE}.${VerbTLD}.conf
+
+# Generate the URI list
+if [ -f "/opt/verb/inst/domain.mod.conf" ]; then
+  . /opt/verb/inst/domain.mod.conf
+  emailURI="${NAMESPACE}.email.${DModBase}"
+  oneURI="${NAMESPACE}.one.${DModBase}"
+  inkURI="${NAMESPACE}.ink.${DModBase}"
+  blueURI="${NAMESPACE}.blue.${DModBase}"
+  vipURI="${NAMESPACE}.vip.${DModBase}"
+  kiwiURI="${NAMESPACE}.kiwi.${DModBase}"
+  redURI="${NAMESPACE}.red.${DModBase}"
+else
+  emailURI="${NAMESPACE}.verb.email"
+  oneURI="${NAMESPACE}.verb.one"
+  inkURI="${NAMESPACE}.verb.ink"
+  blueURI="${NAMESPACE}.verb.blue"
+  vipURI="${NAMESPACE}.verb.vip"
+  kiwiURI="${NAMESPACE}.verb.kiwi"
+  redURI="${NAMESPACE}.verb.red"
+fi
+
+# De-list the NS records
+/usr/bin/ssh -o StrictHostKeyChecking=yes ${NS1Name}.ink /opt/verb/serfs/killinkdnsslavedns ${emailURI}
+/usr/bin/ssh -o StrictHostKeyChecking=yes ${NS2Name}.ink /opt/verb/serfs/killinkdnsslavedns ${emailURI}
+/usr/bin/ssh -o StrictHostKeyChecking=yes ${NS1Name}.ink /opt/verb/serfs/killinkdnsslavedns ${oneURI}
+/usr/bin/ssh -o StrictHostKeyChecking=yes ${NS2Name}.ink /opt/verb/serfs/killinkdnsslavedns ${oneURI}
+/usr/bin/ssh -o StrictHostKeyChecking=yes ${NS1Name}.ink /opt/verb/serfs/killinkdnsslavedns ${inkURI}
+/usr/bin/ssh -o StrictHostKeyChecking=yes ${NS2Name}.ink /opt/verb/serfs/killinkdnsslavedns ${inkURI}
+/usr/bin/ssh -o StrictHostKeyChecking=yes ${NS1Name}.ink /opt/verb/serfs/killinkdnsslavedns ${blueURI}
+/usr/bin/ssh -o StrictHostKeyChecking=yes ${NS2Name}.ink /opt/verb/serfs/killinkdnsslavedns ${blueURI}
+/usr/bin/ssh -o StrictHostKeyChecking=yes ${NS1Name}.ink /opt/verb/serfs/killinkdnsslavedns ${vipURI}
+/usr/bin/ssh -o StrictHostKeyChecking=yes ${NS2Name}.ink /opt/verb/serfs/killinkdnsslavedns ${vipURI}
+/usr/bin/ssh -o StrictHostKeyChecking=yes ${NS1Name}.ink /opt/verb/serfs/killinkdnsslavedns ${kiwiURI}
+/usr/bin/ssh -o StrictHostKeyChecking=yes ${NS2Name}.ink /opt/verb/serfs/killinkdnsslavedns ${kiwiURI}
+/usr/bin/ssh -o StrictHostKeyChecking=yes ${NS1Name}.ink /opt/verb/serfs/killinkdnsslavedns ${redURI}
+/usr/bin/ssh -o StrictHostKeyChecking=yes ${NS2Name}.ink /opt/verb/serfs/killinkdnsslavedns ${redURI}
+
+# Set the Serial No
+#DEV This may be legacy dev and not necessary since ns*.inkisaverb.com NS servers are handled manually
+# . /opt/verb/conf/siteurilist
+# /opt/verb/serfs/inkdnsserial ${hostURI}
+
+# Refresh zones
+if [ -f "/opt/verb/conf/inkdnsconf" ]; then
+  . /opt/verb/conf/inkdnsconf
+  if [ "${InkDNSStat}" = "INSTALLED" ]; then
+/opt/verb/serfs/inkdnsrefreshbind; fi; fi

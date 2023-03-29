@@ -1,0 +1,19 @@
+#!/bin/bash
+#inkVerbRunner! verb.ink
+
+# This updates the runners
+
+# How to use:
+## ./updaterun
+
+cd /opt/rink
+/usr/bin/git clone https://github.com/inkverb/rink
+if [ "$?" != "0" ]; then
+  /usr/bin/echo "git clone failed, I quit."
+  exit 0;
+fi
+
+/usr/bin/rm -f /opt/rink/run/*
+/usr/bin/mv /opt/rink/rink/run/* /opt/rink/run/
+/usr/bin/rm -rf /opt/rink/rink
+/bin/chmod 750 /opt/rink/run/*

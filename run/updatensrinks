@@ -1,0 +1,22 @@
+#!/bin/bash
+#inkVerbRunner! verb.ink
+
+# This runs updateverber on the other two NS rinks and this one
+
+# How to use:
+## ./updatensrinks
+
+
+/opt/verb/serfs/updateverber
+echo "
+Rink: This rink is up to date!
+"
+. /opt/rink/rinknames
+/usr/bin/ssh -o StrictHostKeyChecking=yes ink.${NS1Name} /opt/verb/serfs/updateverber
+echo "
+Rink: NS1 is up to date!
+"
+/usr/bin/ssh -o StrictHostKeyChecking=yes ink.${NS2Name} /opt/verb/serfs/updateverber
+echo "
+Rink: NS2 is up to date!
+"

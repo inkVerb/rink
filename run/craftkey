@@ -1,0 +1,22 @@
+#!/bin/bash
+#inkVerbRunner! verb.ink
+
+# This crafts a new ssh key used in accessing servers
+
+# How to use:
+## ./craftkey [key_name]
+
+# Eg:
+## ./craftkey some_key
+
+
+if [ -z "$1" ]; then
+  /usr/bin/echo "Needs ssh key name as argument, I quit."
+  exit 0
+fi
+
+NEWKEY="$1"
+
+/usr/bin/ssh-keygen -t rsa -N "" -f ~/.ssh/${NEWKEY}
+
+/usr/bin/echo "New ssh key created: ${NEWKEY}"

@@ -1,0 +1,56 @@
+#!/bin/bash
+#inkVerbRunner! verb.ink
+
+# This destroys an existing Vultr VPS, based on Verber namespace and TLD
+
+# How to use:
+## ./killvps [verb-namespace] [tld] [user]
+
+# Eg:
+## ./killvps name ink john
+
+
+if [ -z "$3" ]; then
+  /usr/bin/echo "Needs namespace, TLD & user arguments, I quit."
+  exit 0
+fi
+
+NAMESPACE="$1"
+VerbTLD="$2"
+USER="$3"
+
+if [ ! -f "/opt/rink/conf/vrb.${NAMESPACE}.${VerbTLD}.conf" ]; then
+  /usr/bin/echo "${NAMESPACE}.${VerbTLD} does not exist! I quit."
+  exit 0
+fi
+
+if ! grep -q "VerbUser=\"$USER\"" "/opt/rink/conf/vrb.${NAMESPACE}.${VerbTLD}.conf"; then
+  /usr/bin/echo "${NAMESPACE}.${VerbTLD} not owned by user ${USER}! I quit."
+  exit 0
+fi
+
+# Config
+. /opt/rink/conf/vrb.${NAMESPACE}.${VerbTLD}.conf
+
+# Check
+if [ "$?" != "0" ]; then
+  /usr/bin/echo "Could not be destroyed! Something's wrong. If you recently created this server, wait a few minutes and try again."
+  exit 0
+fi
+
+# Remove from known_hosts
+[[ -n "${VerbIPv4}" ]] && [[ -n "${VerbPort}" ]] && /usr/bin/sed -i "/\[${VerbIPv4}\]:${VerbPort}/d" /root/.ssh/known_hosts
+[[ -n "${VerbIPv4}" ]] && /usr/bin/sed -i "/${VerbIPv4}/d" /root/.ssh/known_hosts
+
+
+# De-list the NS records
+/opt/rink/run/killdns ${NAMESPACE} ${VerbTLD} ${USER}
+
+# Remove pub SSH keys from verber
+/opt/rink/run/killverbrinkkeys ${NAMESPACE} ${VerbTLD} ${USER}
+
+# Remove other 
+kilverberrecords ${NAMESPACE} ${VerbTLD} ${USER}
+
+# Destroy it
+/usr/bin/vultr-cli instance delete ${VultrInstanceID}
