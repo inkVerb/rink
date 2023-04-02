@@ -21,7 +21,6 @@ if [ -f "/opt/rink/.configured" ]; then
 fi
 
 # Configs
-. /opt/verb/conf/servernameip
 . /opt/rink/rinknames
 . /opt/rink/portnum
 
@@ -55,6 +54,9 @@ if [ ! -f "/opt/rink/waitnsfinish" ]; then
   /usr/bin/touch /opt/rink/waitnsfinish
   /usr/bin/echo "Waiting for NS servers to finish creation; re-run this script if it times-out to continue from this stage"
 fi
+
+# Rink config (now we know its ready)
+. /opt/verb/conf/servernameip
 
 # NS1
 if [ ! -f "/opt/rink/ns1done" ]; then
