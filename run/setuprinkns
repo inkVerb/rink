@@ -66,7 +66,7 @@ if [ ! -f "/opt/rink/ns1done" ]; then
   /opt/rink/run/waitvpson ${NS1Name} ink
   #DEV keyscan is a native part of newvps
   # while [ ! -f "/opt/rink/ns1added" ]; do
-  #   /opt/rink/run/keyscan ${NAMESPACE} ${VerbTLD}
+  #   /opt/rink/run/keyscan ${namespace} ${VerbTLD}
   #   #/usr/bin/ssh-keyscan -H -p ${VerbPort} ${VerbIPv4} >> /root/.ssh/known_hosts
   #   wait
   #   if [ "$?" != "0" ]; then
@@ -96,7 +96,7 @@ if [ ! -f "/opt/rink/ns2done" ]; then
   /opt/rink/run/waitvpson ${NS2Name} ink
   #DEV keyscan is a native part of newvps
   # while [ ! -f "/opt/rink/ns2added" ]; do
-  #   /opt/rink/run/keyscan ${NAMESPACE} ${VerbTLD}
+  #   /opt/rink/run/keyscan ${namespace} ${VerbTLD}
   #   #/usr/bin/ssh-keyscan -H -p ${VerbPort} ${VerbIPv4} >> /root/.ssh/known_hosts
   #   wait
   #   if [ "$?" != "0" ]; then

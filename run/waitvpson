@@ -15,19 +15,26 @@ if [ -z "$2" ]; then
   exit 0
 fi
 
-NAMESPACE="$1"
+namespace="$1"
 VerbTLD="$2"
 
-if [ ! -f "/opt/rink/conf/vrb.${NAMESPACE}.${VerbTLD}.conf" ]; then
-  /usr/bin/echo "${NAMESPACE}.${VerbTLD} does not exist! I quit."
+if [ ! -f "/opt/rink/conf/vrb.${namespace}.${VerbTLD}.conf" ]; then
+  /usr/bin/echo "${namespace}.${VerbTLD} does not exist! I quit."
   exit 0
 fi
 
-. /opt/rink/conf/vrb.${NAMESPACE}.${VerbTLD}.conf
+. /opt/rink/conf/vrb.${namespace}.${VerbTLD}.conf
 
 # Wait for powerup
-POWERSTATUS="$(/usr/bin/vultr-cli instance get $VultrInstanceID | /usr/bin/grep '^POWER STATUS' | /usr/bin/sed s"/POWER STATUS\t\t//")"
-while [ "$POWERSTATUS" != "running" ]; do
+count=0
+powerstatus="$(/usr/bin/vultr-cli instance get $VultrInstanceID | /usr/bin/grep '^POWER STATUS' | /usr/bin/sed s"/POWER STATUS\t\t//")"
+while [ "$powerstatus" != "running" ]; do
   sleep 5
-  POWERSTATUS="$(/usr/bin/vultr-cli instance get $VultrInstanceID | /usr/bin/grep '^POWER STATUS' | /usr/bin/sed s"/POWER STATUS\t\t//")"
+  powerstatus="$(/usr/bin/vultr-cli instance get $VultrInstanceID | /usr/bin/grep '^POWER STATUS' | /usr/bin/sed s"/POWER STATUS\t\t//")"
+    # If we have been trying 10 minutes, restart
+  if [ "$count" -gt "200" ]; then
+    /opt/rink/run/powercycle ${namespace} ${VerbTLD}
+    count=0
+  fi
+  ((count++))
 done

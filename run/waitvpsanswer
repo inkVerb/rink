@@ -16,26 +16,33 @@ if [ -z "$2" ]; then
   exit 0
 fi
 
-NAMESPACE="$1"
+namespace="$1"
 VerbTLD="$2"
 
-if [ ! -f "/opt/rink/conf/vrb.${NAMESPACE}.${VerbTLD}.conf" ]; then
-  /usr/bin/echo "${NAMESPACE}.${VerbTLD} does not exist! I quit."
+if [ ! -f "/opt/rink/conf/vrb.${namespace}.${VerbTLD}.conf" ]; then
+  /usr/bin/echo "${namespace}.${VerbTLD} does not exist! I quit."
   exit 0
 fi
 
 # Wait for powerup
-/usr/bin/ssh -o StrictHostKeyChecking=yes -o ConnectTimeout=3 ${NAMESPACE}.${VerbTLD} "exit 0" 1> /opt/rink/tmp/waiton.${NAMESPACE}.${VerbTLD} 2> /opt/rink/tmp/waiton.${NAMESPACE}.${VerbTLD}
-SSHEXIT="$?"
-/usr/bin/grep -q 'key' /opt/rink/tmp/waiton.${NAMESPACE}.${VerbTLD}
-GREPTEST="$?"
-while [ "${GREPTEST}" != "0" ] && [ "${SSHEXIT}" != "0" ]; do
+/usr/bin/ssh -o StrictHostKeyChecking=yes -o ConnectTimeout=3 ${namespace}.${VerbTLD} "exit 0" 1> /opt/rink/tmp/waiton.${namespace}.${VerbTLD} 2> /opt/rink/tmp/waiton.${namespace}.${VerbTLD}
+sshexit="$?"
+/usr/bin/grep -q 'key' /opt/rink/tmp/waiton.${namespace}.${VerbTLD}
+greptest="$?"
+count=0
+while [ "${greptest}" != "0" ] && [ "${sshexit}" != "0" ]; do
   sleep 3
-  /usr/bin/ssh -o StrictHostKeyChecking=yes -o ConnectTimeout=3 ${NAMESPACE}.${VerbTLD} "exit 0" 1> /opt/rink/tmp/waiton.${NAMESPACE}.${VerbTLD} 2> /opt/rink/tmp/waiton.${NAMESPACE}.${VerbTLD}
-  SSHEXIT="$?"
-  /usr/bin/grep -q 'key' /opt/rink/tmp/waiton.${NAMESPACE}.${VerbTLD}
-  GREPTEST="$?"
+  /usr/bin/ssh -o StrictHostKeyChecking=yes -o ConnectTimeout=3 ${namespace}.${VerbTLD} "exit 0" 1> /opt/rink/tmp/waiton.${namespace}.${VerbTLD} 2> /opt/rink/tmp/waiton.${namespace}.${VerbTLD}
+  sshexit="$?"
+  /usr/bin/grep -q 'key' /opt/rink/tmp/waiton.${namespace}.${VerbTLD}
+  greptest="$?"
+  # If we have been trying 10 minutes, restart
+  if [ "$count" -gt "200" ]; then
+    /opt/rink/run/powercycle ${namespace} ${VerbTLD}
+    count=0
+  fi
+  ((count++))
 done
 
 # Cleanup
-/usr/bin/rm -f /opt/rink/tmp/waiton.${NAMESPACE}.${VerbTLD}
+/usr/bin/rm -f /opt/rink/tmp/waiton.${namespace}.${VerbTLD}

@@ -1,0 +1,29 @@
+#!/bin/bash
+#inkVerbRunner! verb.ink
+
+# This runs the powercycle for a VPS regardless of its POWER STATUS
+
+# How to use:
+## ./powercycle [verb-namespace] [tld]
+
+# Eg:
+## ./powercycle name ink
+
+
+if [ -z "$2" ]; then
+  /usr/bin/echo "Needs namespace & TLDarguments, I quit."
+  exit 0
+fi
+
+namespace="$1"
+VerbTLD="$2"
+
+if [ ! -f "/opt/rink/conf/vrb.${namespace}.${VerbTLD}.conf" ]; then
+  /usr/bin/echo "${namespace}.${VerbTLD} does not exist! I quit."
+  exit 0
+fi
+
+. /opt/rink/conf/vrb.${namespace}.${VerbTLD}.conf
+
+# Run the powercycle
+/usr/bin/vultr-cli instance restart 1c1ee091-0bb2-4871-8f02-170e3f192bcc
