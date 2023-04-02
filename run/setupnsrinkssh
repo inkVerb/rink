@@ -17,8 +17,8 @@
 /usr/bin/rm /opt/rink/conf/ssh.ns1.conf
 /usr/bin/echo "Include /opt/rink/conf/ssh.ns1.conf" >> /root/.ssh/config
 /usr/bin/cat <<EOF > /opt/rink/conf/ssh.ns1.conf
-host ns1 ${ServerRinkIPv4}
-hostname ${ServerRinkIPv4}
+host ns1 ${ServerNS1IPv4}
+hostname ${ServerNS1IPv4}
 user root
 port ${Port}
 IdentityFile /root/.ssh/${SSHKey}
@@ -29,8 +29,8 @@ EOF
 /usr/bin/rm /opt/rink/conf/ssh.ns2.conf
 /usr/bin/echo "Include /opt/rink/conf/ssh.ns2.conf" >> /root/.ssh/config
 /usr/bin/cat <<EOF > /opt/rink/conf/ssh.ns2.conf
-host ns2 ${Server2RinkIPv4}
-hostname ${Server2RinkIPv4}
+host ns2 ${ServerNS2IPv4}
+hostname ${ServerNS2IPv4}
 user root
 port ${Port}
 IdentityFile /root/.ssh/${SSHKey}

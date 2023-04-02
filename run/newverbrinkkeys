@@ -64,13 +64,13 @@ fi
 /usr/bin/echo 'Include /root/.ssh/ssh.ns1.conf' >> /root/.ssh/config
 /usr/bin/cat <<EOF > /root/.ssh/ssh.ns1.conf
 Host ns1
-Hostname ${ServerRinkIPv4}
+Hostname ${ServerNS1IPv4}
 User ${NAMESPACE}-${VerbTLD}
 Port ${Port}
 IdentityFile /root/.ssh/Rink_${VerbTLD}_${NAMESPACE}
 EOF
 /usr/bin/echo "#ns1" >> /root/.ssh/known_hosts
-/usr/bin/ssh-keyscan -H -p ${Port} ${ServerRinkIPv4} >> /root/.ssh/known_hosts
+/usr/bin/ssh-keyscan -H -p ${Port} ${ServerNS1IPv4} >> /root/.ssh/known_hosts
 /usr/bin/echo "###ns1" >> /root/.ssh/known_hosts
 
 /usr/bin/sed -i '/ssh.ns2.conf/d' /root/.ssh/config
@@ -78,13 +78,13 @@ EOF
 /usr/bin/echo 'Include /root/.ssh/ssh.ns2.conf' >> /root/.ssh/config
 /usr/bin/cat <<EOF > /root/.ssh/ssh.ns2.conf
 Host ns2
-Hostname ${Server2RinkIPv4}
+Hostname ${ServerNS2IPv4}
 User ${NAMESPACE}-${VerbTLD}
 Port ${Port}
 IdentityFile /root/.ssh/Rink_${VerbTLD}_${NAMESPACE}
 EOF
 /usr/bin/echo "#ns2" >> /root/.ssh/known_hosts
-/usr/bin/ssh-keyscan -H -p ${Port} ${Server2RinkIPv4} >> /root/.ssh/known_hosts
+/usr/bin/ssh-keyscan -H -p ${Port} ${ServerNS2IPv4} >> /root/.ssh/known_hosts
 /usr/bin/echo "###ns2" >> /root/.ssh/known_hosts
 
 /usr/bin/chmod 700 /root/.ssh

@@ -367,11 +367,11 @@ EOS
 /usr/bin/cat <<EOF > /opt/verb/conf/inklists/inkdnsnameservers
 BaseHostNS="${RinkDomain}"
 DefaultNS1="${NS1Host}.${RinkDomain}"
-RinkNS1IPv4="${NS1ip4}"
-RinkNS1IPv6="${NS1ip6}"
+NameserverNS1IPv4="${NS1ip4}"
+NameserverNS1IPv6="${NS1ip6}"
 DefaultNS2="${NA2Host}.${RinkDomain}"
-RinkNS2IPv4="${NS2ip4}"
-RinkNS2IPv6="${NS2ip6}"
+NameserverNS2IPv4="${NS2ip4}"
+NameserverNS2IPv6="${NS2ip6}"
 EOF
 
 # Reboot NS servers
