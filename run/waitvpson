@@ -23,7 +23,6 @@ if [ ! -f "/opt/rink/conf/vrb.${NAMESPACE}.${VerbTLD}.conf" ]; then
   exit 0
 fi
 
-
 . /opt/rink/conf/vrb.${NAMESPACE}.${VerbTLD}.conf
 
 # Wait for powerup

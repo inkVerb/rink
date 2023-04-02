@@ -266,8 +266,8 @@ fi
 # Update the NS information on the imported verber
 /usr/bin/ssh ${NAMESPACE}.${VerbTLD} "/opt/verb/serfs/updateverber"
 /usr/bin/cat /opt/rink/inkdnsnameservers | /usr/bin/ssh ${NAMESPACE}.${VerbTLD} "/usr/bin/cat > /opt/verb/conf/inklists/inkdnsnameservers"
-/usr/bin/ssh ${NAMESPACE}.${VerbTLD} "/opt/verb/serfs/inkdnssetrink"
-/usr/bin/ssh ${NAMESPACE}.${VerbTLD} "/opt/verb/serfs/inkdnssetrink2"
+/usr/bin/ssh ${NAMESPACE}.${VerbTLD} "/opt/verb/serfs/inkdnssetns1"
+/usr/bin/ssh ${NAMESPACE}.${VerbTLD} "/opt/verb/serfs/inkdnssetns2"
 /usr/bin/ssh ${NAMESPACE}.${VerbTLD} "/opt/verb/serfs/inkdnsrefreshbind"
 
 # Rink user setup

@@ -127,14 +127,14 @@ NS2ip4="$VerbIPv4"
 NS2ip6="$VerbIPv6"
 ## Point the NS servers to each other
 ### NS1
-/usr/bin/ssh ${NS1Name}.${RinkVerbTLD} /opt/verb/serfs/inkdnssetrink "${NA2Host}.${RinkDomain}" "${NS2ip4}" "${NS2ip6}"
-/usr/bin/ssh ${NS1Name}.${RinkVerbTLD} /opt/verb/serfs/inkdnssetrink2 "${RinkHost}.${RinkDomain}" "${RinkIPv4}" "${RinkIPv6}"
+/usr/bin/ssh ${NS1Name}.${RinkVerbTLD} /opt/verb/serfs/inkdnssetns1 "${NA2Host}.${RinkDomain}" "${NS2ip4}" "${NS2ip6}"
+/usr/bin/ssh ${NS1Name}.${RinkVerbTLD} /opt/verb/serfs/inkdnssetns2 "${RinkHost}.${RinkDomain}" "${RinkIPv4}" "${RinkIPv6}"
 ### NS2
-/usr/bin/ssh ${NS2Name}.${RinkVerbTLD} /opt/verb/serfs/inkdnssetrink "${NS1Host}.${RinkDomain}" "${NS1ip4}" "${NS1ip6}"
-/usr/bin/ssh ${NS2Name}.${RinkVerbTLD} /opt/verb/serfs/inkdnssetrink2 "${RinkHost}.${RinkDomain}" "${RinkIPv4}" "${RinkIPv6}"
+/usr/bin/ssh ${NS2Name}.${RinkVerbTLD} /opt/verb/serfs/inkdnssetns1 "${NS1Host}.${RinkDomain}" "${NS1ip4}" "${NS1ip6}"
+/usr/bin/ssh ${NS2Name}.${RinkVerbTLD} /opt/verb/serfs/inkdnssetns2 "${RinkHost}.${RinkDomain}" "${RinkIPv4}" "${RinkIPv6}"
 ### This nameserver uses the normal other two, but must be set manually because it is a NS server via make-dns
-/opt/verb/serfs/inkdnssetrink "${NS1Host}.${RinkDomain}" "${NS1ip4}" "${NS1ip6}"
-/opt/verb/serfs/inkdnssetrink2 "${NA2Host}.${RinkDomain}" "${NS2ip4}" "${NS2ip6}"
+/opt/verb/serfs/inkdnssetns1 "${NS1Host}.${RinkDomain}" "${NS1ip4}" "${NS1ip6}"
+/opt/verb/serfs/inkdnssetns2 "${NA2Host}.${RinkDomain}" "${NS2ip4}" "${NS2ip6}"
 
 # Install DNS & Certs that DNS servers skip in setup
 ## Rink
@@ -191,7 +191,7 @@ VerbIPv4="${ServerIPv4}"
 VerbIPv6="${ServerIPv6}"
 VerbIPv6Exp="${ServerExpIPv6}"
 VerbARPAIPv4="${ServerARPAIPv4}"
-VerbARPAIPv6="${ServerARPAIPv6}
+VerbARPAIPv6="${ServerARPAIPv6}"
 EOF
 EOS
 ### NS2 on NS1

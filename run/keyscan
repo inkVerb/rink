@@ -36,6 +36,7 @@ else
 fi
 
 if [ -z "${Keyscan}" ] || [ "${Keyscan}" != "DONE" ] || [ -n "${RESCAN}" ]; then
+
   while [ ! -f "/opt/rink/conf/keyscanned.${NAMESPACE}.${VerbTLD}.conf" ]; do
     # Use our comment system
     /usr/bin/echo "#${NAMESPACE}.${VerbTLD}" >> /root/.ssh/known_hosts

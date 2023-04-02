@@ -270,7 +270,6 @@ fi
 /usr/bin/ssh -o StrictHostKeyChecking=no -o ConnectTimeout=3 -q ${NAMESPACE}.${VerbTLD} "/usr/bin/rm /etc/ssh/ssh_host_* && /usr/bin/ssh-keygen -A && /usr/bin/reboot"
 SSHRESETSTATUS="$?"
 while [ "$SSHRESETSTATUS" != "0" ]; do
-  /usr/bin/echo "newvps ssh-keygen loop reboot error: $SSHRESETSTATUS
   Waiting, then trying again..."
   sleep 3
   /usr/bin/ssh -o StrictHostKeyChecking=no -o ConnectTimeout=3 -q ${NAMESPACE}.${VerbTLD} "/usr/bin/rm -f /etc/ssh/ssh_host_* && /usr/bin/ssh-keygen -A && /usr/bin/reboot"
