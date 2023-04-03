@@ -56,7 +56,7 @@ fi
 . /opt/rink/conf/vrb.${namespace}.${VerbTLD}.conf
 
 ## NS 1, NS 2, servernameip
-/usr/bin/ssh ${namespace}.${VerbTLD} <<EOS
+/usr/bin/ssh -T ${namespace}.${VerbTLD} <<EOS
 /usr/bin/touch /root/.ssh/config
 
 /usr/bin/sed -i '/ssh.ns1.conf/d' /root/.ssh/config
@@ -99,7 +99,7 @@ EOF
 EOS
 
 # Setup on the NS nameservers
-/usr/bin/ssh ${NS1Name}.ink <<EOS
+/usr/bin/ssh -T ${NS1Name}.ink <<EOS
 /usr/bin/groupadd ${namespace}-${VerbTLD}
 /usr/bin/useradd -g ${namespace}-${VerbTLD} ${namespace}-${VerbTLD}
 /usr/bin/mkdir -p /srv/sns/${namespace}-${VerbTLD}/.ssh /srv/sns/${namespace}-${VerbTLD}/calls /srv/sns/${namespace}-${VerbTLD}/domains
@@ -117,7 +117,7 @@ EOF
 /usr/bin/chown -R ${namespace}-${VerbTLD}:${namespace}-${VerbTLD} /srv/sns/${namespace}-${VerbTLD}
 /usr/bin/chmod 700 /srv/sns/${namespace}-${VerbTLD}/.ssh
 EOS
-/usr/bin/ssh ${NS2Name}.ink <<EOS
+/usr/bin/ssh -T ${NS2Name}.ink <<EOS
 /usr/bin/groupadd ${namespace}-${VerbTLD}
 /usr/bin/useradd -g ${namespace}-${VerbTLD} ${namespace}-${VerbTLD}
 /usr/bin/mkdir -p /srv/sns/${namespace}-${VerbTLD}/.ssh /srv/sns/${namespace}-${VerbTLD}/calls /srv/sns/${namespace}-${VerbTLD}/domains

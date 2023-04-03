@@ -181,7 +181,7 @@ fi
 
 ## Dirs used by inkdnsaddslave
 ### Rink on NS1
-/usr/bin/ssh ${NS1Name}.${RinkVerbTLD} <<EOS
+/usr/bin/ssh -T ${NS1Name}.${RinkVerbTLD} <<EOS
 /usr/bin/mkdir -p /srv/sns/${RinkName}-${RinkVerbTLD}/domains /srv/sns/${RinkName}-${RinkVerbTLD}/calls
 /usr/bin/cat <<EOF > /srv/sns/${RinkName}-${RinkVerbTLD}/conf
 VerbHostID="${ServerHost}"
@@ -196,7 +196,7 @@ EOF
 EOS
 ### NS2 on NS1
 . /opt/rink/conf/vrb.${NS2Name}.${RinkVerbTLD}.conf
-/usr/bin/ssh ${NS1Name}.${RinkVerbTLD} <<EOS
+/usr/bin/ssh -T ${NS1Name}.${RinkVerbTLD} <<EOS
 /usr/bin/mkdir -p /srv/sns/${NS2Name}-${RinkVerbTLD}/domains /srv/sns/${NS2Name}-${RinkVerbTLD}/calls
 /usr/bin/cat <<EOF > /srv/sns/${NS2Name}-${RinkVerbTLD}/conf
 VerbHostID="${VerbHostID}"
@@ -210,7 +210,7 @@ VerbARPAIPv6="${VerbARPAIPv6}"
 EOF
 EOS
 ### Rink on NS2
-/usr/bin/ssh ${NS2Name}.${RinkVerbTLD} <<EOS
+/usr/bin/ssh -T ${NS2Name}.${RinkVerbTLD} <<EOS
 /usr/bin/mkdir -p /srv/sns/${RinkName}-${RinkVerbTLD}/domains /srv/sns/${RinkName}-${RinkVerbTLD}/calls
 /usr/bin/cat <<EOF > /srv/sns/${RinkName}-${RinkVerbTLD}/conf
 VerbHostID="${ServerHost}"
@@ -225,7 +225,7 @@ EOF
 EOS
 ### NS1 on NS2 
 . /opt/rink/conf/vrb.${NS1Name}.${RinkVerbTLD}.conf
-/usr/bin/ssh ${NS2Name}.${RinkVerbTLD} <<EOS
+/usr/bin/ssh -T ${NS2Name}.${RinkVerbTLD} <<EOS
 /usr/bin/mkdir -p /srv/sns/${NS1Name}-${RinkVerbTLD}/domains /srv/sns/${NS1Name}-${RinkVerbTLD}/calls
 /usr/bin/cat <<EOF > /srv/sns/${NS1Name}-${RinkVerbTLD}/conf
 VerbHostID="${VerbHostID}"
