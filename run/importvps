@@ -282,9 +282,8 @@ fi
 /usr/bin/ssh ${namespace}.${VerbTLD} "/usr/bin/cp -f /opt/verb/conf/servertldstatus /opt/verb/conf/servertldstatus286"
 /usr/bin/ssh ${namespace}.${VerbTLD} "/usr/bin/cp -f /opt/verb/conf/servernameip /opt/verb/conf/servernameip286"
 ## Create the actual rink keys and users
-/opt/rink/run/newverbrinkkeys name ink start
+/opt/rink/run/newverbrinkkeys ${namespace} ${VerbTLD} ${vuser}
 ## Restore this Verber for post-setop
-/usr/bin/ssh ${namespace}.${VerbTLD} "/usr/bin/sed -i '/RinkConfigured=.*/d' /opt/verb/conf/servernameip"
 /usr/bin/ssh ${namespace}.${VerbTLD} "/usr/bin/cat /opt/verb/conf/servernameip286 >> /opt/verb/conf/servernameip"
 /usr/bin/ssh ${namespace}.${VerbTLD} "/usr/bin/rm -f /opt/verb/conf/servernameip286"
 /usr/bin/ssh ${namespace}.${VerbTLD} "/usr/bin/rm -f /opt/verb/conf/servertldstatus286"
