@@ -135,11 +135,11 @@ EOF
 /usr/bin/chown -R ${namespace}-${VerbTLD}:${namespace}-${VerbTLD} /srv/sns/${namespace}-${VerbTLD}
 /usr/bin/chmod 700 /srv/sns/${namespace}-${VerbTLD}/.ssh
 EOS
-# we can't use ~/.ssh/authorized_keys because that is a relative file location set in sshd settings; the ~/.ssh/*.pub file will still work tho
-/usr/bin/cat /opt/rink/tmp/Rink_${VerbTLD}_${namespace}.pub | /usr/bin/ssh ${NS1Name}.ink "/usr/bin/cat > /srv/sns/${namespace}-${VerbTLD}/.ssh/Rink_${VerbTLD}_${namespace}.pub"
-/usr/bin/cat /opt/rink/tmp/Rink_${VerbTLD}_${namespace}.pub | /usr/bin/ssh ${NS2Name}.ink "/usr/bin/cat > /srv/sns/${namespace}-${VerbTLD}/.ssh/Rink_${VerbTLD}_${namespace}.pub"
-/usr/bin/ssh ${NS1Name}.ink "/usr/bin/chmod 600 /srv/sns/${namespace}-${VerbTLD}/.ssh/*"
-/usr/bin/ssh ${NS2Name}.ink "/usr/bin/chmod 600 /srv/sns/${namespace}-${VerbTLD}/.ssh/*"
+# Update user directories with settings and ssh keys
+/usr/bin/cat /opt/rink/tmp/Rink_${VerbTLD}_${namespace}.pub | /usr/bin/ssh ${NS1Name}.ink "/usr/bin/cat > /srv/sns/${namespace}-${VerbTLD}/.ssh/authorized_keys"
+/usr/bin/cat /opt/rink/tmp/Rink_${VerbTLD}_${namespace}.pub | /usr/bin/ssh ${NS2Name}.ink "/usr/bin/cat > /srv/sns/${namespace}-${VerbTLD}/.ssh/authorized_keys"
+/usr/bin/ssh ${NS1Name}.ink "/usr/bin/chmod 600 /srv/sns/${namespace}-${VerbTLD}/.ssh/authorized_keys"
+/usr/bin/ssh ${NS2Name}.ink "/usr/bin/chmod 600 /srv/sns/${namespace}-${VerbTLD}/.ssh/authorized_keys"
 /usr/bin/cat /opt/rink/tmp/servertldstatus_${VerbTLD}_${namespace} | /usr/bin/ssh ${NS1Name}.ink "/usr/bin/cat > /srv/sns/${namespace}-${VerbTLD}/servertldstatus"
 /usr/bin/cat /opt/rink/tmp/servertldstatus_${VerbTLD}_${namespace} | /usr/bin/ssh ${NS2Name}.ink "/usr/bin/cat > /srv/sns/${namespace}-${VerbTLD}/servertldstatus"
 /usr/bin/ssh ${NS1Name}.ink "/usr/bin/chown -R ${namespace}-${VerbTLD}:${namespace}-${VerbTLD} /srv/sns/${namespace}-${VerbTLD}"
