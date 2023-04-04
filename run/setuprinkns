@@ -223,7 +223,7 @@ VerbARPAIPv4="${ServerARPAIPv4}"
 VerbARPAIPv6="${ServerARPAIPv6}"
 EOF
 EOS
-### NS1 on NS2 
+### NS1 on NS2
 . /opt/rink/conf/vrb.${NS1Name}.${RinkVerbTLD}.conf
 /usr/bin/ssh -T ${NS2Name}.${RinkVerbTLD} <<EOS
 /usr/bin/mkdir -p /srv/sns/${NS1Name}-${RinkVerbTLD}/domains /srv/sns/${NS1Name}-${RinkVerbTLD}/calls
@@ -352,13 +352,21 @@ fi
 /opt/verb/serfs/inkdnsrefreshbind
 
 # Set the configured status on this rink and the NS nameservers
+## Domain hosting and email allowed on the Rink for interactive webapp and verb-level domains
+/usr/bin/sed -i 's/EmailAllowed=.*/EmailAllowed="YES"/' /opt/verb/conf/servernameip
+/usr/bin/sed -i 's/DomHostAllowed=.*/DomHostAllowed="YES"/' /opt/verb/conf/servernameip
 /usr/bin/sed -i '/RinkConfigured=.*/d' /opt/verb/conf/servernameip
 /usr/bin/echo 'RinkConfigured="rink"' >> /opt/verb/conf/servernameip
+## Nameservers are exclusively for DNS, not email or web hosting
 /usr/bin/ssh ${NS1Name}.${RinkVerbTLD} <<EOS
+/usr/bin/sed -i 's/EmailAllowed=.*/EmailAllowed="NO"/' /opt/verb/conf/servernameip
+/usr/bin/sed -i 's/DomHostAllowed=.*/DomHostAllowed="NO"/' /opt/verb/conf/servernameip
 /usr/bin/sed -i '/RinkConfigured=.*/d' /opt/verb/conf/servernameip
 /usr/bin/echo 'RinkConfigured="nameserver"' >> /opt/verb/conf/servernameip
 EOS
 /usr/bin/ssh ${NS2Name}.${RinkVerbTLD} <<EOS
+/usr/bin/sed -i 's/EmailAllowed=.*/EmailAllowed="NO"/' /opt/verb/conf/servernameip
+/usr/bin/sed -i 's/DomHostAllowed=.*/DomHostAllowed="NO"/' /opt/verb/conf/servernameip
 /usr/bin/sed -i '/RinkConfigured=.*/d' /opt/verb/conf/servernameip
 /usr/bin/echo 'RinkConfigured="nameserver"' >> /opt/verb/conf/servernameip
 EOS
