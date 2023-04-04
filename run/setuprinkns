@@ -399,8 +399,17 @@ cp /opt/verb/conf/inklists/inkdnsnameservers /opt/rink/inkdnsnameservers
 /usr/bin/echo "
 ###
 
+On this rink, order of verber setup is unique:
+1. reboot
+2. SSH as usual
+3. Install inkVmail first!
+  - inkVmail installer ('serfs/installinkvmail') (With no PO or Box webmail tool setup!)
+  - Ensure verb-level domains are hosted or parked across the namserver network
+  - inkCert for verb domains ('ink cert do -ma' or 'serfs/inkcertdole-all-verbs')
+  - Lastly, complete any setup actions for PO and Box webmail tools
+
 Cheers!
-Last step in this setup Rink: reboot"
+"
 
 # Cleanup
 /usr/bin/rm -f /opt/rink/ns1done
