@@ -25,9 +25,11 @@ fi
 
 # Make the NS nameserver entries
 /usr/bin/ssh ${NS1Name}.${RinkVerbTLD} /opt/verb/serfs/inkdnsaddslave ${RinkName}-${RinkVerbTLD} ${masterdomain} -n
-e="$?"; [[ "$e" = "0" ]] || /usr/bin/echo "addmasterdomain failed to add ${masterdomain} to NS1"; exit "$e"
+e="$?"; [[ "$e" = "0" ]] || exit "$e"
+/usr/bin/echo "addmasterdomain to added ${masterdomain} to NS1"
 /usr/bin/ssh ${NS2Name}.${RinkVerbTLD} /opt/verb/serfs/inkdnsaddslave ${RinkName}-${RinkVerbTLD} ${masterdomain} -n
-e="$?"; [[ "$e" = "0" ]] || /usr/bin/echo "addmasterdomain failed to add ${masterdomain} to NS2"; exit "$e"
+e="$?"; [[ "$e" = "0" ]] || exit "$e"
+/usr/bin/echo "addmasterdomain to added ${masterdomain} to NS2"
 
 #DEV Alternate version of above
 # /usr/bin/ssh ${NS1Name}.${RinkVerbTLD} <<EOS
