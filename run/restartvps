@@ -15,25 +15,25 @@ if [ -z "$3" ]; then
   exit 0
 fi
 
-NAMESPACE="$1"
+namespace="$1"
 VerbTLD="$2"
-USER="$3"
+vuser="$3"
 
-if [ ! -f "/opt/rink/conf/vrb.${NAMESPACE}.${VerbTLD}.conf" ]; then
-  /usr/bin/echo "${NAMESPACE}.${VerbTLD} does not exist! I quit."
+if [ ! -f "/opt/rink/conf/vrb.${namespace}.${VerbTLD}.conf" ]; then
+  /usr/bin/echo "${namespace}.${VerbTLD} does not exist! I quit."
   exit 0
 fi
 
-if ! grep -q "VerbUser=\"$USER\"" "/opt/rink/conf/vrb.${NAMESPACE}.${VerbTLD}.conf"; then
-  /usr/bin/echo "${NAMESPACE}.${VerbTLD} not owned by user ${USER}! I quit."
+if ! grep -q "VerbUser=\"$vuser\"" "/opt/rink/conf/vrb.${namespace}.${VerbTLD}.conf"; then
+  /usr/bin/echo "${namespace}.${VerbTLD} not owned by user ${vuser}! I quit."
   exit 0
 fi
 
-. /opt/rink/conf/vrb.${NAMESPACE}.${VerbTLD}.conf
+. /opt/rink/conf/vrb.${namespace}.${VerbTLD}.conf
 
 /usr/bin/echo "Restarting. This may take a few minutes..."
 
 /usr/bin/vultr-cli instance restart ${VultrInstanceID}
 
 # Finish
-/usr/bin/echo "${NAMESPACE}.${VerbTLD} restarted. It may take a few minutes for all services to become available."
+/usr/bin/echo "${namespace}.${VerbTLD} restarted. It may take a few minutes for all services to become available."

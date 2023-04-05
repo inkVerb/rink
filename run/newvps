@@ -122,31 +122,31 @@ VerbPort="${Port}"
 EOF
 
 # Get the first IP addresses
-FIRSTIP4PLACEHOLDER="$(/usr/bin/vultr-cli instance ipv4 list $VultrInstanceID | /usr/bin/grep main_ip | /usr/bin/sed 's/\s.*$//')"
-FIRSTIP6PLACEHOLDER="$(/usr/bin/vultr-cli instance ipv6 list $VultrInstanceID | /usr/bin/grep main_ip | /usr/bin/sed 's/\s.*$//')"
+FIRSTIPv4PLACEHOLDER="$(/usr/bin/vultr-cli instance ipv4 list $VultrInstanceID | /usr/bin/grep main_ip | /usr/bin/sed 's/\s.*$//')"
+FIRSTIPv6PLACEHOLDER="$(/usr/bin/vultr-cli instance ipv6 list $VultrInstanceID | /usr/bin/grep main_ip | /usr/bin/sed 's/\s.*$//')"
 
 # IP address
 /usr/bin/echo "New VPS instance ${namespace}.${VerbTLD} initiated. Waiting a few seconds for details to populate..."
 /usr/bin/sleep 5
 
-## Check the IP4 (Default until set: 0.0.0.0)
-IP4="$(/usr/bin/vultr-cli instance ipv4 list $VultrInstanceID | /usr/bin/grep main_ip | /usr/bin/sed 's/\s.*$//')"
-while [ "$IP4" = "0.0.0.0" ] || [ "$IP4" = "$FIRSTIP4PLACEHOLDER" ]; do
-  IP4="$(/usr/bin/vultr-cli instance ipv4 list $VultrInstanceID | /usr/bin/grep main_ip | /usr/bin/sed 's/\s.*$//')"
+## Check the IPv4 (Default until set: 0.0.0.0)
+IPv4="$(/usr/bin/vultr-cli instance ipv4 list $VultrInstanceID | /usr/bin/grep main_ip | /usr/bin/sed 's/\s.*$//')"
+while [ "$IPv4" = "0.0.0.0" ] || [ "$IPv4" = "$FIRSTIPv4PLACEHOLDER" ]; do
+  IPv4="$(/usr/bin/vultr-cli instance ipv4 list $VultrInstanceID | /usr/bin/grep main_ip | /usr/bin/sed 's/\s.*$//')"
   /usr/bin/sleep 1
 done
-/usr/bin/echo "IPv4: $IP4"
+/usr/bin/echo "IPv4: $IPv4"
 
-## Check the IP6 (Default until set is empty; a temp IP6 is set when the final IP4 is set, found with $FIRSTIP6PLACEHOLDER and $SECONDIP6PLACEHOLDER)
-SECONDIP6PLACEHOLDER="$(/usr/bin/vultr-cli instance ipv6 list $VultrInstanceID | /usr/bin/grep main_ip | /usr/bin/sed 's/\s.*$//')"
-IP6="$(/usr/bin/vultr-cli instance ipv6 list $VultrInstanceID | /usr/bin/grep main_ip | /usr/bin/sed 's/\s.*$//')"
+## Check the IPv6 (Default until set is empty; a temp IPv6 is set when the final IPv4 is set, found with $FIRSTIPv6PLACEHOLDER and $SECONDIPv6PLACEHOLDER)
+SECONDIPv6PLACEHOLDER="$(/usr/bin/vultr-cli instance ipv6 list $VultrInstanceID | /usr/bin/grep main_ip | /usr/bin/sed 's/\s.*$//')"
+IPv6="$(/usr/bin/vultr-cli instance ipv6 list $VultrInstanceID | /usr/bin/grep main_ip | /usr/bin/sed 's/\s.*$//')"
 counter=1
-while [ "$IP6" = "$FIRSTIP6PLACEHOLDER" ] || [ "$IP6" = "$SECONDIP6PLACEHOLDER" ] && [ "$counter" -lt "15" ]; do
-  IP6="$(/usr/bin/vultr-cli instance ipv6 list $VultrInstanceID | /usr/bin/grep main_ip | /usr/bin/sed 's/\s.*$//')"
+while [ "$IPv6" = "$FIRSTIPv6PLACEHOLDER" ] || [ "$IPv6" = "$SECONDIPv6PLACEHOLDER" ] && [ "$counter" -lt "15" ]; do
+  IPv6="$(/usr/bin/vultr-cli instance ipv6 list $VultrInstanceID | /usr/bin/grep main_ip | /usr/bin/sed 's/\s.*$//')"
   /usr/bin/sleep 1
   counter=$[$counter +1]
 done
-/usr/bin/echo "IPv6: $IP6"
+/usr/bin/echo "IPv6: $IPv6"
 
 ## IP processing
 ### Compress IPv6
@@ -231,18 +231,18 @@ rarpa_ipv6() {
   printf 'ip6.arpa\n'
 }
 
-IP6NEW=$(compress_ipv6 ${IP6})
-IP6EXP=$(expand_ipv6 ${IP6})
-IP4ARPA=$(/usr/bin/echo ${IP4} | sed -r 's/^([0-9]{1,3}).([0-9]{1,3}).([0-9]{1,3}).([0-9]{1,3})$/\4.\3.\2.\1.in-addr.arpa/')
-IP6ARPA=$(rarpa_ipv6 ${IP6EXP})
+IPv6New=$(compress_ipv6 ${IPv6})
+IPv6Exp=$(expand_ipv6 ${IPv6})
+IPv4ARPA=$(/usr/bin/echo ${IPv4} | sed -r 's/^([0-9]{1,3}).([0-9]{1,3}).([0-9]{1,3}).([0-9]{1,3})$/\4.\3.\2.\1.in-addr.arpa/')
+IPv6ARPA=$(rarpa_ipv6 ${IPv6Exp})
 
 ## Append IP addresses to config
 /usr/bin/cat <<EOF >> /opt/rink/conf/vrb.${namespace}.${VerbTLD}.conf
-VerbIPv4="${IP4}"
-VerbIPv6="${IP6NEW}"
-VerbIPv6Exp="${IP6EXP}"
-VerbARPAIPv4="${IP4ARPA}"
-VerbARPAIPv6="${IP6ARPA}"
+VerbIPv4="${IPv4}"
+VerbIPv6="${IPv6New}"
+VerbIPv6Exp="${IPv6Exp}"
+VerbARPAIPv4="${IPv4ARPA}"
+VerbARPAIPv6="${IPv6ARPA}"
 EOF
 
 # Create the .ssh/config entry
@@ -250,7 +250,7 @@ EOF
 /usr/bin/echo "Include /opt/rink/conf/ssh.${namespace}.${VerbTLD}.conf" >> /root/.ssh/config
 /usr/bin/cat <<EOF > /opt/rink/conf/ssh.${namespace}.${VerbTLD}.conf
 Host ${namespace}.${VerbTLD}
-Hostname ${IP4}
+Hostname ${IPv4}
 User root
 Port ${Port}
 IdentityFile /root/.ssh/${SSHKey}
@@ -285,7 +285,7 @@ while [ "$sshresetstatus" != "0" ]; do
 done
 
 # Remove the local server finkerfprint
-/usr/bin/sed -i "/${IP4}/d" /root/.ssh/known_hosts
+/usr/bin/sed -i "/${IPv4}/d" /root/.ssh/known_hosts
 
 # Add the hashed key
 sleep 10 # The server needs to start its reboot

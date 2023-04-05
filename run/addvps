@@ -22,9 +22,9 @@ fi
 # Get our Rink-NS name settings
 . /opt/rink/rinknames
 
-NAMESPACE="$1"
+namespace="$1"
 VerbTLD="$2"
-USER="$3"
+vuser="$3"
 
 # Import or new VPS?
 if [ "${4}" = "--import" ]; then
@@ -64,25 +64,25 @@ fi
 # New instances only: Create
 if [ "$IMPort" != "true" ]; then
   # Create the VPS
-  if [ ! -f "/opt/rink/conf/raw.${NAMESPACE}.${VerbTLD}.conf" ]; then
-    /opt/rink/run/newvps "$NAMESPACE" "$VerbTLD" "$USER" "$VULTRPLAN" "$SNAPNICK" "$VultrRegion" "$TimeZone"
+  if [ ! -f "/opt/rink/conf/raw.${namespace}.${VerbTLD}.conf" ]; then
+    /opt/rink/run/newvps "$namespace" "$VerbTLD" "$vuser" "$VULTRPLAN" "$SNAPNICK" "$VultrRegion" "$TimeZone"
     e="$?"; [[ "$e" = "0" ]] || exit "$e"
   fi
 
   # Check if finished right
-  if [ -f "/opt/rink/conf/raw.${NAMESPACE}.${VerbTLD}.conf" ]; then
-    if [ -f "/opt/rink/conf/vrb.${NAMESPACE}.${VerbTLD}.conf" ]; then
-      . /opt/rink/conf/vrb.${NAMESPACE}.${VerbTLD}.conf
+  if [ -f "/opt/rink/conf/raw.${namespace}.${VerbTLD}.conf" ]; then
+    if [ -f "/opt/rink/conf/vrb.${namespace}.${VerbTLD}.conf" ]; then
+      . /opt/rink/conf/vrb.${namespace}.${VerbTLD}.conf
     else
-      VultrInstanceID="$(/usr/bin/cat /opt/rink/conf/raw.${NAMESPACE}.${VerbTLD}.conf | /usr/bin/grep ^ID | /usr/bin/sed s"/ID\t\t\t//")"
+      VultrInstanceID="$(/usr/bin/cat /opt/rink/conf/raw.${namespace}.${VerbTLD}.conf | /usr/bin/grep ^ID | /usr/bin/sed s"/ID\t\t\t//")"
     fi
-    if ! /usr/bin/grep -q ^VerbIPv4 /opt/rink/conf/vrb.${NAMESPACE}.${VerbTLD}.conf || ! /usr/bin/grep -q "${VerbIPv4}" /opt/rink/conf/ssh.${NAMESPACE}.${VerbTLD}.conf; then
+    if ! /usr/bin/grep -q ^VerbIPv4 /opt/rink/conf/vrb.${namespace}.${VerbTLD}.conf || ! /usr/bin/grep -q "${VerbIPv4}" /opt/rink/conf/ssh.${namespace}.${VerbTLD}.conf; then
       /usr/bin/echo "Verber was not created correctly. Run this again to try again."
       datestamp="$(/usr/bin/date +%Y-%m-%d_%T)"
-      /usr/bin/mv /opt/rink/conf/vrb.${NAMESPACE}.${VerbTLD}.conf /opt/rink/destroyed/vrb.${USER}.${NAMESPACE}.${VerbTLD}.${datestamp}.conf
-      /usr/bin/mv /opt/rink/conf/raw.${NAMESPACE}.${VerbTLD}.conf /opt/rink/destroyed/raw.${USER}.${NAMESPACE}.${VerbTLD}.${datestamp}.conf
-      /usr/bin/rm -f /opt/rink/conf/ssh.${NAMESPACE}.${VerbTLD}.conf
-      /usr/bin/sed -i "/ssh.${NAMESPACE}.${VerbTLD}.conf/d" /root/.ssh/config
+      /usr/bin/mv /opt/rink/conf/vrb.${namespace}.${VerbTLD}.conf /opt/rink/destroyed/vrb.${vuser}.${namespace}.${VerbTLD}.${datestamp}.conf
+      /usr/bin/mv /opt/rink/conf/raw.${namespace}.${VerbTLD}.conf /opt/rink/destroyed/raw.${vuser}.${namespace}.${VerbTLD}.${datestamp}.conf
+      /usr/bin/rm -f /opt/rink/conf/ssh.${namespace}.${VerbTLD}.conf
+      /usr/bin/sed -i "/ssh.${namespace}.${VerbTLD}.conf/d" /root/.ssh/config
       /usr/bin/vultr-cli instance delete ${VultrInstanceID}
       exit 0
     fi
@@ -92,19 +92,19 @@ if [ "$IMPort" != "true" ]; then
   fi
 
   # Wait for powerup (waiting for restart from newvps) and for a bonafide response
-  /opt/rink/run/waitvpson ${NAMESPACE} ${VerbTLD}
-  /opt/rink/run/waitvpsanswer ${NAMESPACE} ${VerbTLD}
+  /opt/rink/run/waitvpson ${namespace} ${VerbTLD}
+  /opt/rink/run/waitvpsanswer ${namespace} ${VerbTLD}
 
 # Importing instance only
 elif [ "$IMPort" = "true" ]; then
-  /opt/rink/run/importvps "$NAMESPACE" "$VerbTLD" "$USER" "$VultrInstanceID"
+  /opt/rink/run/importvps "$namespace" "$VerbTLD" "$vuser" "$VultrInstanceID"
   e="$?"; [[ "$e" = "0" ]] || exit "$e"
 fi
 
 # Add the SSH key to known_hosts
 #DEV keyscan is a native part of newvps
-# if ! grep -q '^Keyscan="DONE"' "/opt/rink/conf/vrb.${NAMESPACE}.${VerbTLD}.conf"; then
-#   /opt/rink/run/keyscan ${NAMESPACE} ${VerbTLD}
+# if ! grep -q '^Keyscan="DONE"' "/opt/rink/conf/vrb.${namespace}.${VerbTLD}.conf"; then
+#   /opt/rink/run/keyscan ${namespace} ${VerbTLD}
 #   wait
 # fi
 
@@ -112,15 +112,15 @@ fi
 #DEV This was an older method in alpha stages
 #DEV The new methods has the verber list itself with rink* serfs
 #DEV Delete this and the listdns runner if everything works
-#/opt/rink/run/listdns ${NAMESPACE} ${VerbTLD}
+#/opt/rink/run/listdns ${namespace} ${VerbTLD}
 
 # Create new SSH keys on the new verber and install their pub keys on the NS servers
 ## This must go before verb/inst/setup or the server will deny access in post-setup ssh calls
-if ! grep -q '^RINKKEYS="DONE"' "/opt/rink/conf/vrb.${NAMESPACE}.${VerbTLD}.conf"; then
-  /opt/rink/run/newverbrinkkeys ${NAMESPACE} ${VerbTLD} ${USER}
+if ! grep -q '^RINKKEYS="DONE"' "/opt/rink/conf/vrb.${namespace}.${VerbTLD}.conf"; then
+  /opt/rink/run/newverbrinkkeys ${namespace} ${VerbTLD} ${vuser}
   e="$?"; [[ "$e" = "0" ]] || exit "$e"
   if [ "$?" = "0" ]; then
-    /usr/bin/echo 'RINKKEYS="DONE"' >> /opt/rink/conf/vrb.${NAMESPACE}.${VerbTLD}.conf
+    /usr/bin/echo 'RINKKEYS="DONE"' >> /opt/rink/conf/vrb.${namespace}.${VerbTLD}.conf
   fi
 fi
 
@@ -129,47 +129,47 @@ if [ "$IMPort" != "true" ]; then
   # Turn off certain verb domains?
   if [ -n "$verboff" ] && [ "$verboff" = "true" ]; then
     for $vdom in $@; do
-      /usr/bin/ssh ${NAMESPACE}.${VerbTLD} /opt/verb/inst/preverboff $vdom
+      /usr/bin/ssh ${namespace}.${VerbTLD} /opt/verb/inst/preverboff $vdom
     done
   fi
 
   # Serupverb
-  . /opt/rink/conf/vrb.${NAMESPACE}.${VerbTLD}.conf
-  if ! grep -q '^SETUPVERB="DONE"' "/opt/rink/conf/vrb.${NAMESPACE}.${VerbTLD}.conf"; then
+  . /opt/rink/conf/vrb.${namespace}.${VerbTLD}.conf
+  if ! grep -q '^SETUPVERB="DONE"' "/opt/rink/conf/vrb.${namespace}.${VerbTLD}.conf"; then
 
     # Site URIlist
     . /opt/verb/conf/siteurilist # Only for $hostURI
     if [ -f "/opt/verb/inst/domain.mod.conf" ]; then #DEV the domain mod has not yet been tested for Rink management
       . /opt/verb/inst/domain.mod.conf
-      /usr/bin/ssh ${NAMESPACE}.${VerbTLD} /opt/verb/serfs/make-dommod ${VerbHostID} ${DModBase}
+      /usr/bin/ssh ${namespace}.${VerbTLD} /opt/verb/serfs/make-dommod ${VerbHostID} ${DModBase}
     fi
-    /usr/bin/ssh ${NAMESPACE}.${VerbTLD} /opt/verb/serfs/setup ${NAMESPACE} ink email vip ${VerbHostID} ${VerbIPv4} ${VerbIPv6} cb@${RinkDomain} 100 1000 ${VultrRegion} ${Port} boss "$(/usr/bin/pwgen -s -1 16)" ${UpdateRepo} ${UpdateOrg}
+    /usr/bin/ssh ${namespace}.${VerbTLD} /opt/verb/serfs/setup ${namespace} ink email vip ${VerbHostID} ${VerbIPv4} ${VerbIPv6} cb@${RinkDomain} 100 1000 ${VultrRegion} ${Port} boss "$(/usr/bin/pwgen -s -1 16)" ${UpdateRepo} ${UpdateOrg}
     e="$?"; [[ "$e" = "0" ]] || exit "$e"
     if [ "$?" = "0" ]; then
-      /usr/bin/echo 'SETUPVERB="DONE"' >> /opt/rink/conf/vrb.${NAMESPACE}.${VerbTLD}.conf
+      /usr/bin/echo 'SETUPVERB="DONE"' >> /opt/rink/conf/vrb.${namespace}.${VerbTLD}.conf
     fi
   fi
 
   # Wait for sshd to reload (from the end of setup)
   /usr/bin/sleep 3
-  /opt/rink/run/waitvpsanswer ${NAMESPACE} ${VerbTLD}
+  /opt/rink/run/waitvpsanswer ${namespace} ${VerbTLD}
 fi
 
 # Update to latest NS servers
-if ! grep -q 'RINKKEYS="DONE"' "/opt/rink/conf/vrb.${NAMESPACE}.${VerbTLD}.conf"; then
-  /usr/bin/ssh ${NAMESPACE}.${VerbTLD} /opt/verb/serfs/rinkupdatekeys
+if ! grep -q 'RINKKEYS="DONE"' "/opt/rink/conf/vrb.${namespace}.${VerbTLD}.conf"; then
+  /usr/bin/ssh ${namespace}.${VerbTLD} /opt/verb/serfs/rinkupdatekeys
   e="$?"; [[ "$e" = "0" ]] || exit "$e"
   if [ "$?" = "0" ]; then
-    /usr/bin/echo 'RINKKEYS="DONE"' >> /opt/rink/conf/vrb.${NAMESPACE}.${VerbTLD}.conf
+    /usr/bin/echo 'RINKKEYS="DONE"' >> /opt/rink/conf/vrb.${namespace}.${VerbTLD}.conf
   fi
 fi
-if ! grep -q 'RINKVERBSNSLISTED="DONE"' "/opt/rink/conf/vrb.${NAMESPACE}.${VerbTLD}.conf"; then
-  /usr/bin/ssh ${NAMESPACE}.${VerbTLD} /opt/verb/serfs/rinkupdateallverbs
+if ! grep -q 'RINKVERBSNSLISTED="DONE"' "/opt/rink/conf/vrb.${namespace}.${VerbTLD}.conf"; then
+  /usr/bin/ssh ${namespace}.${VerbTLD} /opt/verb/serfs/rinkupdateallverbs
   e="$?"; [[ "$e" = "0" ]] || exit "$e"
   if [ "$?" = "0" ]; then
-    /usr/bin/echo 'RINKVERBSNSLISTED="DONE"' >> /opt/rink/conf/vrb.${NAMESPACE}.${VerbTLD}.conf
+    /usr/bin/echo 'RINKVERBSNSLISTED="DONE"' >> /opt/rink/conf/vrb.${namespace}.${VerbTLD}.conf
   fi
 fi
 
 # Restart the new Verber
-/usr/bin/ssh ${NAMESPACE}.${VerbTLD} /usr/bin/reboot
+/usr/bin/ssh ${namespace}.${VerbTLD} /usr/bin/reboot

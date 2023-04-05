@@ -17,35 +17,35 @@ if [ -z "$3" ]; then
   exit 0
 fi
 
-NAMESPACE="$1"
+namespace="$1"
 VerbTLD="$2"
-USER="$3"
+vuser="$3"
 shift 3
 
-if [ ! -f "/opt/rink/conf/vrb.${NAMESPACE}.${VerbTLD}.conf" ]; then
-  /usr/bin/echo "${NAMESPACE}.${VerbTLD} does not exist! I quit."
+if [ ! -f "/opt/rink/conf/vrb.${namespace}.${VerbTLD}.conf" ]; then
+  /usr/bin/echo "${namespace}.${VerbTLD} does not exist! I quit."
   exit 0
 fi
 
-if ! grep -q "VerbUser=\"$USER\"" "/opt/rink/conf/vrb.${NAMESPACE}.${VerbTLD}.conf"; then
-  /usr/bin/echo "${NAMESPACE}.${VerbTLD} not owned by user ${USER}! I quit."
+if ! grep -q "VerbUser=\"$vuser\"" "/opt/rink/conf/vrb.${namespace}.${VerbTLD}.conf"; then
+  /usr/bin/echo "${namespace}.${VerbTLD} not owned by user ${vuser}! I quit."
   exit 0
 fi
 
-if ! grep -q "Include /opt/rink/conf/ssh.${NAMESPACE}.${VerbTLD}.conf" /root/.ssh/config; then
-  /usr/bin/echo "Something is wrong. ${NAMESPACE}.${VerbTLD} config exists, but the entry is not made in the SSH config! I quit."
+if ! grep -q "Include /opt/rink/conf/ssh.${namespace}.${VerbTLD}.conf" /root/.ssh/config; then
+  /usr/bin/echo "Something is wrong. ${namespace}.${VerbTLD} config exists, but the entry is not made in the SSH config! I quit."
   exit 0
 fi
 
-. /opt/rink/conf/vrb.${NAMESPACE}.${VerbTLD}.conf
+. /opt/rink/conf/vrb.${namespace}.${VerbTLD}.conf
 
 #DEV these keys should already be accepted
 # if [ -z "${FIRSTSSH}" ]; then
-#   /usr/bin/ssh -o StrictHostKeyChecking=accept-new ${NAMESPACE}.${VerbTLD} /usr/bin/cat /etc/ssh/ssh_host_dsa_key.pub >> /root/.ssh/known_hosts
+#   /usr/bin/ssh -o StrictHostKeyChecking=accept-new ${namespace}.${VerbTLD} /usr/bin/cat /etc/ssh/ssh_host_dsa_key.pub >> /root/.ssh/known_hosts
 #   if [ "$?" = "0" ]; then
-#     /usr/bin/echo "FIRSTSSH=\"true\"" >> /opt/rink/conf/vrb.${NAMESPACE}.${VerbTLD}.conf
+#     /usr/bin/echo "FIRSTSSH=\"true\"" >> /opt/rink/conf/vrb.${namespace}.${VerbTLD}.conf
 #   fi
 # fi
 
 # Run the actual command
-/usr/bin/ssh -o StrictHostKeyChecking=yes ${NAMESPACE}.${VerbTLD} $*
+/usr/bin/ssh -o StrictHostKeyChecking=yes ${namespace}.${VerbTLD} $*

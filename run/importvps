@@ -91,12 +91,12 @@ fi
 
 # Get some info
 VultrRegion="$(/usr/bin/vultr-cli instance get "${VultrInstanceID}" | /usr/bin/grep REGION | /usr/bin/sed -r 's/REGION\s+//')"
-IP4="$(/usr/bin/vultr-cli instance ipv4 list $VultrInstanceID | /usr/bin/grep main_ip | /usr/bin/sed 's/\s.*$//')"
-IP6="$(/usr/bin/vultr-cli instance ipv6 list $VultrInstanceID | /usr/bin/grep main_ip | /usr/bin/sed 's/\s.*$//')"
+IPv4="$(/usr/bin/vultr-cli instance ipv4 list $VultrInstanceID | /usr/bin/grep main_ip | /usr/bin/sed 's/\s.*$//')"
+IPv6="$(/usr/bin/vultr-cli instance ipv6 list $VultrInstanceID | /usr/bin/grep main_ip | /usr/bin/sed 's/\s.*$//')"
 
 # IP addresses
-/usr/bin/echo "IPv4: $IP4"
-/usr/bin/echo "IPv6: $IP6"
+/usr/bin/echo "IPv4: $IPv4"
+/usr/bin/echo "IPv6: $IPv6"
 /usr/bin/echo "Region: $VultrRegion"
 
 ## IP processing
@@ -182,10 +182,10 @@ rarpa_ipv6() {
   printf 'ip6.arpa\n'
 }
 
-IP6NEW=$(compress_ipv6 ${IP6})
-IP6EXP=$(expand_ipv6 ${IP6})
-IP4ARPA=$(/bin/echo ${IP4} | sed -r 's/^([0-9]{1,3}).([0-9]{1,3}).([0-9]{1,3}).([0-9]{1,3})$/\4.\3.\2.\1.in-addr.arpa/')
-IP6ARPA=$(rarpa_ipv6 ${IP6EXP})
+IPv6New=$(compress_ipv6 ${IPv6})
+IPv6Exp=$(expand_ipv6 ${IPv6})
+IPv4ARPA=$(/bin/echo ${IPv4} | sed -r 's/^([0-9]{1,3}).([0-9]{1,3}).([0-9]{1,3}).([0-9]{1,3})$/\4.\3.\2.\1.in-addr.arpa/')
+IPv6ARPA=$(rarpa_ipv6 ${IPv6Exp})
 
 /usr/bin/cat <<EOF > /opt/rink/conf/vrb.${namespace}.${VerbTLD}.conf
 VultrInstanceID="${VultrInstanceID}"
@@ -195,11 +195,11 @@ VerbTLD="${VerbTLD}"
 VerbRegion="${VultrRegion}"
 VerbUser="${vuser}"
 VerbPort="${Port}"
-VerbIPv4="${IP4}"
-VerbIPv6="${IP6NEW}"
-VerbIPv6Exp="${IP6EXP}"
-VerbARPAIPv4="${IP4ARPA}"
-VerbARPAIPv6="${IP6ARPA}"
+VerbIPv4="${IPv4}"
+VerbIPv6="${IPv6New}"
+VerbIPv6Exp="${IPv6Exp}"
+VerbARPAIPv4="${IPv4ARPA}"
+VerbARPAIPv6="${IPv6ARPA}"
 EOF
 
 # Create the .ssh/config entry
@@ -207,7 +207,7 @@ EOF
 /usr/bin/echo "Include /opt/rink/conf/ssh.${namespace}.${VerbTLD}.conf" >> /root/.ssh/config
 /usr/bin/cat <<EOF > /opt/rink/conf/ssh.${namespace}.${VerbTLD}.conf
 Host ${namespace}.${VerbTLD}
-Hostname ${IP4}
+Hostname ${IPv4}
 User root
 Port ${Port}
 IdentityFile /root/.ssh/${SSHKey}
@@ -244,7 +244,7 @@ done
 #DEV: probably replace the final `&& reboot` with a vultr-cli ...restart instance (however that works)
 #DEV: however, rebooting from the CLI is softer and prefferable
 ## Remove the known_hosts entry that SSH just added because its identity key has already changed and we'll use a hashed one via keyscan
-/usr/bin/sed -i "/${IP4}/d" /root/.ssh/known_hosts
+/usr/bin/sed -i "/${IPv4}/d" /root/.ssh/known_hosts
 
 # Add the hashed key
 sleep 10 # The server needs to start its reboot

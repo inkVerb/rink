@@ -15,8 +15,8 @@ if [ -z "$1" ]; then
   exit 0
 fi
 
-NEWKEY="$1"
+NewKey="$1"
 
 /usr/bin/cat <<EOF > /opt/rink/sshkey
-SSHKey="$NEWKEY"
+SSHKey="$NewKey"
 EOF

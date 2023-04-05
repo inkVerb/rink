@@ -16,49 +16,49 @@ if [ -z "$3" ]; then
   exit 0
 fi
 
-NAMESPACE="$1"
+namespace="$1"
 VerbTLD="$2"
-USER="$3"
+vuser="$3"
 
-if [ ! -f "/opt/rink/conf/vrb.${NAMESPACE}.${VerbTLD}.conf" ]; then
-  /usr/bin/echo "${NAMESPACE}.${VerbTLD} does not exist! I quit."
+if [ ! -f "/opt/rink/conf/vrb.${namespace}.${VerbTLD}.conf" ]; then
+  /usr/bin/echo "${namespace}.${VerbTLD} does not exist! I quit."
   exit 0
 fi
 
-if ! grep -q "VerbUser=\"$USER\"" "/opt/rink/conf/vrb.${NAMESPACE}.${VerbTLD}.conf"; then
-  /usr/bin/echo "${NAMESPACE}.${VerbTLD} not owned by user ${USER}! I quit."
+if ! grep -q "VerbUser=\"$vuser\"" "/opt/rink/conf/vrb.${namespace}.${VerbTLD}.conf"; then
+  /usr/bin/echo "${namespace}.${VerbTLD} not owned by user ${vuser}! I quit."
   exit 0
 fi
 
 # Verber config
-. /opt/rink/conf/vrb.${NAMESPACE}.${VerbTLD}.conf
+. /opt/rink/conf/vrb.${namespace}.${VerbTLD}.conf
 
 # Site config
 . /opt/verb/conf/siteurilist # Only for $hostURI
 if [ -f "/opt/verb/inst/domain.mod.conf" ]; then
   . /opt/verb/inst/domain.mod.conf
   VERBNSID="${VerbHostID}.${VerbTLD}.${DomModBase}"
-  emailURI="${NAMESPACE}.email.${DModBase}"
-  oneURI="${NAMESPACE}.one.${DModBase}"
-  inkURI="${NAMESPACE}.ink.${DModBase}"
-  blueURI="${NAMESPACE}.blue.${DModBase}"
-  vipURI="${NAMESPACE}.vip.${DModBase}"
-  kiwiURI="${NAMESPACE}.kiwi.${DModBase}"
-  redURI="${NAMESPACE}.red.${DModBase}"
+  emailURI="${namespace}.email.${DModBase}"
+  oneURI="${namespace}.one.${DModBase}"
+  inkURI="${namespace}.ink.${DModBase}"
+  blueURI="${namespace}.blue.${DModBase}"
+  vipURI="${namespace}.vip.${DModBase}"
+  kiwiURI="${namespace}.kiwi.${DModBase}"
+  redURI="${namespace}.red.${DModBase}"
 else
   VERBNSID="${VerbHostID}.verb.${VerbTLD}"
-  emailURI="${NAMESPACE}.verb.email"
-  oneURI="${NAMESPACE}.verb.one"
-  inkURI="${NAMESPACE}.verb.ink"
-  blueURI="${NAMESPACE}.verb.blue"
-  vipURI="${NAMESPACE}.verb.vip"
-  kiwiURI="${NAMESPACE}.verb.kiwi"
-  redURI="${NAMESPACE}.verb.red"
+  emailURI="${namespace}.verb.email"
+  oneURI="${namespace}.verb.one"
+  inkURI="${namespace}.verb.ink"
+  blueURI="${namespace}.verb.blue"
+  vipURI="${namespace}.verb.vip"
+  kiwiURI="${namespace}.verb.kiwi"
+  redURI="${namespace}.verb.red"
 fi
 
 # Check if already added
 if /bin/grep -Fq "${VERBNSID}" /opt/verb/conf/inkdns/zones/db.${hostURI}; then
-/bin/echo "'${NAMESPACE}' has already been listed."
+/bin/echo "'${namespace}' has already been listed."
 exit 0; fi
 
 # Echo the records

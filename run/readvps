@@ -22,22 +22,22 @@ fi
 # Defaults
 . /opt/rink/rinknames
 
-NICKNAME="$1"
+nickname="$1"
 VerbTLD="$2"
 VultrInstanceID="$3"
-USER="$4"
+vuser="$4"
 
 # Check to see if this verber already exists by this name
-if [ -f /opt/rink/conf/vrb.${NICKNAME}.${VerbTLD}.conf ]; then
-  echo "Verber with name '${VerbTLD}' and TLD '${NICKNAME}' already exists."
+if [ -f /opt/rink/conf/vrb.${nickname}.${VerbTLD}.conf ]; then
+  echo "Verber with name '${VerbTLD}' and TLD '${nickname}' already exists."
   exit 0
-elif [ "${VerbTLD}" != "ink" ] && [ ! -f "/opt/rink/conf/vrb.${NICKNAME}.ink.conf" ]; then
-  echo "Verber with 'ink' TLD must be created for '${NICKNAME}' before creating non-'ink' TLD verbers."
+elif [ "${VerbTLD}" != "ink" ] && [ ! -f "/opt/rink/conf/vrb.${nickname}.ink.conf" ]; then
+  echo "Verber with 'ink' TLD must be created for '${nickname}' before creating non-'ink' TLD verbers."
   exit 0
-elif [ "${VerbTLD}" != "ink" ] && [ -f "/opt/rink/conf/vrb.${NICKNAME}.ink.conf" ]; then
-  . /opt/rink/conf/vrb.${NICKNAME}.ink.conf
-  if [ "${VerbUser}" != "${USER}" ]; then
-    echo "Verb name '${NICKNAME}' is already owned by another user."
+elif [ "${VerbTLD}" != "ink" ] && [ -f "/opt/rink/conf/vrb.${nickname}.ink.conf" ]; then
+  . /opt/rink/conf/vrb.${nickname}.ink.conf
+  if [ "${VerbUser}" != "${vuser}" ]; then
+    echo "Verb name '${nickname}' is already owned by another user."
     exit 0
   fi
 fi
@@ -50,19 +50,19 @@ fi
 e="$?"; [[ "$e" = "0" ]] || exit "$e"
 
 # Get the IP addresses
-FIRSTIP4PLACEHOLDER="$(/usr/bin/vultr-cli instance ipv4 list $VultrInstanceID | /usr/bin/grep main_ip | /usr/bin/sed 's/\s.*$//')"
-FIRSTIP6PLACEHOLDER="$(/usr/bin/vultr-cli instance ipv6 list $VultrInstanceID | /usr/bin/grep main_ip | /usr/bin/sed 's/\s.*$//')"
-/usr/bin/echo "IPv4: $IP4"
-/usr/bin/echo "IPv6: $IP6"
+FIRSTIPv4PLACEHOLDER="$(/usr/bin/vultr-cli instance ipv4 list $VultrInstanceID | /usr/bin/grep main_ip | /usr/bin/sed 's/\s.*$//')"
+FIRSTIPv6PLACEHOLDER="$(/usr/bin/vultr-cli instance ipv6 list $VultrInstanceID | /usr/bin/grep main_ip | /usr/bin/sed 's/\s.*$//')"
+/usr/bin/echo "IPv4: $IPv4"
+/usr/bin/echo "IPv6: $IPv6"
 
 # Get the VPS instance ID
-/usr/bin/cat <<EOF > /opt/rink/conf/vrb.${NICKNAME}.${VerbTLD}.conf
+/usr/bin/cat <<EOF > /opt/rink/conf/vrb.${nickname}.${VerbTLD}.conf
 VultrInstanceID="$VultrInstanceID"
 VerbHostID="NONE_MOD_ADD"
-VerbName="$NICKNAME"
+VerbName="$nickname"
 VerbTLD="$VerbTLD"
 VerbRegion="NONE_MOD_ADD"
-VerbUser="$USER"
+VerbUser="$vuser"
 VerbPort="$Port"
 EOF
 
@@ -149,37 +149,37 @@ rarpa_ipv6() {
   printf 'ip6.arpa\n'
 }
 
-IP6NEW=$(compress_ipv6 ${IP6})
-IP6EXP=$(expand_ipv6 ${IP6})
-IP4ARPA=$(/bin/echo ${IP4} | sed -r 's/^([0-9]{1,3}).([0-9]{1,3}).([0-9]{1,3}).([0-9]{1,3})$/\4.\3.\2.\1.in-addr.arpa/')
-IP6ARPA=$(rarpa_ipv6 ${IP6EXP})
+IPv6New=$(compress_ipv6 ${IPv6})
+IPv6Exp=$(expand_ipv6 ${IPv6})
+IPv4ARPA=$(/bin/echo ${IPv4} | sed -r 's/^([0-9]{1,3}).([0-9]{1,3}).([0-9]{1,3}).([0-9]{1,3})$/\4.\3.\2.\1.in-addr.arpa/')
+IPv6ARPA=$(rarpa_ipv6 ${IPv6Exp})
 
 ## Append IP addresses to config
-/usr/bin/cat <<EOF >> /opt/rink/conf/vrb.${NICKNAME}.${VerbTLD}.conf
-VerbIPv4="${IP4}"
-VerbIPv6="${IP6NEW}"
-VerbIPv6Exp="${IP6EXP}"
-VerbARPAIPv4="${IP4ARPA}"
-VerbARPAIPv6="${IP6ARPA}"
+/usr/bin/cat <<EOF >> /opt/rink/conf/vrb.${nickname}.${VerbTLD}.conf
+VerbIPv4="${IPv4}"
+VerbIPv6="${IPv6New}"
+VerbIPv6Exp="${IPv6Exp}"
+VerbARPAIPv4="${IPv4ARPA}"
+VerbARPAIPv6="${IPv6ARPA}"
 EOF
 
 # Create the .ssh/config entry
 . /opt/rink/sshkey
-/usr/bin/echo "Include /opt/rink/conf/ssh.${NICKNAME}.${VerbTLD}.conf" >> /root/.ssh/config
-/usr/bin/cat <<EOF > /opt/rink/conf/ssh.${NICKNAME}.${VerbTLD}.conf
-Host ${NICKNAME}.${VerbTLD}
-Hostname ${IP4}
+/usr/bin/echo "Include /opt/rink/conf/ssh.${nickname}.${VerbTLD}.conf" >> /root/.ssh/config
+/usr/bin/cat <<EOF > /opt/rink/conf/ssh.${nickname}.${VerbTLD}.conf
+Host ${nickname}.${VerbTLD}
+Hostname ${IPv4}
 User root
 Port ${Port}
 IdentityFile /root/.ssh/${SSHKey}
 EOF
 
 # Keyscan
-/opt/rink/run/keyscan ${NICKNAME} ${VerbTLD}
+/opt/rink/run/keyscan ${nickname} ${VerbTLD}
 e="$?"; [[ "$e" = "0" ]] || exit "$e"
 
 # Check for an answer
-/opt/rink/run/waitvpsanswer ${NICKNAME} ${VerbTLD}
+/opt/rink/run/waitvpsanswer ${nickname} ${VerbTLD}
 
 # Finish
-/usr/bin/echo "${NICKNAME}.${VerbTLD} mod added. It should be ready now."
+/usr/bin/echo "${nickname}.${VerbTLD} mod added. It should be ready now."

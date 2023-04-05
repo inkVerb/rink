@@ -15,9 +15,9 @@ if [ -z "$2" ]; then
   exit 0
 fi
 
-NEWSnapshotID="$1"
-NICKNAME="$2"
+NewSnapshotID="$1"
+nickname="$2"
 
-/usr/bin/cat <<EOF > /opt/rink/snapshotid/${NICKNAME}
-SnapshotID="$NEWSnapshotID"
+/usr/bin/cat <<EOF > /opt/rink/snapshotid/${nickname}
+SnapshotID="$NewSnapshotID"
 EOF

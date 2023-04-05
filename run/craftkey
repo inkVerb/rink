@@ -15,8 +15,8 @@ if [ -z "$1" ]; then
   exit 0
 fi
 
-NEWKEY="$1"
+NewKey="$1"
 
-/usr/bin/ssh-keygen -t rsa -N "" -f ~/.ssh/${NEWKEY}
+/usr/bin/ssh-keygen -t rsa -N "" -f ~/.ssh/${NewKey}
 
-/usr/bin/echo "New ssh key created: ${NEWKEY}"
+/usr/bin/echo "New ssh key created: ${NewKey}"

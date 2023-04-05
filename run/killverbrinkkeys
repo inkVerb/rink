@@ -15,27 +15,27 @@ if [ -z "$3" ]; then
   exit 0
 fi
 
-NAMESPACE="$1"
+namespace="$1"
 VerbTLD="$2"
-USER="$3"
+vuser="$3"
 
-if [ ! -f "/opt/rink/conf/vrb.${NAMESPACE}.${VerbTLD}.conf" ]; then
-  /usr/bin/echo "${NAMESPACE}.${VerbTLD} does not exist! I quit."
+if [ ! -f "/opt/rink/conf/vrb.${namespace}.${VerbTLD}.conf" ]; then
+  /usr/bin/echo "${namespace}.${VerbTLD} does not exist! I quit."
   exit 0
 fi
 
-if ! grep -q "VerbUser=\"$USER\"" "/opt/rink/conf/vrb.${NAMESPACE}.${VerbTLD}.conf"; then
-  /usr/bin/echo "${NAMESPACE}.${VerbTLD} not owned by user ${USER}! I quit."
+if ! grep -q "VerbUser=\"$vuser\"" "/opt/rink/conf/vrb.${namespace}.${VerbTLD}.conf"; then
+  /usr/bin/echo "${namespace}.${VerbTLD} not owned by user ${vuser}! I quit."
   exit 0
 fi
 
-. /opt/rink/conf/vrb.${NAMESPACE}.${VerbTLD}.conf
+. /opt/rink/conf/vrb.${namespace}.${VerbTLD}.conf
 
 #DEV these keys should already be accepted
 # if [ -z "${FIRSTSSH}" ]; then
-#   /usr/bin/ssh -t -o StrictHostKeyChecking=accept-new ${NAMESPACE}.${VerbTLD} cat /etc/ssh/ssh_host_dsa_key.pub >> /root/.ssh/known_hosts
+#   /usr/bin/ssh -t -o StrictHostKeyChecking=accept-new ${namespace}.${VerbTLD} cat /etc/ssh/ssh_host_dsa_key.pub >> /root/.ssh/known_hosts
 #   if [ "$?" = "0" ]; then
-#     /usr/bin/echo "FIRSTSSH=\"true\"" >> /opt/rink/conf/vrb.${NAMESPACE}.${VerbTLD}.conf
+#     /usr/bin/echo "FIRSTSSH=\"true\"" >> /opt/rink/conf/vrb.${namespace}.${VerbTLD}.conf
 #   fi
 # fi
 
@@ -46,7 +46,7 @@ fi
 . /opt/rink/sshkey
 
 # NS 1, NS 2, servernameip, keys
-/usr/bin/ssh -o StrictHostKeyChecking=yes ${NAMESPACE}.${VerbTLD} <<EOS
+/usr/bin/ssh -o StrictHostKeyChecking=yes ${namespace}.${VerbTLD} <<EOS
 /usr/bin/sed -i '/ssh.${NS1Name}.${RinkVerbTLD}.conf/d' /root/.ssh/config
 /usr/bin/rm /opt/rink/conf/ssh.${NS1Name}.${RinkVerbTLD}.conf
 
@@ -55,18 +55,18 @@ fi
 
 /usr/bin/sed -i '/RinkConfigured=.*/d' /opt/verb/conf/servernameip
 
-/usr/bin/rm /root/.ssh/Rink_${VerbTLD}_${NAMESPACE}.pub
-/usr/bin/rm /root/.ssh/Rink_${VerbTLD}_${NAMESPACE}
+/usr/bin/rm /root/.ssh/Rink_${VerbTLD}_${namespace}.pub
+/usr/bin/rm /root/.ssh/Rink_${VerbTLD}_${namespace}
 EOS
 
 # Delete on the NS rinks
 /usr/bin/ssh -o StrictHostKeyChecking=yes ${NS1Name}.${RinkVerbTLD} <<EOS
-/usr/bin/userdel ${NAMESPACE}-${VerbTLD}
-/usr/bin/groupdel ${NAMESPACE}-${VerbTLD}
-/usr/bin/rm -rf /srv/sns/${NAMESPACE}-${VerbTLD}
+/usr/bin/userdel ${namespace}-${VerbTLD}
+/usr/bin/groupdel ${namespace}-${VerbTLD}
+/usr/bin/rm -rf /srv/sns/${namespace}-${VerbTLD}
 EOS
 /usr/bin/ssh -o StrictHostKeyChecking=yes ${NS2Name}.${RinkVerbTLD} <<EOS
-/usr/bin/userdel ${NAMESPACE}-${VerbTLD}
-/usr/bin/groupdel ${NAMESPACE}-${VerbTLD}
-/usr/bin/rm -rf /srv/sns/${NAMESPACE}-${VerbTLD}
+/usr/bin/userdel ${namespace}-${VerbTLD}
+/usr/bin/groupdel ${namespace}-${VerbTLD}
+/usr/bin/rm -rf /srv/sns/${namespace}-${VerbTLD}
 EOS

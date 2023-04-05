@@ -15,8 +15,8 @@ if [ -z "$1" ]; then
   exit 0
 fi
 
-NEWPort="$1"
+NewPort="$1"
 
 /usr/bin/cat <<EOF > /opt/rink/portnum
-Port="$NEWPort"
+Port="$NewPort"
 EOF
