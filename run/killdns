@@ -38,6 +38,7 @@ fi
 
 # Verber config
 . /opt/rink/conf/vrb.${namespace}.${VerbTLD}.conf
+. /opt/rink/ns/${VerbNameServersConfig}
 
 # Generate the URI list
 if [ -f "/opt/verb/inst/domain.mod.conf" ]; then

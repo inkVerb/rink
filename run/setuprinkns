@@ -22,6 +22,7 @@ fi
 
 # Configs
 . /opt/rink/rinknames
+. /opt/rink/ns/${NameServersConfig}
 . /opt/rink/portnum
 
 # In progress or from start?
@@ -106,9 +107,9 @@ if [ ! -f "/opt/rink/ns2done" ]; then
   #   fi
   # done
   ## Setup
-  /usr/bin/ssh ${NS2Name}.${RinkVerbTLD} /opt/verb/inst/make-dns ${NA2Host} ${RinkDomain}
+  /usr/bin/ssh ${NS2Name}.${RinkVerbTLD} /opt/verb/inst/make-dns ${NS2Host} ${RinkDomain}
   wait
-  /usr/bin/ssh ${NS2Name}.${RinkVerbTLD} /opt/verb/serfs/setup ${NS2Name} ${RinkVerbTLD} email vip ${NA2Host} ${VerbIPv4} ${VerbIPv6} cb@${RinkDomain} 100 1000 ${TimeZone2} ${VerbPort} boss "$(/usr/bin/pwgen -s -1 16)" ${UpdateRepo} ${UpdateOrg}
+  /usr/bin/ssh ${NS2Name}.${RinkVerbTLD} /opt/verb/serfs/setup ${NS2Name} ${RinkVerbTLD} email vip ${NS2Host} ${VerbIPv4} ${VerbIPv6} cb@${RinkDomain} 100 1000 ${TimeZone2} ${VerbPort} boss "$(/usr/bin/pwgen -s -1 16)" ${UpdateRepo} ${UpdateOrg}
   wait
   if [ "$?" = "0" ]; then
     /usr/bin/touch /opt/rink/ns2done
@@ -127,14 +128,14 @@ NS2ip4="$VerbIPv4"
 NS2ip6="$VerbIPv6"
 ## Point the NS servers to each other
 ### NS1
-/usr/bin/ssh ${NS1Name}.${RinkVerbTLD} /opt/verb/serfs/inkdnssetns1 "${NA2Host}.${RinkDomain}" "${NS2ip4}" "${NS2ip6}"
+/usr/bin/ssh ${NS1Name}.${RinkVerbTLD} /opt/verb/serfs/inkdnssetns1 "${NS2Host}.${RinkDomain}" "${NS2ip4}" "${NS2ip6}"
 /usr/bin/ssh ${NS1Name}.${RinkVerbTLD} /opt/verb/serfs/inkdnssetns2 "${RinkHost}.${RinkDomain}" "${RinkIPv4}" "${RinkIPv6}"
 ### NS2
 /usr/bin/ssh ${NS2Name}.${RinkVerbTLD} /opt/verb/serfs/inkdnssetns1 "${NS1Host}.${RinkDomain}" "${NS1ip4}" "${NS1ip6}"
 /usr/bin/ssh ${NS2Name}.${RinkVerbTLD} /opt/verb/serfs/inkdnssetns2 "${RinkHost}.${RinkDomain}" "${RinkIPv4}" "${RinkIPv6}"
 ### This nameserver uses the normal other two, but must be set manually because it is a NS server via make-dns
 /opt/verb/serfs/inkdnssetns1 "${NS1Host}.${RinkDomain}" "${NS1ip4}" "${NS1ip6}"
-/opt/verb/serfs/inkdnssetns2 "${NA2Host}.${RinkDomain}" "${NS2ip4}" "${NS2ip6}"
+/opt/verb/serfs/inkdnssetns2 "${NS2Host}.${RinkDomain}" "${NS2ip4}" "${NS2ip6}"
 
 # Install DNS & Certs that DNS servers skip in setup
 ## Rink
@@ -377,7 +378,7 @@ BaseHostNS="${RinkDomain}"
 DefaultNS1="${NS1Host}.${RinkDomain}"
 NameserverNS1IPv4="${NS1ip4}"
 NameserverNS1IPv6="${NS1ip6}"
-DefaultNS2="${NA2Host}.${RinkDomain}"
+DefaultNS2="${NS2Host}.${RinkDomain}"
 NameserverNS2IPv4="${NS2ip4}"
 NameserverNS2IPv6="${NS2ip6}"
 EOF

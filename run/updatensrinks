@@ -7,16 +7,35 @@
 ## ./updatensrinks
 
 
+# Update this verber
 /opt/verb/serfs/updateverber
 echo "
 Rink: This rink is up to date!
 "
+
+# Rink configs
 . /opt/rink/rinknames
-/usr/bin/ssh -o StrictHostKeyChecking=yes ink.${NS1Name} /opt/verb/serfs/updateverber
-echo "
-Rink: NS1 is up to date!
-"
-/usr/bin/ssh -o StrictHostKeyChecking=yes ink.${NS2Name} /opt/verb/serfs/updateverber
-echo "
-Rink: NS2 is up to date!
-"
+
+# Loop through each NS nameserver
+cd /opt/rink/ns || exit 6
+for nspair in *; do
+
+    ## Config validation
+    . /opt/rink/ns/"${nspair}"
+    if [ -z "${NS1Host}" ] || [ -z "${NS2Host}" ] || [ -z "${NS1Name}" ] || [ -z "${NS21Name}" ]; then continue; fi
+
+    ## Run the updates
+    /usr/bin/ssh -o StrictHostKeyChecking=yes ${NS1Name}.${RinkVerbTLD} /opt/verb/serfs/updateverber
+    echo "
+    Rink: ${NS1Host} is up to date!
+    "
+    /usr/bin/ssh -o StrictHostKeyChecking=yes ${NS2Name}.${RinkVerbTLD} /opt/verb/serfs/updateverber
+    echo "
+    Rink: ${NS2Host} is up to date!
+    "
+done
+
+
+
+
+

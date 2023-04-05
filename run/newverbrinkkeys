@@ -34,7 +34,12 @@ if ! grep -q "VerbUser=\"$vuser\"" "/opt/rink/conf/vrb.${namespace}.${VerbTLD}.c
   exit 0
 fi
 
+## Include the configs
+. /opt/rink/portnum
+. /opt/verb/conf/servernameip
+. /opt/rink/sshkey
 . /opt/rink/conf/vrb.${namespace}.${VerbTLD}.conf
+. /opt/rink/ns/${VerbNameServersConfig}
 
 #DEV these keys should already be accepted
 # if [ -z "${FIRSTSSH}" ]; then
@@ -48,12 +53,6 @@ fi
 /usr/bin/ssh ${namespace}.${VerbTLD} "/usr/bin/ssh-keygen -t rsa -N '' -f /root/.ssh/Rink_${VerbTLD}_${namespace} -C Rink_${VerbTLD}_${namespace}"
 /usr/bin/ssh ${namespace}.${VerbTLD} /usr/bin/cat /root/.ssh/Rink_${VerbTLD}_${namespace}.pub > /opt/rink/tmp/Rink_${VerbTLD}_${namespace}.pub
 /usr/bin/ssh ${namespace}.${VerbTLD} /usr/bin/cat /opt/verb/conf/servertldstatus286 > /opt/rink/tmp/servertldstatus_${VerbTLD}_${namespace}
-
-## Include the configs
-. /opt/rink/portnum
-. /opt/verb/conf/servernameip
-. /opt/rink/sshkey
-. /opt/rink/conf/vrb.${namespace}.${VerbTLD}.conf
 
 ## NS 1, NS 2, servernameip
 /usr/bin/ssh -T ${namespace}.${VerbTLD} <<EOS

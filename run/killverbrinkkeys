@@ -29,7 +29,13 @@ if ! grep -q "VerbUser=\"$vuser\"" "/opt/rink/conf/vrb.${namespace}.${VerbTLD}.c
   exit 0
 fi
 
+# Include the configs
+. /opt/rink/rinknames
+. /opt/rink/portnum
+. /opt/verb/conf/servernameip
+. /opt/rink/sshkey
 . /opt/rink/conf/vrb.${namespace}.${VerbTLD}.conf
+. /opt/rink/ns/${VerbNameServersConfig}
 
 #DEV these keys should already be accepted
 # if [ -z "${FIRSTSSH}" ]; then
@@ -38,12 +44,6 @@ fi
 #     /usr/bin/echo "FIRSTSSH=\"true\"" >> /opt/rink/conf/vrb.${namespace}.${VerbTLD}.conf
 #   fi
 # fi
-
-# Include the configs
-. /opt/rink/rinknames
-. /opt/rink/portnum
-. /opt/verb/conf/servernameip
-. /opt/rink/sshkey
 
 # NS 1, NS 2, servernameip, keys
 /usr/bin/ssh -o StrictHostKeyChecking=yes ${namespace}.${VerbTLD} <<EOS

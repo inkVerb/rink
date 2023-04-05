@@ -98,8 +98,27 @@ Note the public key of the rink must be installed on this existing verber:
 ./importvps name ink john s0mElong-An6Cr7z3-ID
 ```
 
-## Scripts
+## Scripts & Configs
 
 Scripts are located in `rink/run/`
 
 Descriptions and usage are in the file and most can be seen via `head /opt/rink/run/somescript`
+
+Each created-controlled verber has three configs in `rink/conf`
+
+- `raw.*` for raw output at the time of VPS creation or import (IP information changes when creating, but not importing)
+- `ssh.*` for information to `ssh` into that verber
+- `vrb.*` for settings specific to that verber, including which IP and which nameserver set it is using in `$VerbNameServersConfig`
+
+## Multiple NS sets
+- Nameservers work in sets of two
+- Configs for these nameserver pairs are in `rink/ns/` by combined names, such as `ns1ns2`
+- These are recorded in `conf/vrb.*` files as `$VerbNameServersConfig`
+- The current new VPS nameserver pair config is recorded in the rink master `rink/rinknames` file as `$NameServersConfig`
+
+### TO-DO
+- A "runner" script needs to be written that inherits code from setuprinkns to only create an additional pair of nameservers
+  - This should increment host ID based on `ns1` and `ns2` formats, not single digits
+  - This should update the `rink/rinknames` file's `$NameServersConfig` setting to reflect the new pair
+  - Theoretically, this should replace all code it inherited from setuprinkns by simply being run in place of that code
+- This will also update `/opt/rink/inkdnsnameservers`, which is added to each new and imported verber

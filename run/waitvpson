@@ -24,6 +24,7 @@ if [ ! -f "/opt/rink/conf/vrb.${namespace}.${VerbTLD}.conf" ]; then
 fi
 
 . /opt/rink/conf/vrb.${namespace}.${VerbTLD}.conf
+. /opt/rink/ns/${VerbNameServersConfig}
 
 # Wait for powerup
 count=0

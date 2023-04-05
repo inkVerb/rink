@@ -32,11 +32,12 @@ VultrInstanceID="$4"
 if [ -f /opt/rink/conf/vrb.${namespace}.${VerbTLD}.conf ]; then
   /usr/bin/echo "Verber with name '${VerbTLD}' and TLD '${namespace}' already exists."
   exit 5
-elif [ "${VerbTLD}" != "ink" ] && [ ! -f "/opt/rink/conf/vrb.${namespace}.ink.conf" ]; then
-  /usr/bin/echo "Verber with 'ink' TLD must be created for '${namespace}' before creating non-'ink' TLD verbers."
+elif [ "${VerbTLD}" != "${RinkVerbTLD}'" ] && [ ! -f "/opt/rink/conf/vrb.${namespace}.${RinkVerbTLD}.conf" ]; then
+  /usr/bin/echo "Verber with '${RinkVerbTLD}' TLD must be created for '${namespace}' before creating non-'${RinkVerbTLD}' TLD verbers."
   exit 5
-elif [ "${VerbTLD}" != "ink" ] && [ -f "/opt/rink/conf/vrb.${namespace}.ink.conf" ]; then
-  . /opt/rink/conf/vrb.${namespace}.ink.conf
+elif [ "${VerbTLD}" != "${RinkVerbTLD}'" ] && [ -f "/opt/rink/conf/vrb.${namespace}.${RinkVerbTLD}.conf" ]; then
+  . /opt/rink/conf/vrb.${namespace}.${RinkVerbTLD}.conf
+  . /opt/rink/ns/${VerbNameServersConfig}
   if [ "${VerbUser}" != "${vuser}" ]; then
     /usr/bin/echo "Verb name '${namespace}' is already owned by another user."
     exit 5
@@ -46,14 +47,14 @@ fi
 # Get the latest Verb ID number
 if [ -f "/opt/rink/lastverbid" ]; then
   . /opt/rink/lastverbid
-  HOSTID=$(( LASTID + 1 ))
+  HostID=$(( LASTID + 1 ))
 else
-  HOSTID="1"
+  HostID="1"
 fi
 ## Make sure it is not in use
 ### grep "-s, --no-messages suppress error messages"
-while /usr/bin/grep -qs ^VerbHostID=\"$HOSTID\" /opt/rink/conf/vrb.* > /dev/null; do
-  HOSTID=$(( HOSTID + 1 ))
+while /usr/bin/grep -qs ^VerbHostID=\"$HostID\" /opt/rink/conf/vrb.* > /dev/null; do
+  HostID=$(( HostID + 1 ))
 done
 
 # Check if the VPS ID even exists
@@ -189,7 +190,7 @@ IPv6ARPA=$(rarpa_ipv6 ${IPv6Exp})
 
 /usr/bin/cat <<EOF > /opt/rink/conf/vrb.${namespace}.${VerbTLD}.conf
 VultrInstanceID="${VultrInstanceID}"
-VerbHostID="${HOSTID}"
+VerbHostID="${HostID}"
 VerbName="${namespace}"
 VerbTLD="${VerbTLD}"
 VerbRegion="${VultrRegion}"
@@ -200,6 +201,7 @@ VerbIPv6="${IPv6New}"
 VerbIPv6Exp="${IPv6Exp}"
 VerbARPAIPv4="${IPv4ARPA}"
 VerbARPAIPv6="${IPv6ARPA}"
+VerbNameServersConfig="${NameServersConfig}"
 EOF
 
 # Create the .ssh/config entry
@@ -257,18 +259,18 @@ e="$?"; [[ "$e" = "0" ]] || exit "$e"
 /usr/bin/ssh -q -o StrictHostKeyChecking=yes ${NS1Name}.${RinkVerbTLD} [[ -d "/srv/sns/${namespace}-${VerbTLD}" ]] && ns1already="true"
 /usr/bin/ssh -q -o StrictHostKeyChecking=yes ${NS2Name}.${RinkVerbTLD} [[ -d "/srv/sns/${namespace}-${VerbTLD}" ]] && ns2already="true"
 if [ "${ns1already}" = "true" ] && [ "${ns2already}" = "true" ]; then
-  /usr/bin/echo "SNS user already exists on nameserver ${NS1Host} & ${NA2Host}. Fix that first."
+  /usr/bin/echo "SNS user already exists on nameserver ${NS1Host} & ${NS2Host}. Fix that first."
   exit 7
 elif [ "${ns1already}" = "true" ]; then
   /usr/bin/echo "SNS user already exists on nameserver ${NS1Host}. Fix that first."
   exit 7
 elif [ "${ns2already}" = "true" ]; then
-  /usr/bin/echo "SNS user already exists on nameserver ${NA2Host}. Fix that first."
+  /usr/bin/echo "SNS user already exists on nameserver ${NS2Host}. Fix that first."
   exit 7
 fi
 
 # Last ID (Only when we got this far)
-/usr/bin/echo "LASTID=\"$HOSTID\"" > /opt/rink/lastverbid
+/usr/bin/echo "LASTID=\"$HostID\"" > /opt/rink/lastverbid
 
 # Update the NS information on the imported verber
 /usr/bin/ssh ${namespace}.${VerbTLD} "/opt/verb/serfs/updateverber"

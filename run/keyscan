@@ -22,6 +22,7 @@ VerbTLD="$2"
 
 if [ -f /opt/rink/conf/vrb.${namespace}.${VerbTLD}.conf ]; then
   . /opt/rink/conf/vrb.${namespace}.${VerbTLD}.conf
+  . /opt/rink/ns/${VerbNameServersConfig}
   # Re-scanning?
   if [ -n "$3" ] && [ "$3" = "-r" ]; then
     rescan="true"

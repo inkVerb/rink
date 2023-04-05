@@ -32,6 +32,7 @@ fi
 
 # Verber config
 . /opt/rink/conf/vrb.${namespace}.${VerbTLD}.conf
+. /opt/rink/ns/${VerbNameServersConfig}
 
 # Site config
 . /opt/verb/conf/siteurilist # Only for $hostURI

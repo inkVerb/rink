@@ -73,6 +73,7 @@ if [ "$IMPort" != "true" ]; then
   if [ -f "/opt/rink/conf/raw.${namespace}.${VerbTLD}.conf" ]; then
     if [ -f "/opt/rink/conf/vrb.${namespace}.${VerbTLD}.conf" ]; then
       . /opt/rink/conf/vrb.${namespace}.${VerbTLD}.conf
+      . /opt/rink/ns/${VerbNameServersConfig}
     else
       VultrInstanceID="$(/usr/bin/cat /opt/rink/conf/raw.${namespace}.${VerbTLD}.conf | /usr/bin/grep ^ID | /usr/bin/sed s"/ID\t\t\t//")"
     fi
@@ -135,14 +136,22 @@ if [ "$IMPort" != "true" ]; then
 
   # Serupverb
   . /opt/rink/conf/vrb.${namespace}.${VerbTLD}.conf
+  . /opt/rink/ns/${VerbNameServersConfig}
   if ! grep -q '^SETUPVERB="DONE"' "/opt/rink/conf/vrb.${namespace}.${VerbTLD}.conf"; then
 
-    # Site URIlist
-    . /opt/verb/conf/siteurilist # Only for $hostURI
+    ## Site URIlist
+    . /opt/verb/conf/siteurilist # Only for $hostURI of this rink
+    
+    ## Domain mod? (ALPHA)
     if [ -f "/opt/verb/inst/domain.mod.conf" ]; then #DEV the domain mod has not yet been tested for Rink management
       . /opt/verb/inst/domain.mod.conf
       /usr/bin/ssh ${namespace}.${VerbTLD} /opt/verb/serfs/make-dommod ${VerbHostID} ${DModBase}
     fi
+
+    ## Permanently set to current nameservers
+    /usr/bin/cat /opt/rink/inkdnsnameservers | /usr/bin/ssh ${namespace}.${VerbTLD} "/usr/bin/cat > /opt/verb/conf/inklists/inkdnsnameservers"
+
+    ## Run setup
     /usr/bin/ssh ${namespace}.${VerbTLD} /opt/verb/serfs/setup ${namespace} ink email vip ${VerbHostID} ${VerbIPv4} ${VerbIPv6} cb@${RinkDomain} 100 1000 ${VultrRegion} ${Port} boss "$(/usr/bin/pwgen -s -1 16)" ${UpdateRepo} ${UpdateOrg}
     e="$?"; [[ "$e" = "0" ]] || exit "$e"
     if [ "$?" = "0" ]; then

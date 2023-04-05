@@ -27,6 +27,7 @@ APIKEY="$1"
 # Prepare the directories
 /usr/bin/mkdir -p /opt/rink/tmp
 /usr/bin/mkdir -p /opt/rink/conf
+/usr/bin/mkdir -p /opt/rink/ns
 /usr/bin/mkdir -p /opt/rink/destroyed
 /usr/bin/mkdir -p /opt/rink/snapshotid
 /bin/ln -sfn /opt/rink ~/

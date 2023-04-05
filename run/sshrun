@@ -38,6 +38,7 @@ if ! grep -q "Include /opt/rink/conf/ssh.${namespace}.${VerbTLD}.conf" /root/.ss
 fi
 
 . /opt/rink/conf/vrb.${namespace}.${VerbTLD}.conf
+. /opt/rink/ns/${VerbNameServersConfig}
 
 #DEV these keys should already be accepted
 # if [ -z "${FIRSTSSH}" ]; then

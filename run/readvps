@@ -21,6 +21,7 @@ fi
 
 # Defaults
 . /opt/rink/rinknames
+. /opt/rink/ns/${NameServersConfig}
 
 nickname="$1"
 VerbTLD="$2"
@@ -31,11 +32,12 @@ vuser="$4"
 if [ -f /opt/rink/conf/vrb.${nickname}.${VerbTLD}.conf ]; then
   echo "Verber with name '${VerbTLD}' and TLD '${nickname}' already exists."
   exit 0
-elif [ "${VerbTLD}" != "ink" ] && [ ! -f "/opt/rink/conf/vrb.${nickname}.ink.conf" ]; then
-  echo "Verber with 'ink' TLD must be created for '${nickname}' before creating non-'ink' TLD verbers."
+elif [ "${VerbTLD}" != "${RinkVerbTLD}" ] && [ ! -f "/opt/rink/conf/vrb.${nickname}.${RinkVerbTLD}.conf" ]; then
+  echo "Verber with '${RinkVerbTLD}' TLD must be created for '${nickname}' before creating non-'${RinkVerbTLD}' TLD verbers."
   exit 0
-elif [ "${VerbTLD}" != "ink" ] && [ -f "/opt/rink/conf/vrb.${nickname}.ink.conf" ]; then
-  . /opt/rink/conf/vrb.${nickname}.ink.conf
+elif [ "${VerbTLD}" != "${RinkVerbTLD}" ] && [ -f "/opt/rink/conf/vrb.${nickname}.${RinkVerbTLD}.conf" ]; then
+  . /opt/rink/conf/vrb.${nickname}.${RinkVerbTLD}.conf
+  . /opt/rink/ns/${VerbNameServersConfig}
   if [ "${VerbUser}" != "${vuser}" ]; then
     echo "Verb name '${nickname}' is already owned by another user."
     exit 0
@@ -161,6 +163,7 @@ VerbIPv6="${IPv6New}"
 VerbIPv6Exp="${IPv6Exp}"
 VerbARPAIPv4="${IPv4ARPA}"
 VerbARPAIPv6="${IPv6ARPA}"
+VerbNameServersConfig="${NameServersConfig}"
 EOF
 
 # Create the .ssh/config entry

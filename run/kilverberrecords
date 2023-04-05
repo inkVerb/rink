@@ -30,6 +30,7 @@ if ! grep -q "VerbUser=\"$vuser\"" "/opt/rink/conf/vrb.${namespace}.${VerbTLD}.c
 fi
 
 . /opt/rink/conf/vrb.${namespace}.${VerbTLD}.conf
+. /opt/rink/ns/${VerbNameServersConfig}
 
 # Remove SSH entries
 /usr/bin/sed -i "/Include \/opt\/rink\/conf\/ssh.${namespace}.${VerbTLD}.conf/d" /root/.ssh/config
