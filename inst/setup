@@ -28,6 +28,7 @@ APIKEY="$1"
 /usr/bin/mkdir -p /opt/rink/tmp
 /usr/bin/mkdir -p /opt/rink/conf
 /usr/bin/mkdir -p /opt/rink/ns
+/usr/bin/mkdir -p /opt/rink/drive
 /usr/bin/mkdir -p /opt/rink/destroyed
 /usr/bin/mkdir -p /opt/rink/snapshotid
 /bin/ln -sfn /opt/rink ~/

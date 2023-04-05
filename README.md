@@ -4,12 +4,16 @@ For system control of Vultr-hosted [verbers](https://github.com/inkverb/verb)
 Prerequisites:
 1. You need snapshots based on verbers prepared with `make-verber-laemp`
 2. Those snapshots must have SSH keys created on this server
-  - Instructions for these can be found in steps 0-4 in the [Official Cheat Sheet](https://github.com/inkVerb/verb/blob/main/dev/official-cheat-sheet.md)
+  - Instructions for these can be found in steps 0-4 in the verber [Official Cheat Sheet](https://github.com/inkVerb/verb/blob/main/dev/official-cheat-sheet.md)
 3. You need to create a rink server, then two rink-auto-created NS servers (three servers total)
   - On the rink server: The original file `verb/conf/inklists/inkdnsnameservers` should be replaced with `rink/inst/inkdnsnameservers`
     - `verb/conf/inklists/inkdnsnameservers` will remain unique on each of the three rink servers
-  - Only go as far to install `verb/inst/make-preverber` on the main "Rink" server, then complete setup and the other two nameservers by properly installing this `rink` repo
-  - Instructions for the final `rink` installation can be found from step 5 in the [Official Cheat Sheet](https://github.com/inkVerb/verb/blob/main/dev/official-cheat-sheet.md)
+  - Instructions for final `rink` installation can be found from step 5 in the verber [Official Cheat Sheet](https://github.com/inkVerb/verb/blob/main/dev/official-cheat-sheet.md)
+4. Your domain registrar must be the nameserver of your nameserver domain
+  - You can't "park" your nameserver domain on another parking service, such as a VPS service like DigitalOcean or Vultr, but use the registrar as the nameserver
+  - Eg: for `ns1.yournsdomain.tld` etc, `yournsdomain.tld` has its nameservers set to use the registrar's default nameservers
+  - Create actual "hosts" for `ns1`, `ns2` etc for `yournsdomain.tld` FQDN, not merely A and AAAA entries for `ns1`, `ns2` etc in `yournsdomain.tld`
+  - You also need A and AAAA records for `ns1`, `ns2` etc for `yournsdomain.tld`
 
 ## SSH Keys
 
