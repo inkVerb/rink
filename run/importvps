@@ -381,6 +381,16 @@ fi
 
 # Tell the Verber to import itself to the nameservers
 /usr/bin/ssh ${namespace}.${VerbTLD} "/opt/verb/serfs/rinkimportme"
+if [ "$?" != "0" ]; then
+  /usr/bin/echo "Server could not be imported by nameservers, something is very wrong"
+  /usr/bin/rm -f /opt/rink/conf/ssh.${namespace}.${VerbTLD}.conf /opt/rink/conf/vrb.${namespace}.${VerbTLD}.conf
+  /usr/bin/mv /opt/rink/conf/raw.${namespace}.${VerbTLD}.conf /opt/rink/destroyed/failedimport.${namespace}.${VerbTLD}.conf
+  /usr/bin/sed -i "/ssh.${namespace}.${VerbTLD}.conf/d" /root/.ssh/config
+  exit 6
+fi
+
+# Remove the import permission
+/usr/bin/ssh ${namespace}.${VerbTLD} "/usr/bin/rm -f /opt/verb/conf/.importme"
 
 # Finish
 /usr/bin/echo "${namespace}.${VerbTLD} imported. It's identity key has changed, so you will need to remove lines with those IP addresses from any .ssh/known_hosts files on machines previously used to access it."
