@@ -3,8 +3,7 @@
 
 # This imports an existing VPS verber instance, creating all normal config files as any instance created with newvps
 ## Prerequesite: the SSH public key at /root/.ssh/Vultr_Rink_Key.pub from the "rink" verber must be installed in /root/.ssh/authorized_keys on this server for it to work
-## Tertiary Warning: This is run by other scripts and should not be run by itself
-## Used by: addvps
+## Prerequesite: this file must exist on the verber to be imported: /opt/verb/conf/.importme
 
 # How to use:
 ## ./importvps [verb-namespace] [tld] [user] [vultr-instance-ID]
