@@ -226,6 +226,18 @@ VerbARPAIPv6="${IPv6ARPA}"
 VerbNameServersConfig="${NameServersConfig}"
 EOF
 
+# Create the .ssh/config entry
+. /opt/rink/sshkey
+/usr/bin/sed -i "/ssh.${namespace}.${VerbTLD}.conf/d" /root/.ssh/config
+/usr/bin/echo "Include /opt/rink/conf/ssh.${namespace}.${VerbTLD}.conf" >> /root/.ssh/config
+/usr/bin/cat <<EOF > /opt/rink/conf/ssh.${namespace}.${VerbTLD}.conf
+Host ${namespace}.${VerbTLD}
+Hostname ${sshIP}
+User root
+Port ${Port}
+IdentityFile /root/.ssh/${SSHKey}
+EOF
+
 # Wait for powerup
 /usr/bin/echo "Checking if VPS can be accessed..."
 /opt/rink/run/waitvpsanswer ${namespace} ${VerbTLD}
@@ -264,18 +276,6 @@ sleep 10 # The server needs to start its reboot
 /opt/rink/run/waitvpson ${namespace} ${VerbTLD}
 /opt/rink/run/waitvpsanswer ${namespace} ${VerbTLD}
 /opt/rink/run/keyscan ${namespace} ${VerbTLD}
-
-# Create the .ssh/config entry
-. /opt/rink/sshkey
-/usr/bin/sed -i "/ssh.${namespace}.${VerbTLD}.conf/d" /root/.ssh/config
-/usr/bin/echo "Include /opt/rink/conf/ssh.${namespace}.${VerbTLD}.conf" >> /root/.ssh/config
-/usr/bin/cat <<EOF > /opt/rink/conf/ssh.${namespace}.${VerbTLD}.conf
-Host ${namespace}.${VerbTLD}
-Hostname ${sshIP}
-User root
-Port ${Port}
-IdentityFile /root/.ssh/${SSHKey}
-EOF
 
 # Test the connection
 /usr/bin/ssh ${namespace}.${VerbTLD} exit 0
