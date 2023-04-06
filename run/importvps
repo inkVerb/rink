@@ -27,6 +27,12 @@ namespace="$1"
 VerbTLD="$2"
 vuser="$3"
 VultrInstanceID="$4"
+if [ -z "$5" ]; then
+  . /opt/rink/portnum
+else
+  Port="$5"
+fi
+
 
 # Check to see if this verber already exists by this name
 if [ -f /opt/rink/conf/vrb.${namespace}.${VerbTLD}.conf ]; then
@@ -64,9 +70,6 @@ if ! /usr/bin/vultr-cli instance list | /usr/bin/grep -q "^${VultrInstanceID}"; 
   exit 5
 fi
 
-# Get $Port
-. /opt/rink/portnum
-
 # Create the instance
 /usr/bin/vultr-cli instance get "${VultrInstanceID}" > /opt/rink/conf/raw.${namespace}.${VerbTLD}.conf
 
@@ -81,36 +84,18 @@ if [ -f /opt/rink/conf/raw.${namespace}.${VerbTLD}.conf ]; then
   if ! /usr/bin/grep -q ^ID /opt/rink/conf/raw.${namespace}.${VerbTLD}.conf; then
     /usr/bin/echo "VPS output file is not correct, start over."
     /usr/bin/rm -f "*.${namespace}.${VerbTLD}.conf"
-    /usr/bin/sed -i "/ssh.${namespace}.${VerbTLD}.conf/d" /root/.ssh/config
     exit 4
   fi
 else
   /usr/bin/echo "VPS output file does not exist, start over."
   /usr/bin/rm -f "*.${namespace}.${VerbTLD}.conf"
-  /usr/bin/sed -i "/ssh.${namespace}.${VerbTLD}.conf/d" /root/.ssh/config
   exit 4
 fi
 
-# Get some info
+# Get region and IP info
 VultrRegion="$(/usr/bin/vultr-cli instance get "${VultrInstanceID}" | /usr/bin/grep REGION | /usr/bin/sed -r 's/REGION\s+//')"
 IPv4="$(/usr/bin/vultr-cli instance ipv4 list $VultrInstanceID | /usr/bin/grep main_ip | /usr/bin/sed 's/\s.*$//')"
 IPv6="$(/usr/bin/vultr-cli instance ipv6 list $VultrInstanceID | /usr/bin/grep main_ip | /usr/bin/sed 's/\s.*$//')"
-
-# Get the Host
-/usr/bin/ssh ${namespace}.${VerbTLD} /usr/bin/cat /opt/verb/conf/servernameip > /opt/rink/tmp/servernameip.${namespace}.${VerbTLD}
-. /opt/rink/tmp/servernameip.${namespace}.${VerbTLD}
-## Validate
-if [ -z "${ServerHost}" ] || [ "${ServerName}" != "${namespace}" ] || [ "${ServerTLD}" != "${VerbTLD}" ]; then
-  /usr/bin/echo "Imported verber not properly configured, cannot proceed!"
-  exit 8
-else
-  HostID="$ServerHost"
-fi
-
-# IP addresses
-/usr/bin/echo "IPv4: $IPv4"
-/usr/bin/echo "IPv6: $IPv6"
-/usr/bin/echo "Region: $VultrRegion"
 
 ## IP processing
 ### Compress IPv6
@@ -200,17 +185,100 @@ IPv6Exp=$(expand_ipv6 ${IPv6})
 IPv4ARPA=$(/bin/echo ${IPv4} | sed -r 's/^([0-9]{1,3}).([0-9]{1,3}).([0-9]{1,3}).([0-9]{1,3})$/\4.\3.\2.\1.in-addr.arpa/')
 IPv6ARPA=$(rarpa_ipv6 ${IPv6Exp})
 
+### IP validation
+isIP4() {
+local IP4="$1"
+local VALIDregex="^([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})"
+if [[ "${IP4}" =~ ${VALIDregex} ]]; then
+isIP4="true"; else
+isIP4="false"; fi
+}
+isIP4 ${IPv4}
+isIP6() {
+local IP6="$1"
+local VALIDregex="(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:)|fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(ffff(:0{1,4}){0,1}:){0,1}((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])|([0-9a-fA-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]))"
+if [[ "${IP6}" =~ ${VALIDregex} ]]; then
+isIP6="true"; else
+isIP6="false"; fi
+}
+isIP6 ${IPv6Exp}
+
+### IP for ssh config
+if [ "${isIP4}" = "true" ]; then
+  sshIP="${IPv4}"
+elif [ "${isIP4}" = "true" ]; then
+  sshIP="${IPv6Exp}"
+fi
+
+
+# Create the .ssh/config entry
+. /opt/rink/sshkey
+/usr/bin/sed -i "/ssh.${namespace}.${VerbTLD}.conf/d" /root/.ssh/config
+/usr/bin/echo "Include /opt/rink/conf/ssh.${namespace}.${VerbTLD}.conf" >> /root/.ssh/config
+/usr/bin/cat <<EOF > /opt/rink/conf/ssh.${namespace}.${VerbTLD}.conf
+Host ${namespace}.${VerbTLD}
+Hostname ${sshIP}
+User root
+Port ${Port}
+IdentityFile /root/.ssh/${SSHKey}
+EOF
+
+# Test the connection
+/usr/bin/ssh ${namespace}.${VerbTLD} exit 0
+if [ "$?" != "0" ]; then
+  /usr/bin/echo "Can't connect to this verber based on credentials!
+Re-read the instructions and consider checking the port"
+  /usr/bin/rm -f /opt/rink/conf/ssh.${namespace}.${VerbTLD}.conf
+  /usr/bin/mv /opt/rink/conf/raw.${namespace}.${VerbTLD}.conf /opt/rink/destroyed/failedimport.${namespace}.${VerbTLD}.conf
+  /usr/bin/sed -i "/ssh.${namespace}.${VerbTLD}.conf/d" /root/.ssh/config
+  exit 8
+fi
+
+# Check for import permission
+/usr/bin/ssh ${namespace}.${VerbTLD} /usr/bin/ls /opt/verb/conf/.importme > /dev/null 2>&1
+if [ "$?" != "0" ]; then
+  /usr/bin/echo "Server does not grant permission to be imported; read the instructions"
+  /usr/bin/rm -f /opt/rink/conf/ssh.${namespace}.${VerbTLD}.conf
+  /usr/bin/mv /opt/rink/conf/raw.${namespace}.${VerbTLD}.conf /opt/rink/destroyed/failedimport.${namespace}.${VerbTLD}.conf
+  /usr/bin/sed -i "/ssh.${namespace}.${VerbTLD}.conf/d" /root/.ssh/config
+  exit 9
+fi
+# Get the Host
+/usr/bin/ssh ${namespace}.${VerbTLD} /usr/bin/cat /opt/verb/conf/servernameip > /opt/rink/tmp/servernameip.${namespace}.${VerbTLD}
+. /opt/rink/tmp/servernameip.${namespace}.${VerbTLD}
+## Validate
+if [ -z "${ServerHost}" ] || [ "${ServerName}" != "${namespace}" ] || [ "${ServerTLD}" != "${VerbTLD}" ]; then
+  /usr/bin/echo "Imported verber not properly configured, cannot proceed!"
+  /usr/bin/rm -f /opt/rink/conf/ssh.${namespace}.${VerbTLD}.conf
+  /usr/bin/mv /opt/rink/conf/raw.${namespace}.${VerbTLD}.conf /opt/rink/destroyed/failedimport.${namespace}.${VerbTLD}.conf
+  /usr/bin/sed -i "/ssh.${namespace}.${VerbTLD}.conf/d" /root/.ssh/config
+  exit 8
+else
+  HostID="$ServerHost"
+fi
+
+# IP addresses
+/usr/bin/echo "IPv4: $IPv4"
+/usr/bin/echo "IPv6: $IPv6"
+/usr/bin/echo "Region: $VultrRegion"
+
 # Validate IP addresses
 if [ "${ServerExpIPv6}" != "${IPv6Exp}" ] && [ "${ServerExpIPv6}" != "NOIP6" ]; then
   /usr/bin/echo "IPv6 addresses for imported verber do not agree, cannot proceed!
 Server reports: ${IPv6Exp}
 Verber records: ${ServerExpIPv6}"
+  /usr/bin/rm -f /opt/rink/conf/ssh.${namespace}.${VerbTLD}.conf
+  /usr/bin/mv /opt/rink/conf/raw.${namespace}.${VerbTLD}.conf /opt/rink/destroyed/failedimport.${namespace}.${VerbTLD}.conf
+  /usr/bin/sed -i "/ssh.${namespace}.${VerbTLD}.conf/d" /root/.ssh/config
   exit 8
 fi
 if [ "${ServerIPv4}" != "${IPv4}" ] && [ "${ServerIPv4}" != "NOIP4" ]; then
   /usr/bin/echo "IPv4 addresses for imported verber do not agree, cannot proceed!
 Server reports: ${IPv4}
 Verber records: ${ServerIPv4}"
+  /usr/bin/rm -f /opt/rink/conf/ssh.${namespace}.${VerbTLD}.conf
+  /usr/bin/mv /opt/rink/conf/raw.${namespace}.${VerbTLD}.conf /opt/rink/destroyed/failedimport.${namespace}.${VerbTLD}.conf
+  /usr/bin/sed -i "/ssh.${namespace}.${VerbTLD}.conf/d" /root/.ssh/config
   exit 8
 fi
 
@@ -228,17 +296,6 @@ VerbIPv6Exp="${IPv6Exp}"
 VerbARPAIPv4="${IPv4ARPA}"
 VerbARPAIPv6="${IPv6ARPA}"
 VerbNameServersConfig="${NameServersConfig}"
-EOF
-
-# Create the .ssh/config entry
-. /opt/rink/sshkey
-/usr/bin/echo "Include /opt/rink/conf/ssh.${namespace}.${VerbTLD}.conf" >> /root/.ssh/config
-/usr/bin/cat <<EOF > /opt/rink/conf/ssh.${namespace}.${VerbTLD}.conf
-Host ${namespace}.${VerbTLD}
-Hostname ${IPv4}
-User root
-Port ${Port}
-IdentityFile /root/.ssh/${SSHKey}
 EOF
 
 # Wait for powerup
