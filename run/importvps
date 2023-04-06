@@ -209,81 +209,10 @@ elif [ "${isIP4}" = "true" ]; then
   sshIP="${IPv6Exp}"
 fi
 
-
-# Create the .ssh/config entry
-. /opt/rink/sshkey
-/usr/bin/sed -i "/ssh.${namespace}.${VerbTLD}.conf/d" /root/.ssh/config
-/usr/bin/echo "Include /opt/rink/conf/ssh.${namespace}.${VerbTLD}.conf" >> /root/.ssh/config
-/usr/bin/cat <<EOF > /opt/rink/conf/ssh.${namespace}.${VerbTLD}.conf
-Host ${namespace}.${VerbTLD}
-Hostname ${sshIP}
-User root
-Port ${Port}
-IdentityFile /root/.ssh/${SSHKey}
-EOF
-
-# Test the connection
-/usr/bin/ssh ${namespace}.${VerbTLD} exit 0
-if [ "$?" != "0" ]; then
-  /usr/bin/echo "Can't connect to this verber based on credentials!
-Re-read the instructions and consider checking the port"
-  /usr/bin/rm -f /opt/rink/conf/ssh.${namespace}.${VerbTLD}.conf
-  /usr/bin/mv /opt/rink/conf/raw.${namespace}.${VerbTLD}.conf /opt/rink/destroyed/failedimport.${namespace}.${VerbTLD}.conf
-  /usr/bin/sed -i "/ssh.${namespace}.${VerbTLD}.conf/d" /root/.ssh/config
-  exit 8
-fi
-
-# Check for import permission
-/usr/bin/ssh ${namespace}.${VerbTLD} /usr/bin/ls /opt/verb/conf/.importme > /dev/null 2>&1
-if [ "$?" != "0" ]; then
-  /usr/bin/echo "Server does not grant permission to be imported; read the instructions"
-  /usr/bin/rm -f /opt/rink/conf/ssh.${namespace}.${VerbTLD}.conf
-  /usr/bin/mv /opt/rink/conf/raw.${namespace}.${VerbTLD}.conf /opt/rink/destroyed/failedimport.${namespace}.${VerbTLD}.conf
-  /usr/bin/sed -i "/ssh.${namespace}.${VerbTLD}.conf/d" /root/.ssh/config
-  exit 9
-fi
-# Get the Host
-/usr/bin/ssh ${namespace}.${VerbTLD} /usr/bin/cat /opt/verb/conf/servernameip > /opt/rink/tmp/servernameip.${namespace}.${VerbTLD}
-. /opt/rink/tmp/servernameip.${namespace}.${VerbTLD}
-## Validate
-if [ -z "${ServerHost}" ] || [ "${ServerName}" != "${namespace}" ] || [ "${ServerTLD}" != "${VerbTLD}" ]; then
-  /usr/bin/echo "Imported verber not properly configured, cannot proceed!"
-  /usr/bin/rm -f /opt/rink/conf/ssh.${namespace}.${VerbTLD}.conf
-  /usr/bin/mv /opt/rink/conf/raw.${namespace}.${VerbTLD}.conf /opt/rink/destroyed/failedimport.${namespace}.${VerbTLD}.conf
-  /usr/bin/sed -i "/ssh.${namespace}.${VerbTLD}.conf/d" /root/.ssh/config
-  exit 8
-else
-  HostID="$ServerHost"
-fi
-
-# IP addresses
-/usr/bin/echo "IPv4: $IPv4"
-/usr/bin/echo "IPv6: $IPv6"
-/usr/bin/echo "Region: $VultrRegion"
-
-# Validate IP addresses
-if [ "${ServerExpIPv6}" != "${IPv6Exp}" ] && [ "${ServerExpIPv6}" != "NOIP6" ]; then
-  /usr/bin/echo "IPv6 addresses for imported verber do not agree, cannot proceed!
-Server reports: ${IPv6Exp}
-Verber records: ${ServerExpIPv6}"
-  /usr/bin/rm -f /opt/rink/conf/ssh.${namespace}.${VerbTLD}.conf
-  /usr/bin/mv /opt/rink/conf/raw.${namespace}.${VerbTLD}.conf /opt/rink/destroyed/failedimport.${namespace}.${VerbTLD}.conf
-  /usr/bin/sed -i "/ssh.${namespace}.${VerbTLD}.conf/d" /root/.ssh/config
-  exit 8
-fi
-if [ "${ServerIPv4}" != "${IPv4}" ] && [ "${ServerIPv4}" != "NOIP4" ]; then
-  /usr/bin/echo "IPv4 addresses for imported verber do not agree, cannot proceed!
-Server reports: ${IPv4}
-Verber records: ${ServerIPv4}"
-  /usr/bin/rm -f /opt/rink/conf/ssh.${namespace}.${VerbTLD}.conf
-  /usr/bin/mv /opt/rink/conf/raw.${namespace}.${VerbTLD}.conf /opt/rink/destroyed/failedimport.${namespace}.${VerbTLD}.conf
-  /usr/bin/sed -i "/ssh.${namespace}.${VerbTLD}.conf/d" /root/.ssh/config
-  exit 8
-fi
-
+# We need this before we can use keyscan
 /usr/bin/cat <<EOF > /opt/rink/conf/vrb.${namespace}.${VerbTLD}.conf
 VultrInstanceID="${VultrInstanceID}"
-VerbHostID="${HostID}"
+VerbHostID="IMPORTING"
 VerbName="${namespace}"
 VerbTLD="${VerbTLD}"
 VerbRegion="${VultrRegion}"
@@ -335,19 +264,100 @@ sleep 10 # The server needs to start its reboot
 /opt/rink/run/waitvpson ${namespace} ${VerbTLD}
 /opt/rink/run/waitvpsanswer ${namespace} ${VerbTLD}
 /opt/rink/run/keyscan ${namespace} ${VerbTLD}
-e="$?"; [[ "$e" = "0" ]] || exit "$e"
+
+# Create the .ssh/config entry
+. /opt/rink/sshkey
+/usr/bin/sed -i "/ssh.${namespace}.${VerbTLD}.conf/d" /root/.ssh/config
+/usr/bin/echo "Include /opt/rink/conf/ssh.${namespace}.${VerbTLD}.conf" >> /root/.ssh/config
+/usr/bin/cat <<EOF > /opt/rink/conf/ssh.${namespace}.${VerbTLD}.conf
+Host ${namespace}.${VerbTLD}
+Hostname ${sshIP}
+User root
+Port ${Port}
+IdentityFile /root/.ssh/${SSHKey}
+EOF
+
+# Test the connection
+/usr/bin/ssh ${namespace}.${VerbTLD} exit 0
+if [ "$?" != "0" ]; then
+  /usr/bin/echo "Can't connect to this verber based on credentials!
+Re-read the instructions and consider checking the port"
+  /usr/bin/rm -f /opt/rink/conf/ssh.${namespace}.${VerbTLD}.conf /opt/rink/conf/vrb.${namespace}.${VerbTLD}.conf
+  /usr/bin/mv /opt/rink/conf/raw.${namespace}.${VerbTLD}.conf /opt/rink/destroyed/failedimport.${namespace}.${VerbTLD}.conf
+  /usr/bin/sed -i "/ssh.${namespace}.${VerbTLD}.conf/d" /root/.ssh/config
+  exit 8
+fi
+
+# Check for import permission
+/usr/bin/ssh ${namespace}.${VerbTLD} /usr/bin/ls /opt/verb/conf/.importme > /dev/null 2>&1
+if [ "$?" != "0" ]; then
+  /usr/bin/echo "Server does not grant permission to be imported; read the instructions"
+  /usr/bin/rm -f /opt/rink/conf/ssh.${namespace}.${VerbTLD}.conf /opt/rink/conf/vrb.${namespace}.${VerbTLD}.conf
+  /usr/bin/mv /opt/rink/conf/raw.${namespace}.${VerbTLD}.conf /opt/rink/destroyed/failedimport.${namespace}.${VerbTLD}.conf
+  /usr/bin/sed -i "/ssh.${namespace}.${VerbTLD}.conf/d" /root/.ssh/config
+  exit 9
+fi
+# Get the host
+/usr/bin/ssh ${namespace}.${VerbTLD} /usr/bin/cat /opt/verb/conf/servernameip > /opt/rink/tmp/servernameip.${namespace}.${VerbTLD}
+. /opt/rink/tmp/servernameip.${namespace}.${VerbTLD}
+## Validate
+if [ -z "${ServerHost}" ] || [ "${ServerName}" != "${namespace}" ] || [ "${ServerTLD}" != "${VerbTLD}" ]; then
+  /usr/bin/echo "Imported verber not properly configured, cannot proceed!"
+  /usr/bin/rm -f /opt/rink/conf/ssh.${namespace}.${VerbTLD}.conf /opt/rink/conf/vrb.${namespace}.${VerbTLD}.conf
+  /usr/bin/mv /opt/rink/conf/raw.${namespace}.${VerbTLD}.conf /opt/rink/destroyed/failedimport.${namespace}.${VerbTLD}.conf
+  /usr/bin/sed -i "/ssh.${namespace}.${VerbTLD}.conf/d" /root/.ssh/config
+  exit 8
+else
+  HostID="$ServerHost"
+fi
+## Set the host
+/usr/bin/sed -i "s/VerbHostID=.*/VerbHostID=\"${HostID}\"/" /opt/rink/conf/vrb.${namespace}.${VerbTLD}.conf
+
+# Validate IP addresses
+if [ "${ServerExpIPv6}" != "${IPv6Exp}" ] && [ "${ServerExpIPv6}" != "NOIP6" ]; then
+  /usr/bin/echo "IPv6 addresses for imported verber do not agree, cannot proceed!
+Server reports: ${IPv6Exp}
+Verber records: ${ServerExpIPv6}"
+  /usr/bin/rm -f /opt/rink/conf/ssh.${namespace}.${VerbTLD}.conf /opt/rink/conf/vrb.${namespace}.${VerbTLD}.conf
+  /usr/bin/mv /opt/rink/conf/raw.${namespace}.${VerbTLD}.conf /opt/rink/destroyed/failedimport.${namespace}.${VerbTLD}.conf
+  /usr/bin/sed -i "/ssh.${namespace}.${VerbTLD}.conf/d" /root/.ssh/config
+  exit 8
+fi
+if [ "${ServerIPv4}" != "${IPv4}" ] && [ "${ServerIPv4}" != "NOIP4" ]; then
+  /usr/bin/echo "IPv4 addresses for imported verber do not agree, cannot proceed!
+Server reports: ${IPv4}
+Verber records: ${ServerIPv4}"
+  /usr/bin/rm -f /opt/rink/conf/ssh.${namespace}.${VerbTLD}.conf /opt/rink/conf/vrb.${namespace}.${VerbTLD}.conf
+  /usr/bin/mv /opt/rink/conf/raw.${namespace}.${VerbTLD}.conf /opt/rink/destroyed/failedimport.${namespace}.${VerbTLD}.conf
+  /usr/bin/sed -i "/ssh.${namespace}.${VerbTLD}.conf/d" /root/.ssh/config
+  exit 8
+fi
+
+# IP addresses
+/usr/bin/echo "IPv4: $IPv4"
+/usr/bin/echo "IPv6: $IPv6"
+/usr/bin/echo "Region: $VultrRegion"
 
 # Check for existing sns user
 /usr/bin/ssh -q -o StrictHostKeyChecking=yes ${NS1Name}.${RinkVerbTLD} [[ -d "/srv/sns/${namespace}-${VerbTLD}" ]] && ns1already="true"
 /usr/bin/ssh -q -o StrictHostKeyChecking=yes ${NS2Name}.${RinkVerbTLD} [[ -d "/srv/sns/${namespace}-${VerbTLD}" ]] && ns2already="true"
 if [ "${ns1already}" = "true" ] && [ "${ns2already}" = "true" ]; then
   /usr/bin/echo "SNS user already exists on nameserver ${NS1Host} & ${NS2Host}. Fix that first."
+  /usr/bin/rm -f /opt/rink/conf/ssh.${namespace}.${VerbTLD}.conf /opt/rink/conf/vrb.${namespace}.${VerbTLD}.conf
+  /usr/bin/mv /opt/rink/conf/raw.${namespace}.${VerbTLD}.conf /opt/rink/destroyed/failedimport.${namespace}.${VerbTLD}.conf
+  /usr/bin/sed -i "/ssh.${namespace}.${VerbTLD}.conf/d" /root/.ssh/config
   exit 7
 elif [ "${ns1already}" = "true" ]; then
   /usr/bin/echo "SNS user already exists on nameserver ${NS1Host}. Fix that first."
+  /usr/bin/rm -f /opt/rink/conf/ssh.${namespace}.${VerbTLD}.conf /opt/rink/conf/vrb.${namespace}.${VerbTLD}.conf
+  /usr/bin/mv /opt/rink/conf/raw.${namespace}.${VerbTLD}.conf /opt/rink/destroyed/failedimport.${namespace}.${VerbTLD}.conf
+  /usr/bin/sed -i "/ssh.${namespace}.${VerbTLD}.conf/d" /root/.ssh/config
   exit 7
 elif [ "${ns2already}" = "true" ]; then
   /usr/bin/echo "SNS user already exists on nameserver ${NS2Host}. Fix that first."
+  /usr/bin/rm -f /opt/rink/conf/ssh.${namespace}.${VerbTLD}.conf /opt/rink/conf/vrb.${namespace}.${VerbTLD}.conf
+  /usr/bin/mv /opt/rink/conf/raw.${namespace}.${VerbTLD}.conf /opt/rink/destroyed/failedimport.${namespace}.${VerbTLD}.conf
+  /usr/bin/sed -i "/ssh.${namespace}.${VerbTLD}.conf/d" /root/.ssh/config
   exit 7
 fi
 
