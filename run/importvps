@@ -38,10 +38,10 @@ fi
 if [ -f /opt/rink/conf/vrb.${namespace}.${VerbTLD}.conf ]; then
   /usr/bin/echo "Verber with name '${VerbTLD}' and TLD '${namespace}' already exists."
   exit 5
-elif [ "${VerbTLD}" != "${RinkVerbTLD}'" ] && [ ! -f "/opt/rink/conf/vrb.${namespace}.${RinkVerbTLD}.conf" ]; then
+elif [ "${VerbTLD}" != "${RinkVerbTLD}" ] && [ ! -f "/opt/rink/conf/vrb.${namespace}.${RinkVerbTLD}.conf" ]; then
   /usr/bin/echo "Verber with '${RinkVerbTLD}' TLD must be created for '${namespace}' before creating non-'${RinkVerbTLD}' TLD verbers."
   exit 5
-elif [ "${VerbTLD}" != "${RinkVerbTLD}'" ] && [ -f "/opt/rink/conf/vrb.${namespace}.${RinkVerbTLD}.conf" ]; then
+elif [ "${VerbTLD}" != "${RinkVerbTLD}" ] && [ -f "/opt/rink/conf/vrb.${namespace}.${RinkVerbTLD}.conf" ]; then
   . /opt/rink/conf/vrb.${namespace}.${RinkVerbTLD}.conf
   . /opt/rink/ns/${VerbNameServersConfig}
   if [ "${VerbUser}" != "${vuser}" ]; then

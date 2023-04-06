@@ -40,11 +40,11 @@ fi
 if [ -f /opt/rink/conf/vrb.${namespace}.${VerbTLD}.conf ]; then
   /usr/bin/echo "Verber with name '${VerbTLD}' and TLD '${namespace}' already exists."
   exit 5
-elif [ "${VerbTLD}" != "ink" ] && [ ! -f "/opt/rink/conf/vrb.${namespace}.ink.conf" ]; then
-  /usr/bin/echo "Verber with 'ink' TLD must be created for '${namespace}' before creating non-'ink' TLD verbers."
+elif [ "${VerbTLD}" != "${RinkVerbTLD}" ] && [ ! -f "/opt/rink/conf/vrb.${namespace}.${RinkVerbTLD}.conf" ]; then
+  /usr/bin/echo "Verber with '${RinkVerbTLD}' TLD must be created for '${namespace}' before creating non-'${RinkVerbTLD}' TLD verbers."
   exit 5
-elif [ "${VerbTLD}" != "ink" ] && [ -f "/opt/rink/conf/vrb.${namespace}.ink.conf" ]; then
-  . /opt/rink/conf/vrb.${namespace}.ink.conf
+elif [ "${VerbTLD}" != "${RinkVerbTLD}" ] && [ -f "/opt/rink/conf/vrb.${namespace}.${RinkVerbTLD}.conf" ]; then
+  . /opt/rink/conf/vrb.${namespace}.${RinkVerbTLD}.conf
   . /opt/rink/ns/${VerbNameServersConfig}
   if [ "${VerbUser}" != "${vuser}" ]; then
     /usr/bin/echo "Verb name '${namespace}' is already owned by another user."
