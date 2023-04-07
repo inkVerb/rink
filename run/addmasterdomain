@@ -3,6 +3,7 @@
 
 # This lists a domain on the NS slave nameservers when it is hosted on this rink
 ## rinkadddomain defers to this when it leans that it is being run on a rink server
+## This cannot use verb domains, which must be used by rinkupdateallverbs
 
 # How to use:
 ## ./addmasterdomain [ domain.tld ]
@@ -24,7 +25,7 @@ if [ "$RinkConfigured" != "rink" ]; then
 fi
 
 # Served or parked?
-if [ -f "/opt/verb/conf/inkdns/zones/${masterdomain}" ] || [ -f "/opt/verb/conf/inkdns/inkzones/${masterdomain}" ]; then
+if [ -f "/opt/verb/conf/inkdns/zones/${masterdomain}" ]; then
   parkserve="served"
 elif [ -f "/opt/verb/conf/inkdns/parked/${masterdomain}" ]; then
   parkserve="parked"
