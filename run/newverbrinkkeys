@@ -101,7 +101,7 @@ EOS
 /usr/bin/ssh -T ${NS1Name}.ink <<EOS
 /usr/bin/groupadd ${namespace}-${VerbTLD}
 /usr/bin/useradd -g ${namespace}-${VerbTLD} ${namespace}-${VerbTLD}
-/usr/bin/mkdir -p /srv/sns/${namespace}-${VerbTLD}/.ssh /srv/sns/${namespace}-${VerbTLD}/calls /srv/sns/${namespace}-${VerbTLD}/domains
+/usr/bin/mkdir -p /srv/sns/${namespace}-${VerbTLD}/.ssh /srv/sns/${namespace}-${VerbTLD}/calls /srv/sns/${namespace}-${VerbTLD}/domains /srv/sns/${namespace}-${VerbTLD}/parked
 /usr/bin/usermod -d /srv/sns/${namespace}-${VerbTLD} ${namespace}-${VerbTLD}
 /usr/bin/cat <<EOF > /srv/sns/${namespace}-${VerbTLD}/conf
 VerbHostID="${VerbHostID}"
@@ -119,7 +119,7 @@ EOS
 /usr/bin/ssh -T ${NS2Name}.ink <<EOS
 /usr/bin/groupadd ${namespace}-${VerbTLD}
 /usr/bin/useradd -g ${namespace}-${VerbTLD} ${namespace}-${VerbTLD}
-/usr/bin/mkdir -p /srv/sns/${namespace}-${VerbTLD}/.ssh /srv/sns/${namespace}-${VerbTLD}/calls /srv/sns/${namespace}-${VerbTLD}/domains
+/usr/bin/mkdir -p /srv/sns/${namespace}-${VerbTLD}/.ssh /srv/sns/${namespace}-${VerbTLD}/calls /srv/sns/${namespace}-${VerbTLD}/domains /srv/sns/${namespace}-${VerbTLD}/parked
 /usr/bin/usermod -d /srv/sns/${namespace}-${VerbTLD} ${namespace}-${VerbTLD}
 /usr/bin/cat <<EOF > /srv/sns/${namespace}-${VerbTLD}/conf
 VerbHostID="${VerbHostID}"

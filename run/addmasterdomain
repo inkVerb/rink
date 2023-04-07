@@ -2,7 +2,7 @@
 #inkVerbRunner! verb.ink
 
 # This lists a domain on the NS slave nameservers when it is hosted on this rink
-## rinkadddomain defers to this when it leans that this is a rink server
+## rinkadddomain defers to this when it leans that it is being run on a rink server
 
 # How to use:
 ## ./addmasterdomain [ domain.tld ]
@@ -23,61 +23,43 @@ if [ "$RinkConfigured" != "rink" ]; then
 	exit 6
 fi
 
-# Make the NS nameserver entries
-/usr/bin/ssh ${RinkNS1Name}.${RinkVerbTLD} /opt/verb/serfs/inkdnsaddslave ${RinkName}-${RinkVerbTLD} ${masterdomain} -n
-e="$?"; [[ "$e" = "0" ]] || exit "$e"
-/usr/bin/echo "addmasterdomain to added ${masterdomain} to NS1"
-/usr/bin/ssh ${RinkNS2Name}.${RinkVerbTLD} /opt/verb/serfs/inkdnsaddslave ${RinkName}-${RinkVerbTLD} ${masterdomain} -n
-e="$?"; [[ "$e" = "0" ]] || exit "$e"
-/usr/bin/echo "addmasterdomain to added ${masterdomain} to NS2"
+# Served or parked?
+if [ -f "/opt/verb/conf/inkdns/zones/${masterdomain}" ] || [ -f "/opt/verb/conf/inkdns/inkzones/${masterdomain}" ]; then
+  parkserve="served"
+elif [ -f "/opt/verb/conf/inkdns/parked/${masterdomain}" ]; then
+  parkserve="parked"
+else
+  /usr/bin/echo "${masterdomain} is neither served nor parked here; nothing to do"
+  exit 8
+fi
 
 #DEV Alternate version of above
-# /usr/bin/ssh ${RinkNS1Name}.${RinkVerbTLD} <<EOS
-# /usr/bin/cat <<EOF > /srv/sns/${ServerName}-${ServerTLD}/domains/${slavedomain}
-# sdnsDomain="${slavedomain}"
-# sdnsIPv4="${ServerIPv4}"
-# sdnsIPv4ARPA="${ServerARPAIPv4}"
-# sdnsIPv6Exp="${ServerExpIPv6}"
-# sdnsIPv6Cmp="${ServerIPv6}"
-# sdnsIPv6ARPA="${ServerARPAIPv6}"
-# EOF
-# EOS
-# /usr/bin/ssh ${RinkNS2Name}.${RinkVerbTLD} <<EOS
-# /usr/bin/cat <<EOF > /srv/sns/${ServerName}-${ServerTLD}/domains/${slavedomain}
-# sdnsDomain="${slavedomain}"
-# sdnsIPv4="${ServerIPv4}"
-# sdnsIPv4ARPA="${ServerARPAIPv4}"
-# sdnsIPv6Exp="${ServerExpIPv6}"
-# sdnsIPv6Cmp="${ServerIPv6}"
-# sdnsIPv6ARPA="${ServerARPAIPv6}"
-# EOF
-# EOS
+/usr/bin/ssh ${RinkNS1Name}.${RinkVerbTLD} <<EOS
+/usr/bin/cat <<EOF > /srv/sns/${ServerName}-${ServerTLD}/domains/${parkserve}/${masterdomain}
+sdnsDomain="${masterdomain}"
+sdnsIPv4="${ServerIPv4}"
+sdnsIPv4ARPA="${ServerARPAIPv4}"
+sdnsIPv6Exp="${ServerExpIPv6}"
+sdnsIPv6Cmp="${ServerIPv6}"
+sdnsIPv6ARPA="${ServerARPAIPv6}"
+EOF
+EOS
+/usr/bin/ssh ${RinkNS2Name}.${RinkVerbTLD} <<EOS
+/usr/bin/cat <<EOF > /srv/sns/${ServerName}-${ServerTLD}/domains/${parkserve}/${masterdomain}
+sdnsDomain="${masterdomain}"
+sdnsIPv4="${ServerIPv4}"
+sdnsIPv4ARPA="${ServerARPAIPv4}"
+sdnsIPv6Exp="${ServerExpIPv6}"
+sdnsIPv6Cmp="${ServerIPv6}"
+sdnsIPv6ARPA="${ServerARPAIPv6}"
+EOF
+EOS
 
-#DEV Below is obsolete because we simply list the domain configs in the sns/VERBER/domains/ folder, then inkdnsrefreshbind loops through them to create the entries
-# # Check for conflicts (imported code from rinkcheck)
-# ## NS1
-# i=1
-# already="false"
-# /usr/bin/ssh -q ${RinkNS1Name}.${RinkVerbTLD} [[ -f "/srv/sns/${ServerName}-${ServerTLD}/calls/inkdnsaddslave" ]] || [[ -f "/srv/sns/${ServerName}-${ServerTLD}/calls/killinkdnsslavedns" ]] && already="true"
-# while [ $already = "true" ]; do
-# 	if [ "$i" -ge "20" ]; then /usr/bin/echo "Call for ${checkserf} is already pending on ${RinkNS1Name} for over 1 minute. Try later."; exit 0; fi
-# 	/usr/bin/ssh -q ${RinkNS1Name}.${RinkVerbTLD} [[ -f "/srv/sns/${ServerName}-${ServerTLD}/calls/inkdnsaddslave" ]] || [[ -f "/srv/sns/${ServerName}-${ServerTLD}/calls/killinkdnsslavedns" ]] || already="false"
-# 	/usr/bin/sleep 3
-# 	i=$(( i + 1 ))
-#   if [ "$i" -ge "60" ]; then /usr/bin/echo "This is taking too long. Domain not listed on NS nameservers"; exit 4; fi
-# done
-# ## NS2
-# i=1
-# already="false"
-# /usr/bin/ssh -q ${RinkNS2Name}.${RinkVerbTLD} [[ -f "/srv/sns/${ServerName}-${ServerTLD}/calls/inkdnsaddslave" ]] || [[ -f "/srv/sns/${ServerName}-${ServerTLD}/calls/killinkdnsslavedns" ]] && already="true"
-# while [ $already = "true" ]; do
-# 	if [ "$i" -ge "20" ]; then /usr/bin/echo "Call for ${checkserf} is already pending on ${RinkNS2Name} for over 1 minute. Try later."; exit 0; fi
-# 	/usr/bin/ssh -q ${RinkNS2Name}.${RinkVerbTLD} [[ -f "/srv/sns/${ServerName}-${ServerTLD}/calls/inkdnsaddslave" ]] || [[ -f "/srv/sns/${ServerName}-${ServerTLD}/calls/killinkdnsslavedns" ]] || already="false"
-# 	/usr/bin/sleep 3
-# 	i=$(( i + 1 ))
-#   if [ "$i" -ge "60" ]; then /usr/bin/echo "This is taking too long. Domain not listed on NS nameservers"; exit 4; fi
-# done
-
-# # Insert the function statements
-# /usr/bin/ssh ${RinkNS1Name}.${RinkVerbTLD} "/usr/bin/echo 'inkdnsaddslave ${ServerName}-${ServerTLD} ${masterdomain} -n' > /srv/sns/${ServerName}-${ServerTLD}/calls/inkdnsaddslave"
-# /usr/bin/ssh ${RinkNS2Name}.${RinkVerbTLD} "/usr/bin/echo 'inkdnsaddslave ${ServerName}-${ServerTLD} ${masterdomain} -n' > /srv/sns/${ServerName}-${ServerTLD}/calls/inkdnsaddslave"
+#DEV replaces the above code because above checks whether it is a served or parked domain
+# Make the NS nameserver entries
+# /usr/bin/ssh ${RinkNS1Name}.${RinkVerbTLD} /opt/verb/serfs/inkdnsaddslave ${RinkName}-${RinkVerbTLD} ${masterdomain} -n
+# e="$?"; [[ "$e" = "0" ]] || exit "$e"
+# /usr/bin/echo "addmasterdomain to added ${masterdomain} to NS1"
+# /usr/bin/ssh ${RinkNS2Name}.${RinkVerbTLD} /opt/verb/serfs/inkdnsaddslave ${RinkName}-${RinkVerbTLD} ${masterdomain} -n
+# e="$?"; [[ "$e" = "0" ]] || exit "$e"
+# /usr/bin/echo "addmasterdomain to added ${masterdomain} to NS2"
