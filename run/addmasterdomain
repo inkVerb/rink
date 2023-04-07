@@ -25,9 +25,9 @@ if [ "$RinkConfigured" != "rink" ]; then
 fi
 
 # Served or parked?
-if [ -f "/opt/verb/conf/inkdns/zones/${masterdomain}" ]; then
+if [ -f "/opt/verb/conf/inkdns/zones/db.${masterdomain}" ]; then
   parkserve="served"
-elif [ -f "/opt/verb/conf/inkdns/parked/${masterdomain}" ]; then
+elif [ -f "/opt/verb/conf/inkdns/parked/db.${masterdomain}" ]; then
   parkserve="parked"
 else
   /usr/bin/echo "${masterdomain} is neither served nor parked here; nothing to do"
