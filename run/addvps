@@ -150,6 +150,7 @@ if [ "$IMPort" != "true" ]; then
 
     ## Permanently set to current nameservers
     /usr/bin/cat /opt/rink/inkdnsnameservers | /usr/bin/ssh ${namespace}.${VerbTLD} "/usr/bin/cat > /opt/verb/conf/inklists/inkdnsnameservers"
+    /usr/bin/ssh ${namespace}.${VerbTLD} /usr/bin/echo 'CustomNS="true"' >> /opt/verb/conf/inklists/inkdnsnameservers
 
     ## Run setup
     /usr/bin/ssh ${namespace}.${VerbTLD} /opt/verb/serfs/setup ${namespace} ink email vip ${VerbHostID} ${VerbIPv4} ${VerbIPv6} cb@${RinkDomain} 100 1000 ${VultrRegion} ${Port} boss "$(/usr/bin/pwgen -s -1 16)" ${UpdateRepo} ${UpdateOrg}

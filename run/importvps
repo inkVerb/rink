@@ -364,6 +364,7 @@ fi
 # Update the NS information on the imported verber
 /usr/bin/ssh ${namespace}.${VerbTLD} "/opt/verb/serfs/updateverber"
 /usr/bin/cat /opt/rink/inkdnsnameservers | /usr/bin/ssh ${namespace}.${VerbTLD} "/usr/bin/cat > /opt/verb/conf/inklists/inkdnsnameservers"
+/usr/bin/ssh ${namespace}.${VerbTLD} /usr/bin/echo 'CustomNS="true"' >> /opt/verb/conf/inklists/inkdnsnameservers
 /usr/bin/ssh ${namespace}.${VerbTLD} "/opt/verb/serfs/inkdnssetns1"
 /usr/bin/ssh ${namespace}.${VerbTLD} "/opt/verb/serfs/inkdnssetns2"
 /usr/bin/ssh ${namespace}.${VerbTLD} "/opt/verb/serfs/inkdnsrefreshbind"
