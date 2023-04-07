@@ -299,6 +299,13 @@ if [ "$?" != "0" ]; then
 fi
 # Get the host
 /usr/bin/ssh ${namespace}.${VerbTLD} /usr/bin/cat /opt/verb/conf/servernameip > /opt/rink/tmp/servernameip.${namespace}.${VerbTLD}
+if [ "$?" != "0" ] || [ ! -f "/opt/rink/tmp/servernameip.${namespace}.${VerbTLD}" ]; then
+  /usr/bin/echo "Server does not have proper settings, cannot proceed!"
+  /usr/bin/rm -f /opt/rink/conf/ssh.${namespace}.${VerbTLD}.conf /opt/rink/conf/vrb.${namespace}.${VerbTLD}.conf
+  /usr/bin/mv /opt/rink/conf/raw.${namespace}.${VerbTLD}.conf /opt/rink/destroyed/failedimport.${namespace}.${VerbTLD}.conf
+  /usr/bin/sed -i "/ssh.${namespace}.${VerbTLD}.conf/d" /root/.ssh/config
+  exit 9
+fi
 . /opt/rink/tmp/servernameip.${namespace}.${VerbTLD}
 ## Validate
 if [ -z "${ServerHost}" ] || [ "${ServerName}" != "${namespace}" ] || [ "${ServerTLD}" != "${VerbTLD}" ]; then
@@ -312,6 +319,7 @@ else
 fi
 ## Set the host
 /usr/bin/sed -i "s/VerbHostID=.*/VerbHostID=\"${HostID}\"/" /opt/rink/conf/vrb.${namespace}.${VerbTLD}.conf
+/usr/bin/rm -f /opt/rink/tmp/servernameip.${namespace}.${VerbTLD}
 
 # Validate IP addresses
 if [ "${ServerExpIPv6}" != "${IPv6Exp}" ] && [ "${ServerExpIPv6}" != "NOIP6" ]; then
