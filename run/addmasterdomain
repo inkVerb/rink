@@ -35,7 +35,7 @@ else
 fi
 
 #DEV Alternate version of above
-/usr/bin/ssh ${RinkNS1Name}.${RinkVerbTLD} <<EOS
+/usr/bin/ssh -T ${RinkNS1Name}.${RinkVerbTLD} <<EOS
 /usr/bin/cat <<EOF > /srv/sns/${ServerName}-${ServerTLD}/domains/${parkserve}/${masterdomain}
 sdnsDomain="${masterdomain}"
 sdnsIPv4="${ServerIPv4}"
@@ -45,7 +45,7 @@ sdnsIPv6Cmp="${ServerIPv6}"
 sdnsIPv6ARPA="${ServerARPAIPv6}"
 EOF
 EOS
-/usr/bin/ssh ${RinkNS2Name}.${RinkVerbTLD} <<EOS
+/usr/bin/ssh -T ${RinkNS2Name}.${RinkVerbTLD} <<EOS
 /usr/bin/cat <<EOF > /srv/sns/${ServerName}-${ServerTLD}/domains/${parkserve}/${masterdomain}
 sdnsDomain="${masterdomain}"
 sdnsIPv4="${ServerIPv4}"
