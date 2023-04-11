@@ -402,6 +402,12 @@ else
   /usr/bin/echo 'RinkVerbsNSListed="DONE"' >> /opt/rink/conf/vrb.${namespace}.${VerbTLD}.conf
 fi
 
+# Verber info
+/usr/bin/echo "# servernameip" > /opt/rink/conf/svr.${namespace}.${VerbTLD}.conf
+/usr/bin/ssh ${namespace}.${VerbTLD} "/usr/bin/cat /opt/verb/conf/servernameip" >> /opt/rink/conf/svr.${namespace}.${VerbTLD}.conf
+/usr/bin/echo "# siteurlist" >> /opt/rink/conf/svr.${namespace}.${VerbTLD}.conf
+/usr/bin/ssh ${namespace}.${VerbTLD} "/usr/bin/cat /opt/verb/conf/siteurilist" >> /opt/rink/conf/svr.${namespace}.${VerbTLD}.conf
+
 # PTR records with the hosting service
 . /opt/rink/conf/vrb.${namespace}.${VerbTLD}.conf
 . /opt/rink/conf/svr.${namespace}.${VerbTLD}.conf
