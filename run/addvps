@@ -117,12 +117,9 @@ fi
 
 # Create new SSH keys on the new verber and install their pub keys on the NS servers
 ## This must go before verb/inst/setup or the server will deny access in post-setup ssh calls
-if ! grep -q '^RINKKEYS="DONE"' "/opt/rink/conf/vrb.${namespace}.${VerbTLD}.conf"; then
+if ! grep -q '^RinkKeys="DONE"' "/opt/rink/conf/vrb.${namespace}.${VerbTLD}.conf"; then
   /opt/rink/run/newverbrinkkeys ${namespace} ${VerbTLD} ${vuser}
   e="$?"; [[ "$e" = "0" ]] || exit "$e"
-  if [ "$?" = "0" ]; then
-    /usr/bin/echo 'RINKKEYS="DONE"' >> /opt/rink/conf/vrb.${namespace}.${VerbTLD}.conf
-  fi
 fi
 
 # New instances only: setup
@@ -134,10 +131,10 @@ if [ "$IMPort" != "true" ]; then
     done
   fi
 
-  # Serupverb
+  # Setup
   . /opt/rink/conf/vrb.${namespace}.${VerbTLD}.conf
   . /opt/rink/ns/${VerbNameServersConfig}
-  if ! grep -q '^SETUPVERB="DONE"' "/opt/rink/conf/vrb.${namespace}.${VerbTLD}.conf"; then
+  if ! grep -q '^SetupVerber="DONE"' "/opt/rink/conf/vrb.${namespace}.${VerbTLD}.conf"; then
 
     ## Site URIlist
     . /opt/verb/conf/siteurilist # Only for $hostURI of this rink
@@ -156,7 +153,7 @@ if [ "$IMPort" != "true" ]; then
     /usr/bin/ssh ${namespace}.${VerbTLD} /opt/verb/serfs/setup ${namespace} ink email vip ${VerbHostID} ${VerbIPv4} ${VerbIPv6} cb@${RinkDomain} 100 1000 ${VultrRegion} ${Port} boss "$(/usr/bin/pwgen -s -1 16)" ${UpdateRepo} ${UpdateOrg}
     e="$?"; [[ "$e" = "0" ]] || exit "$e"
     if [ "$?" = "0" ]; then
-      /usr/bin/echo 'SETUPVERB="DONE"' >> /opt/rink/conf/vrb.${namespace}.${VerbTLD}.conf
+      /usr/bin/echo 'SetupVerber="DONE"' >> /opt/rink/conf/vrb.${namespace}.${VerbTLD}.conf
     fi
   fi
 
@@ -166,20 +163,29 @@ if [ "$IMPort" != "true" ]; then
 fi
 
 # Update to latest NS servers
-if ! grep -q 'RINKKEYS="DONE"' "/opt/rink/conf/vrb.${namespace}.${VerbTLD}.conf"; then
+if ! grep -q 'RinkKeys="DONE"' "/opt/rink/conf/vrb.${namespace}.${VerbTLD}.conf"; then
   /usr/bin/ssh ${namespace}.${VerbTLD} /opt/verb/serfs/rinkupdatekeys
   e="$?"; [[ "$e" = "0" ]] || exit "$e"
-  if [ "$?" = "0" ]; then
-    /usr/bin/echo 'RINKKEYS="DONE"' >> /opt/rink/conf/vrb.${namespace}.${VerbTLD}.conf
-  fi
 fi
-if ! grep -q 'RINKVERBSNSLISTED="DONE"' "/opt/rink/conf/vrb.${namespace}.${VerbTLD}.conf"; then
+if ! grep -q 'RinkVerbsNSListed="DONE"' "/opt/rink/conf/vrb.${namespace}.${VerbTLD}.conf"; then
   /usr/bin/ssh ${namespace}.${VerbTLD} /opt/verb/serfs/rinkupdateallverbs
   e="$?"; [[ "$e" = "0" ]] || exit "$e"
   if [ "$?" = "0" ]; then
-    /usr/bin/echo 'RINKVERBSNSLISTED="DONE"' >> /opt/rink/conf/vrb.${namespace}.${VerbTLD}.conf
+    /usr/bin/echo 'RinkVerbsNSListed="DONE"' >> /opt/rink/conf/vrb.${namespace}.${VerbTLD}.conf
   fi
 fi
+
+# Verber info
+/usr/bin/echo "# servernameip" > /opt/rink/conf/svr.${namespace}.${VerbTLD}.conf
+/usr/bin/ssh ${namespace}.${VerbTLD} "/usr/bin/cat /opt/verb/conf/servernameip" >> /opt/rink/conf/svr.${namespace}.${VerbTLD}.conf
+/usr/bin/echo "# siteurlist" >> /opt/rink/conf/svr.${namespace}.${VerbTLD}.conf
+/usr/bin/ssh ${namespace}.${VerbTLD} "/usr/bin/cat /opt/verb/conf/siteurilist" >> /opt/rink/conf/svr.${namespace}.${VerbTLD}.conf
+
+# PTR records with the hosting service
+. /opt/rink/conf/vrb.${namespace}.${VerbTLD}.conf
+. /opt/rink/conf/svr.${namespace}.${VerbTLD}.conf
+/usr/bin/vultr-cli instance reverse-dns set-ipv4 "${VultrInstanceID}" -e "${hostURI}" -i "${ServerIPv4}"
+/usr/bin/vultr-cli instance reverse-dns set-ipv6 "${VultrInstanceID}" -e "${hostURI}" -i "${ServerIPv6}"
 
 # Restart the new Verber
 /usr/bin/ssh ${namespace}.${VerbTLD} /usr/bin/reboot

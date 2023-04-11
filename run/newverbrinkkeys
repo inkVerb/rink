@@ -134,6 +134,7 @@ EOF
 /usr/bin/chown -R ${namespace}-${VerbTLD}:${namespace}-${VerbTLD} /srv/sns/${namespace}-${VerbTLD}
 /usr/bin/chmod 700 /srv/sns/${namespace}-${VerbTLD}/.ssh
 EOS
+
 # Update user directories with settings and ssh keys
 /usr/bin/cat /opt/rink/tmp/Rink_${VerbTLD}_${namespace}.pub | /usr/bin/ssh ${NS1Name}.ink "/usr/bin/cat > /srv/sns/${namespace}-${VerbTLD}/.ssh/authorized_keys"
 /usr/bin/cat /opt/rink/tmp/Rink_${VerbTLD}_${namespace}.pub | /usr/bin/ssh ${NS2Name}.ink "/usr/bin/cat > /srv/sns/${namespace}-${VerbTLD}/.ssh/authorized_keys"
@@ -145,3 +146,6 @@ EOS
 /usr/bin/ssh ${NS2Name}.ink "/usr/bin/chown -R ${namespace}-${VerbTLD}:${namespace}-${VerbTLD} /srv/sns/${namespace}-${VerbTLD}"
 /usr/bin/rm -f /opt/rink/tmp/Rink_${VerbTLD}_${namespace}.pub
 /usr/bin/rm -f /opt/rink/tmp/servertldstatus_${VerbTLD}_${namespace}
+
+# Note in the settings
+/usr/bin/echo 'RinkKeys="DONE"' >> /opt/rink/conf/vrb.${namespace}.${VerbTLD}.conf
