@@ -7,9 +7,15 @@
 ## ./addvps [verb-namespace] [tld] [user] [vultr-plan (1gb shortcut for lowest)] [snapshot-nickname] [vultr-region - optional] [PHP-timezone - optional] [update repo - optional, default is verb-update] [update GitHub org - optional, default is inkverb]
 
 # Eg:
-## ./addvps name ink someuser 1gb laemp
-## ./addvps john ink otheruser 1gb laempsjc
-## ./addvps nick red billuser vc2-1c-2gb laemp sea America/Los_Angeles
+## ./addvps name ink someuser 1gb laemp ord America/Chicago
+## ./addvps name ink someuser 1gb laemp dfw America/Chicago
+## ./addvps name ink someuser 1gb laemp ewr America/New_York
+## ./addvps name ink someuser 1gb laemp yto America/Toronto
+## ./addvps name ink someuser 1gb laemp itm Asia/Tokyo
+## ./addvps name ink someuser 1gb laemp nrt Asia/Tokyo
+## ./addvps name ink someuser 1gb laemp sgp Asia/Singapore
+## ./addvps john ink otheruser 1gb laemp lax America/Los_Angeles
+## ./addvps nick red billuser vc2-1c-2gb laemp sjc America/Los_Angeles
 ## ./addvps nick vip billuser vc2-1c-2gb laemp sea America/Los_Angeles verb-update inkverb
 ## ./addvps name ink someuser --import s0mElong-An6Cr7z3-ID
 

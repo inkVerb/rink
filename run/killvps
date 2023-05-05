@@ -43,15 +43,19 @@ fi
 [[ -n "${VerbIPv4}" ]] && [[ -n "${VerbPort}" ]] && /usr/bin/sed -i "/\[${VerbIPv4}\]:${VerbPort}/d" /root/.ssh/known_hosts
 [[ -n "${VerbIPv4}" ]] && /usr/bin/sed -i "/${VerbIPv4}/d" /root/.ssh/known_hosts
 
-
 # De-list the NS records
-/opt/rink/run/killdns ${namespace} ${VerbTLD} ${vuser}
+#DEV obsolete, see killdns notes
+#/opt/rink/run/killdns ${namespace} ${VerbTLD} ${vuser}
+
+# Remove controlled users on SNS servers
+/usr/bin/ssh -o StrictHostKeyChecking=yes ${NS1Name}.${RinkVerbTLD} /usr/bin/rm -rf /srv/sns/${namespace}-${VerbTLD}
+/usr/bin/ssh -o StrictHostKeyChecking=yes ${NS2Name}.${RinkVerbTLD} /usr/bin/rm -rf /srv/sns/${namespace}-${VerbTLD}
 
 # Remove pub SSH keys from verber
 /opt/rink/run/killverbrinkkeys ${namespace} ${VerbTLD} ${vuser}
 
 # Remove other 
-kilverberrecords ${namespace} ${VerbTLD} ${vuser}
+/opt/rink/run/kilverberrecords ${namespace} ${VerbTLD} ${vuser}
 
 # Destroy it
 /usr/bin/vultr-cli instance delete ${VultrInstanceID}

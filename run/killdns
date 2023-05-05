@@ -2,6 +2,9 @@
 #inkVerbRunner! verb.ink
 
 # This de-lists the NS records for a verber from the NS nameservers, which were listed in addvps by the rink ordering the verber to run rinkupdateallverbs
+#DEV: This is obsolete because these are now stored in /srv/sns/verber-tld/domains/served/, so deleting that verber-tld directory removes these entries
+
+
 # How to use:
 ## ./killdns [ verb-namespace ] [ verb-tld ] [ user ]
 
