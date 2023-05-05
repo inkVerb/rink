@@ -27,4 +27,4 @@ fi
 . /opt/rink/ns/${VerbNameServersConfig}
 
 # Run the powercycle
-/usr/bin/vultr-cli instance restart 1c1ee091-0bb2-4871-8f02-170e3f192bcc
+/usr/bin/vultr-cli instance restart ${VultrInstanceID}

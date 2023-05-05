@@ -25,19 +25,19 @@ if [ ! -f "/opt/rink/conf/vrb.${namespace}.${VerbTLD}.conf" ]; then
 fi
 
 # Wait for powerup
-/usr/bin/ssh -o StrictHostKeyChecking=yes -o ConnectTimeout=3 ${namespace}.${VerbTLD} "exit 0" 1> /opt/rink/tmp/waiton.${namespace}.${VerbTLD} 2> /opt/rink/tmp/waiton.${namespace}.${VerbTLD}
+/usr/bin/ssh -o StrictHostKeyChecking=yes -o ConnectTimeout=4 ${namespace}.${VerbTLD} "exit 0" 1> /opt/rink/tmp/waiton.${namespace}.${VerbTLD} 2> /opt/rink/tmp/waiton.${namespace}.${VerbTLD}
 sshexit="$?"
 /usr/bin/grep -q 'key' /opt/rink/tmp/waiton.${namespace}.${VerbTLD}
 greptest="$?"
 count=0
 while [ "${greptest}" != "0" ] && [ "${sshexit}" != "0" ]; do
-  sleep 3
+  sleep 2
   /usr/bin/ssh -o StrictHostKeyChecking=yes -o ConnectTimeout=3 ${namespace}.${VerbTLD} "exit 0" 1> /opt/rink/tmp/waiton.${namespace}.${VerbTLD} 2> /opt/rink/tmp/waiton.${namespace}.${VerbTLD}
   sshexit="$?"
   /usr/bin/grep -q 'key' /opt/rink/tmp/waiton.${namespace}.${VerbTLD}
   greptest="$?"
   # If we have been trying 10 minutes, restart
-  if [ "$count" -gt "200" ]; then
+  if [ "$count" -gt "60" ]; then
     /opt/rink/run/powercycle ${namespace} ${VerbTLD}
     count=0
   fi

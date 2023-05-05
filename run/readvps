@@ -66,6 +66,7 @@ VerbTLD="$VerbTLD"
 VerbRegion="NONE_MOD_ADD"
 VerbUser="$vuser"
 VerbPort="$Port"
+VerbNameServersConfig="${NameServersConfig}"
 EOF
 
 ## IP processing
@@ -163,7 +164,6 @@ VerbIPv6="${IPv6New}"
 VerbIPv6Exp="${IPv6Exp}"
 VerbARPAIPv4="${IPv4ARPA}"
 VerbARPAIPv6="${IPv6ARPA}"
-VerbNameServersConfig="${NameServersConfig}"
 EOF
 
 # Create the .ssh/config entry
