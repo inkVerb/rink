@@ -29,7 +29,7 @@ vultrplan="$4"
 snapnick="$5"
 
 # Override defaults
-if [ -n "$6" ] && /usr/bin/grep -q "^$6" /opt/rink/VultrRegions; then
+if [ -n "$6" ] && /usr/bin/vultr-cli regions list | /usr/bin/grep -q "^$6"; then
   VultrRegion="$6" # Overrides region from rinknames
 fi
 if [ -n "$7" ] && /usr/bin/grep -q "^$7" /opt/verb/ink/PHPcities; then
@@ -37,14 +37,14 @@ if [ -n "$7" ] && /usr/bin/grep -q "^$7" /opt/verb/ink/PHPcities; then
 fi
 
 # Check to see if this verber already exists by this name
-if [ -f /opt/rink/conf/vrb.${namespace}.${VerbTLD}.conf ]; then
+if [ -f /opt/rink/conf/${namespace}.${VerbTLD}.vrb ]; then
   /usr/bin/echo "Verber with name '${VerbTLD}' and TLD '${namespace}' already exists."
   exit 5
-elif [ "${VerbTLD}" != "${RinkVerbTLD}" ] && [ ! -f "/opt/rink/conf/vrb.${namespace}.${RinkVerbTLD}.conf" ]; then
+elif [ "${VerbTLD}" != "${RinkVerbTLD}" ] && [ ! -f "/opt/rink/conf/${namespace}.${RinkVerbTLD}.vrb" ]; then
   /usr/bin/echo "Verber with '${RinkVerbTLD}' TLD must be created for '${namespace}' before creating non-'${RinkVerbTLD}' TLD verbers."
   exit 5
-elif [ "${VerbTLD}" != "${RinkVerbTLD}" ] && [ -f "/opt/rink/conf/vrb.${namespace}.${RinkVerbTLD}.conf" ]; then
-  . /opt/rink/conf/vrb.${namespace}.${RinkVerbTLD}.conf
+elif [ "${VerbTLD}" != "${RinkVerbTLD}" ] && [ -f "/opt/rink/conf/${namespace}.${RinkVerbTLD}.vrb" ]; then
+  . /opt/rink/conf/${namespace}.${RinkVerbTLD}.vrb
   . /opt/rink/ns/${VerbNameServersConfig}
   if [ "${VerbUser}" != "${vuser}" ]; then
     /usr/bin/echo "Verb name '${namespace}' is already owned by another user."
@@ -61,7 +61,7 @@ else
 fi
 ## Make sure it is not in use
 ### grep "-s, --no-messages suppress error messages"
-while /usr/bin/grep -qs ^VerbHostID=\"$HOSTID\" /opt/rink/conf/vrb.* > /dev/null; do
+while /usr/bin/grep -qs ^VerbHostID=\"$HOSTID\" /opt/rink/conf/*.vrb > /dev/null; do
   HOSTID=$(( HOSTID + 1 ))
 done
 
@@ -87,7 +87,7 @@ fi
 . /opt/rink/portnum
 
 # Create the instance
-/usr/bin/vultr-cli instance create --region "${VultrRegion}" --plan "${vultrplan}" --snapshot "${SnapshotID}" --label "${namespace}.${VerbTLD}" --ipv6 true > /opt/rink/conf/raw.${namespace}.${VerbTLD}.conf
+/usr/bin/vultr-cli instance create --region "${VultrRegion}" --plan "${vultrplan}" --snapshot "${SnapshotID}" --label "${namespace}.${VerbTLD}" --ipv6 true > /opt/rink/conf/${namespace}.${VerbTLD}.raw
 
 # Exit status?
 e="$?"; if [ "$e" != "0" ]; then
@@ -96,23 +96,23 @@ e="$?"; if [ "$e" != "0" ]; then
 fi
 
 # Did it work?
-if [ -f /opt/rink/conf/raw.${namespace}.${VerbTLD}.conf ]; then
-  if ! /usr/bin/grep -q ^ID /opt/rink/conf/raw.${namespace}.${VerbTLD}.conf; then
+if [ -f /opt/rink/conf/${namespace}.${VerbTLD}.raw ]; then
+  if ! /usr/bin/grep -q ^ID /opt/rink/conf/${namespace}.${VerbTLD}.raw; then
     /usr/bin/echo "VPS output file is not correct, start over."
-    /usr/bin/rm -f "*.${namespace}.${VerbTLD}.conf"
-    /usr/bin/sed -i "/ssh.${namespace}.${VerbTLD}.conf/d" /root/.ssh/config
+    /usr/bin/rm -f "${namespace}.${VerbTLD}.*"
+    /usr/bin/sed -i "/${namespace}.${VerbTLD}.ssh/d" /root/.ssh/config
     exit 4
   fi
 else
   /usr/bin/echo "VPS output file does not exist, start over."
-  /usr/bin/rm -f "*.${namespace}.${VerbTLD}.conf"
-  /usr/bin/sed -i "/ssh.${namespace}.${VerbTLD}.conf/d" /root/.ssh/config
+  /usr/bin/rm -f "${namespace}.${VerbTLD}.*"
+  /usr/bin/sed -i "/${namespace}.${VerbTLD}.ssh/d" /root/.ssh/config
   exit 4
 fi
 
 # Get the VPS instance ID
-VultrInstanceID="$(/usr/bin/cat /opt/rink/conf/raw.${namespace}.${VerbTLD}.conf | /usr/bin/grep ^ID | /usr/bin/sed s"/ID\t\t\t//")"
-/usr/bin/cat <<EOF > /opt/rink/conf/vrb.${namespace}.${VerbTLD}.conf
+VultrInstanceID="$(/usr/bin/cat /opt/rink/conf/${namespace}.${VerbTLD}.raw | /usr/bin/grep ^ID | /usr/bin/sed s"/ID\t\t\t//")"
+/usr/bin/cat <<EOF > /opt/rink/conf/${namespace}.${VerbTLD}.vrb
 VultrInstanceID="${VultrInstanceID}"
 VerbHostID="${HOSTID}"
 VerbName="${namespace}"
@@ -239,7 +239,7 @@ IPv4ARPA=$(/usr/bin/echo ${IPv4} | sed -r 's/^([0-9]{1,3}).([0-9]{1,3}).([0-9]{1
 IPv6ARPA=$(rarpa_ipv6 ${IPv6Exp})
 
 ## Append IP addresses to config
-/usr/bin/cat <<EOF >> /opt/rink/conf/vrb.${namespace}.${VerbTLD}.conf
+/usr/bin/cat <<EOF >> /opt/rink/conf/${namespace}.${VerbTLD}.vrb
 VerbIPv4="${IPv4}"
 VerbIPv6="${IPv6New}"
 VerbIPv6Exp="${IPv6Exp}"
@@ -250,8 +250,8 @@ EOF
 
 # Create the .ssh/config entry
 . /opt/rink/sshkey
-/usr/bin/echo "Include /opt/rink/conf/ssh.${namespace}.${VerbTLD}.conf" >> /root/.ssh/config
-/usr/bin/cat <<EOF > /opt/rink/conf/ssh.${namespace}.${VerbTLD}.conf
+/usr/bin/echo "Include /opt/rink/conf/${namespace}.${VerbTLD}.ssh" >> /root/.ssh/config
+/usr/bin/cat <<EOF > /opt/rink/conf/${namespace}.${VerbTLD}.ssh
 Host ${namespace}.${VerbTLD}
 Hostname ${IPv4}
 User root
@@ -264,7 +264,7 @@ EOF
 /opt/rink/run/waitvpsanswer ${namespace} ${VerbTLD}
 e="$?"; if [ "$e" != "0" ]; then
   /usr/bin/echo "VPS cannot be accessed. It is possible that the keys are not installed. Make sure that they key '${SSHKey}' is properly installed on this VPS, then try again."
-  /usr/bin/rm -f "*.${namespace}.${VerbTLD}.conf"
+  /usr/bin/rm -f "${namespace}.${VerbTLD}.*"
   exit "$e"
 fi
 

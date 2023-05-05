@@ -22,29 +22,29 @@ VerbTLD="$2"
 vuser="$3"
 shift 3
 
-if [ ! -f "/opt/rink/conf/vrb.${namespace}.${VerbTLD}.conf" ]; then
+if [ ! -f "/opt/rink/conf/${namespace}.${VerbTLD}.vrb" ]; then
   /usr/bin/echo "${namespace}.${VerbTLD} does not exist! I quit."
   exit 0
 fi
 
-if ! grep -q "VerbUser=\"$vuser\"" "/opt/rink/conf/vrb.${namespace}.${VerbTLD}.conf"; then
+if ! grep -q "VerbUser=\"$vuser\"" "/opt/rink/conf/${namespace}.${VerbTLD}.vrb"; then
   /usr/bin/echo "${namespace}.${VerbTLD} not owned by user ${vuser}! I quit."
   exit 0
 fi
 
-if ! grep -q "Include /opt/rink/conf/ssh.${namespace}.${VerbTLD}.conf" /root/.ssh/config; then
+if ! grep -q "Include /opt/rink/conf/${namespace}.${VerbTLD}.ssh" /root/.ssh/config; then
   /usr/bin/echo "Something is wrong. ${namespace}.${VerbTLD} config exists, but the entry is not made in the SSH config! I quit."
   exit 0
 fi
 
-. /opt/rink/conf/vrb.${namespace}.${VerbTLD}.conf
+. /opt/rink/conf/${namespace}.${VerbTLD}.vrb
 . /opt/rink/ns/${VerbNameServersConfig}
 
 #DEV these keys should already be accepted
 # if [ -z "${FIRSTSSH}" ]; then
 #   /usr/bin/ssh -o StrictHostKeyChecking=accept-new ${namespace}.${VerbTLD} /usr/bin/cat /etc/ssh/ssh_host_dsa_key.pub >> /root/.ssh/known_hosts
 #   if [ "$?" = "0" ]; then
-#     /usr/bin/echo "FIRSTSSH=\"true\"" >> /opt/rink/conf/vrb.${namespace}.${VerbTLD}.conf
+#     /usr/bin/echo "FIRSTSSH=\"true\"" >> /opt/rink/conf/${namespace}.${VerbTLD}.vrb
 #   fi
 # fi
 

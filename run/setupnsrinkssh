@@ -11,13 +11,15 @@
 . /opt/rink/portnum
 . /opt/verb/conf/servernameip
 . /opt/rink/sshkey
+. /opt/rink/rinknames
+. /opt/rink/ns/${NameServersConfig}
 
 # NS 1
-/usr/bin/sed -i '/ssh.ns1.conf/d' /root/.ssh/config
-/usr/bin/rm /opt/rink/conf/ssh.ns1.conf
-/usr/bin/echo "Include /opt/rink/conf/ssh.ns1.conf" >> /root/.ssh/config
-/usr/bin/cat <<EOF > /opt/rink/conf/ssh.ns1.conf
-host ns1 ${ServerNS1IPv4}
+/usr/bin/sed -i "/${NS1Name}.${RinkVerbTLD}.ssh/d" /root/.ssh/config
+/usr/bin/rm /opt/rink/conf/${NS1Name}.${RinkVerbTLD}.ssh
+/usr/bin/echo "Include /opt/rink/conf/${NS1Name}.${RinkVerbTLD}.ssh" >> /root/.ssh/config
+/usr/bin/cat <<EOF > /opt/rink/conf/${NS1Name}.${RinkVerbTLD}.ssh
+host ${NS1Name}.${RinkVerbTLD} ${ServerNS1IPv4}
 hostname ${ServerNS1IPv4}
 user root
 port ${Port}
@@ -25,11 +27,11 @@ IdentityFile /root/.ssh/${SSHKey}
 EOF
 
 # NS 2
-/usr/bin/sed -i '/ssh.ns2.conf/d' /root/.ssh/config
-/usr/bin/rm /opt/rink/conf/ssh.ns2.conf
-/usr/bin/echo "Include /opt/rink/conf/ssh.ns2.conf" >> /root/.ssh/config
-/usr/bin/cat <<EOF > /opt/rink/conf/ssh.ns2.conf
-host ns2 ${ServerNS2IPv4}
+/usr/bin/sed -i "/${NS2Name}.${RinkVerbTLD}.ssh/d" /root/.ssh/config
+/usr/bin/rm /opt/rink/conf/${NS2Name}.${RinkVerbTLD}.ssh
+/usr/bin/echo "Include /opt/rink/conf/${NS2Name}.${RinkVerbTLD}.ssh" >> /root/.ssh/config
+/usr/bin/cat <<EOF > /opt/rink/conf/${NS2Name}.${RinkVerbTLD}.ssh
+host ${NS2Name}.${RinkVerbTLD} ${ServerNS2IPv4}
 hostname ${ServerNS2IPv4}
 user root
 port ${Port}

@@ -19,18 +19,18 @@ namespace="$1"
 VerbTLD="$2"
 vuser="$3"
 
-if [ ! -f "/opt/rink/conf/vrb.${namespace}.${VerbTLD}.conf" ]; then
+if [ ! -f "/opt/rink/conf/${namespace}.${VerbTLD}.vrb" ]; then
   /usr/bin/echo "${namespace}.${VerbTLD} does not exist! I quit."
   exit 0
 fi
 
-if ! grep -q "VerbUser=\"$vuser\"" "/opt/rink/conf/vrb.${namespace}.${VerbTLD}.conf"; then
+if ! grep -q "VerbUser=\"$vuser\"" "/opt/rink/conf/${namespace}.${VerbTLD}.vrb"; then
   /usr/bin/echo "${namespace}.${VerbTLD} not owned by user ${vuser}! I quit."
   exit 0
 fi
 
 # Config
-. /opt/rink/conf/vrb.${namespace}.${VerbTLD}.conf
+. /opt/rink/conf/${namespace}.${VerbTLD}.vrb
 . /opt/rink/ns/${VerbNameServersConfig}
 
 # Check

@@ -6,7 +6,7 @@
 ## Used by: addmodvps
 
 # How to use:
-## ./readvps [nickname] [tld] [vultr instance ID] [user]
+## ./readvps [namespace] [tld] [vultr instance ID] [user]
 
 # Eg:
 ## ./readvps name ink bla3-bla2-bla1 john
@@ -15,7 +15,7 @@
 
 
 if [ -z "$4" ]; then
-  /usr/bin/echo "Needs nickname, TLD, Vultr instance ID, & user arguments, I quit."
+  /usr/bin/echo "Needs namespace, TLD, Vultr instance ID, & user arguments, I quit."
   exit 0
 fi
 
@@ -23,23 +23,23 @@ fi
 . /opt/rink/rinknames
 . /opt/rink/ns/${NameServersConfig}
 
-nickname="$1"
+namespace="$1"
 VerbTLD="$2"
 VultrInstanceID="$3"
 vuser="$4"
 
 # Check to see if this verber already exists by this name
-if [ -f /opt/rink/conf/vrb.${nickname}.${VerbTLD}.conf ]; then
-  echo "Verber with name '${VerbTLD}' and TLD '${nickname}' already exists."
+if [ -f /opt/rink/conf/${namespace}.${VerbTLD}.vrb ]; then
+  echo "Verber with name '${VerbTLD}' and TLD '${namespace}' already exists."
   exit 0
-elif [ "${VerbTLD}" != "${RinkVerbTLD}" ] && [ ! -f "/opt/rink/conf/vrb.${nickname}.${RinkVerbTLD}.conf" ]; then
-  echo "Verber with '${RinkVerbTLD}' TLD must be created for '${nickname}' before creating non-'${RinkVerbTLD}' TLD verbers."
+elif [ "${VerbTLD}" != "${RinkVerbTLD}" ] && [ ! -f "/opt/rink/conf/${namespace}.${RinkVerbTLD}.vrb" ]; then
+  echo "Verber with '${RinkVerbTLD}' TLD must be created for '${namespace}' before creating non-'${RinkVerbTLD}' TLD verbers."
   exit 0
-elif [ "${VerbTLD}" != "${RinkVerbTLD}" ] && [ -f "/opt/rink/conf/vrb.${nickname}.${RinkVerbTLD}.conf" ]; then
-  . /opt/rink/conf/vrb.${nickname}.${RinkVerbTLD}.conf
+elif [ "${VerbTLD}" != "${RinkVerbTLD}" ] && [ -f "/opt/rink/conf/${namespace}.${RinkVerbTLD}.vrb" ]; then
+  . /opt/rink/conf/${namespace}.${RinkVerbTLD}.vrb
   . /opt/rink/ns/${VerbNameServersConfig}
   if [ "${VerbUser}" != "${vuser}" ]; then
-    echo "Verb name '${nickname}' is already owned by another user."
+    echo "Verb name '${namespace}' is already owned by another user."
     exit 0
   fi
 fi
@@ -58,10 +58,10 @@ FIRSTIPv6PLACEHOLDER="$(/usr/bin/vultr-cli instance ipv6 list $VultrInstanceID |
 /usr/bin/echo "IPv6: $IPv6"
 
 # Get the VPS instance ID
-/usr/bin/cat <<EOF > /opt/rink/conf/vrb.${nickname}.${VerbTLD}.conf
+/usr/bin/cat <<EOF > /opt/rink/conf/${namespace}.${VerbTLD}.vrb
 VultrInstanceID="$VultrInstanceID"
 VerbHostID="NONE_MOD_ADD"
-VerbName="$nickname"
+VerbName="$namespace"
 VerbTLD="$VerbTLD"
 VerbRegion="NONE_MOD_ADD"
 VerbUser="$vuser"
@@ -158,7 +158,7 @@ IPv4ARPA=$(/bin/echo ${IPv4} | sed -r 's/^([0-9]{1,3}).([0-9]{1,3}).([0-9]{1,3})
 IPv6ARPA=$(rarpa_ipv6 ${IPv6Exp})
 
 ## Append IP addresses to config
-/usr/bin/cat <<EOF >> /opt/rink/conf/vrb.${nickname}.${VerbTLD}.conf
+/usr/bin/cat <<EOF >> /opt/rink/conf/${namespace}.${VerbTLD}.vrb
 VerbIPv4="${IPv4}"
 VerbIPv6="${IPv6New}"
 VerbIPv6Exp="${IPv6Exp}"
@@ -168,9 +168,9 @@ EOF
 
 # Create the .ssh/config entry
 . /opt/rink/sshkey
-/usr/bin/echo "Include /opt/rink/conf/ssh.${nickname}.${VerbTLD}.conf" >> /root/.ssh/config
-/usr/bin/cat <<EOF > /opt/rink/conf/ssh.${nickname}.${VerbTLD}.conf
-Host ${nickname}.${VerbTLD}
+/usr/bin/echo "Include /opt/rink/conf/${namespace}.${VerbTLD}.ssh" >> /root/.ssh/config
+/usr/bin/cat <<EOF > /opt/rink/conf/${namespace}.${VerbTLD}.ssh
+Host ${namespace}.${VerbTLD}
 Hostname ${IPv4}
 User root
 Port ${Port}
@@ -178,11 +178,11 @@ IdentityFile /root/.ssh/${SSHKey}
 EOF
 
 # Keyscan
-/opt/rink/run/keyscan ${nickname} ${VerbTLD}
+/opt/rink/run/keyscan ${namespace} ${VerbTLD}
 e="$?"; [[ "$e" = "0" ]] || exit "$e"
 
 # Check for an answer
-/opt/rink/run/waitvpsanswer ${nickname} ${VerbTLD}
+/opt/rink/run/waitvpsanswer ${namespace} ${VerbTLD}
 
 # Finish
-/usr/bin/echo "${nickname}.${VerbTLD} mod added. It should be ready now."
+/usr/bin/echo "${namespace}.${VerbTLD} mod added. It should be ready now."

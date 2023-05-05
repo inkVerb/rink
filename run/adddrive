@@ -1,0 +1,141 @@
+#!/bin/bash
+#inkVerbRunner! verb.ink
+
+# This is the master command to add a new VPS, complete with all requirements
+
+# How to use:
+## ./adddrive [verb-namespace] [tld] [user] [size] [type] [region]
+
+# Eg:
+## ./adddrive name ink someuser
+
+
+if [ -z "$5" ]; then
+  /usr/bin/echo "Needs namespace, TLD, user, plan, region, & snapshot arguments, I quit."
+  exit 0
+fi
+
+# Get our Rink-NS name settings
+. /opt/rink/rinknames
+
+namespace="$1"
+verbTLD="$2"
+vuser="$3"
+drivesize="$4"
+drivetype="$5"
+driveregion="$6"
+
+# Credential checks
+if [ -z "${6}" ]; then
+  /usr/bin/echo "Enter all credentials; read instructions."
+  exit 5
+fi
+
+if [ ! -f "/opt/rink/conf/${namespace}.${VerbTLD}.vrb" ]; then
+  /usr/bin/echo "${namespace}.${VerbTLD} does not exist! I quit."
+  exit 0
+fi
+
+# Check verber config
+if ! grep -q "VerbUser=\"$vuser\"" "/opt/rink/conf/${namespace}.${VerbTLD}.vrb"; then
+  /usr/bin/echo "${namespace}.${VerbTLD} not owned by user ${vuser}! I quit."
+  exit 0
+else
+  . /opt/rink/conf/${namespace}.${VerbTLD}.vrb
+fi
+
+# Confirm mount name for device
+drivename="${drivetype}"
+i=1
+while [ -f "/opt/rink/drive/${namespace}.${verbTLD}.${drivename}.drive" ]; do
+  drivename="${drivetype}${i}"
+  ((i++))
+  if [ "${i}" = "5" ]; then
+    /usr/bin/echo "Cannot have more than four of the same drive type mounted to one verber. I quit."
+    exit 7
+  fi
+done
+
+# Arranging
+if [ "${drivetype}" = "ssd" ]; then
+  typetest="block_storage_high_perf"
+  typecreate="high_perf"
+elif [ "${drivetype}" = "hdd" ]; then
+  typetest="block_storage_storage_opt"
+  typecreate="storage_opt"
+fi
+
+# Check region availability
+if /usr/bin/vultr-cli regions list | /usr/bin/grep "^${driveregion}" | /usr/bin/grep -q "${typetest}"; then
+  /usr/bin/echo "Creating ${drivesize} GB ${drivetype} drive in ${driveregion} region..."
+else
+  /usr/bin/echo "Region not available for that drive type, I quit."
+  exit 5
+fi
+
+# Create the drive
+/usr/bin/vultr-cli bs c -s=${drivesize} -b=${typecreate} -r=${driveregion} > /opt/rink/drive/${namespace}.${verbTLD}.${drivetype}.raw
+e="$?"; [[ "$e" = "0" ]] || exit "$e"
+
+
+# Process the output
+/usr/bin/tail -n +2 /opt/rink/drive/${namespace}.${verbTLD}.${drivetype}.raw > /opt/rink/drive/${namespace}.${verbTLD}.${drivetype}.line
+driveID="$(/usr/bin/cat /opt/rink/drive/${namespace}.${verbTLD}.${drivetype}.line | /usr/bin/sed 's#[[:space:]].*##')"
+/usr/bin/rm -f /opt/rink/drive/${namespace}.${verbTLD}.${drivetype}.line
+/usr/bin/echo "driveID=\"${driveID}\"
+verber=\"${namespace}.${verbTLD}\"
+size=\"${drivesize}\"
+region=\"${driveregion}\"" > /opt/rink/drive/${namespace}.${verbTLD}.${drivename}.drive
+
+
+. /opt/rink/drive/${namespace}.${verbTLD}.${drivename}.drive
+
+# Wait for the drive to be ready
+/usr/bin/vultr-cli bs g ${driveID} | /usr/bin/grep -q 'active'
+driveactive="$?"
+while [ "${driveactive}" = "1" ]; do
+  sleep 1
+  /usr/bin/vultr-cli bs g ${driveID} | /usr/bin/grep -q 'active'
+  driveactive="$?"
+  ## Double-check via "pending"
+  if [ "${driveactive}" = "0" ]; then
+    /usr/bin/vultr-cli bs g ${driveID} | /usr/bin/grep -q 'pending'
+    if [ "$?" = "1" ]; then
+      break
+    else
+      driveactive="1"
+    fi
+  fi
+done
+
+. /opt/rink/drive/${namespace}.${verbTLD}.${drivename}.drive
+
+# Attach the instance
+/usr/bin/vultr-cli bs a ${driveID} -i=${VultrInstanceID}
+
+# Find the device name in /dev/vdb etc
+/usr/bin/ssh ${namespace}.${verbTLD} "/usr/bin/ls /dev/vd*" > /opt/rink/tmp/${namespace}.${verbTLD}.${drivename}.drive
+if ! /usr/bin/grep -q vdb /opt/rink/tmp/${namespace}.${verbTLD}.${drivename}.drive; then
+  driveDev="vdb"
+elif ! /usr/bin/grep -q vdc /opt/rink/tmp/${namespace}.${verbTLD}.${drivename}.drive; then
+  driveDev="vdc"
+elif ! /usr/bin/grep -q vdd /opt/rink/tmp/${namespace}.${verbTLD}.${drivename}.drive; then
+  driveDev="vdd"
+elif ! /usr/bin/grep -q vde /opt/rink/tmp/${namespace}.${verbTLD}.${drivename}.drive; then
+  driveDev="vde"
+elif ! /usr/bin/grep -q vdf /opt/rink/tmp/${namespace}.${verbTLD}.${drivename}.drive; then
+  driveDev="vdf"
+elif ! /usr/bin/grep -q vdg /opt/rink/tmp/${namespace}.${verbTLD}.${drivename}.drive; then
+  driveDev="vdg"
+elif ! /usr/bin/grep -q vdh /opt/rink/tmp/${namespace}.${verbTLD}.${drivename}.drive; then
+  driveDev="vdh"
+else
+  /usr/bin/echo "Cannot have more than eight drives mounted to one verber. I quit."
+  exit 7
+fi 
+
+# Record the device name in /opt/rink/drive/${namespace}.${verbTLD}.${drivename}.drive
+/usr/bin/echo "driveDev=\"${driveDev}\"" >> /opt/rink/drive/${namespace}.${verbTLD}.${drivename}.drive
+
+# Mount the drive on the verber
+/usr/bin/ssh ${namespace}.${verbTLD} /opt/verb/serfs/inkdriveadd ${driveDev} ${drivename} ${drivetype}

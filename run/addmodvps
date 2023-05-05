@@ -14,7 +14,7 @@
 ## This merely adds the verber to the basic nameserver control Rink so that its DNS zone will be published through this NS Rink cluster
 
 # How to use:
-## ./addmodvps [nickname] [tld] [vultr instance ID] [user]
+## ./addmodvps [namespace] [tld] [vultr instance ID] [user]
 
 # Eg:
 ## ./addmodvps  name ink bla3-bla2-bla1 john
@@ -22,14 +22,14 @@
 
 
 if [ -z "$4" ]; then
-  /usr/bin/echo "Needs nickname, TLD, Vultr instance ID, & user arguments, I quit."
+  /usr/bin/echo "Needs namespace, TLD, Vultr instance ID, & user arguments, I quit."
   exit 0
 fi
 
 # Get our Rink-NS name settings
 . /opt/rink/rinknames
 
-nickname="$1"
+namespace="$1"
 VerbTLD="$2"
 VultrInstanceID="$3"
 vuser="$4"
@@ -37,36 +37,36 @@ vuser="$4"
 . /opt/rink/portnum # for Port
 
 # Read the VPS
-if [ ! -f "/opt/rink/conf/raw.${nickname}.${VerbTLD}.conf" ]; then
-  /opt/rink/run/readvps "$nickname" "$VerbTLD" "$VultrInstanceID" "$vuser"
+if [ ! -f "/opt/rink/conf/${namespace}.${VerbTLD}.raw" ]; then
+  /opt/rink/run/readvps "$namespace" "$VerbTLD" "$VultrInstanceID" "$vuser"
   e="$?"; [[ "$e" = "0" ]] || exit "$e"
 fi
 
 # Create new SSH keys on the new verber and install their pub keys on the NS servers
 ## This must go before verb/inst/setup or the server will deny access in post-setup ssh calls
-if ! grep -q '^RinkKeys="DONE"' "/opt/rink/conf/vrb.${nickname}.${VerbTLD}.conf"; then
-  /opt/rink/run/newverbrinkkeys ${nickname} ${VerbTLD} ${vuser}
+if ! grep -q '^RinkKeys="DONE"' "/opt/rink/conf/${namespace}.${VerbTLD}.vrb"; then
+  /opt/rink/run/newverbrinkkeys ${namespace} ${VerbTLD} ${vuser}
   e="$?"; [[ "$e" = "0" ]] || exit "$e"
   if [ "$?" = "0" ]; then
-    /usr/bin/echo 'RinkKeys="DONE"' >> /opt/rink/conf/vrb.${nickname}.${VerbTLD}.conf
+    /usr/bin/echo 'RinkKeys="DONE"' >> /opt/rink/conf/${namespace}.${VerbTLD}.vrb
   fi
 fi
 
 # Update to latest NS servers
-if ! grep -q 'RinkKeys="DONE"' "/opt/rink/conf/vrb.${nickname}.${VerbTLD}.conf"; then
-  /usr/bin/ssh ${nickname}.${VerbTLD} /opt/verb/serfs/rinkupdatekeys
+if ! grep -q 'RinkKeys="DONE"' "/opt/rink/conf/${namespace}.${VerbTLD}.vrb"; then
+  /usr/bin/ssh ${namespace}.${VerbTLD} /opt/verb/serfs/rinkupdatekeys
   e="$?"; [[ "$e" = "0" ]] || exit "$e"
   if [ "$?" = "0" ]; then
-    /usr/bin/echo 'RinkKeys="DONE"' >> /opt/rink/conf/vrb.${nickname}.${VerbTLD}.conf
+    /usr/bin/echo 'RinkKeys="DONE"' >> /opt/rink/conf/${namespace}.${VerbTLD}.vrb
   fi
 fi
-if ! grep -q 'RinkVerbsNSListed="DONE"' "/opt/rink/conf/vrb.${nickname}.${VerbTLD}.conf"; then
-  /usr/bin/ssh ${nickname}.${VerbTLD} /opt/verb/serfs/rinkupdateallverbs
+if ! grep -q 'RinkVerbsNSListed="DONE"' "/opt/rink/conf/${namespace}.${VerbTLD}.vrb"; then
+  /usr/bin/ssh ${namespace}.${VerbTLD} /opt/verb/serfs/rinkupdateallverbs
   e="$?"; [[ "$e" = "0" ]] || exit "$e"
   if [ "$?" = "0" ]; then
-    /usr/bin/echo 'RinkVerbsNSListed="DONE"' >> /opt/rink/conf/vrb.${nickname}.${VerbTLD}.conf
+    /usr/bin/echo 'RinkVerbsNSListed="DONE"' >> /opt/rink/conf/${namespace}.${VerbTLD}.vrb
   fi
 fi
 
 # Restart the mod Verber
-/usr/bin/ssh ${nickname}.${VerbTLD} /usr/bin/reboot
+/usr/bin/ssh ${namespace}.${VerbTLD} /usr/bin/reboot

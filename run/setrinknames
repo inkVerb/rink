@@ -44,11 +44,11 @@ else
 To see available timezones, run: cat /opt/verb/ink/PHPcities"
   exit 0
 fi
-if /usr/bin/grep -q "^${VultrRegion}" /opt/rink/VultrRegions && /usr/bin/grep -q "^${VultrRegion1}" /opt/rink/VultrRegions && /usr/bin/grep -q "^${VultrRegion2}" /opt/rink/VultrRegions; then
+if /usr/bin/vultr-cli regions list | /usr/bin/grep -q "^${VultrRegion}" && /usr/bin/vultr-cli regions list | /usr/bin/grep -q "^${VultrRegion1}" && /usr/bin/vultr-cli regions list | /usr/bin/grep -q "^${VultrRegion2}"; then
   /usr/bin/echo "Regions: NS1 = ${VultrRegion1}; NS2 = ${VultrRegion2}; NS3 = ${VultrRegion}"
 else
   /usr/bin/echo "Must set region for Vultr, read instructions
-To see available Vultr regions, run: cat /opt/rink/run/VultrRegions"
+To see available Vultr regions, run: /usr/bin/vultr-cli regions list"
   exit 0
 fi
 if [ -f "/opt/rink/snapshotid/${DfaultNSSnapshotID}"  ]; then
@@ -104,7 +104,7 @@ UpdateOrg="$UpdateOrg"
 NameServersConfig="${RinkNS1Host}${RinkNS2Host}"
 EOF
 
-# First nameservers config (so they can be specific to each verber by including /opt/rink/ns/${NameServersConfig} after the vrb...conf file)
+# First nameservers config (so they can be specific to each verber by including /opt/rink/ns/${NameServersConfig} after the .vrb file)
 /usr/bin/cat <<EOF > "/opt/rink/ns/${RinkNS1Host}${RinkNS2Host}"
 NS1Host="$RinkNS1Host"
 NS2Host="$RinkNS2Host"
