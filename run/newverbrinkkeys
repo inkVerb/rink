@@ -59,40 +59,40 @@ fi
 /usr/bin/ssh -T ${namespace}.${VerbTLD} <<EOS
 /usr/bin/touch /root/.ssh/config
 
-/usr/bin/sed -i '/${NS1Name}.${RinkVerbTLD}.ssh/d' /root/.ssh/config
-/usr/bin/rm -f /root/.ssh/${NS1Name}.${RinkVerbTLD}.ssh
-/usr/bin/echo 'Include /root/.ssh/${NS1Name}.${RinkVerbTLD}.ssh' >> /root/.ssh/config
-/usr/bin/cat <<EOF > /root/.ssh/${NS1Name}.${RinkVerbTLD}.ssh
-Host ${NS1Name}.${RinkVerbTLD}
+/usr/bin/sed -i '/ns1.ssh/d' /root/.ssh/config
+/usr/bin/rm -f /root/.ssh/ns1.ssh
+/usr/bin/echo 'Include /root/.ssh/ns1.ssh' >> /root/.ssh/config
+/usr/bin/cat <<EOF > /root/.ssh/ns1.ssh
+Host ns1
 Hostname ${ServerNS1IPv4}
 User ${namespace}-${VerbTLD}
 Port ${Port}
 IdentityFile /root/.ssh/Rink_${VerbTLD}_${namespace}
 EOF
-/usr/bin/echo "#${NS1Name}.${RinkVerbTLD}" >> /root/.ssh/known_hosts
+/usr/bin/echo "#ns1" >> /root/.ssh/known_hosts
 /usr/bin/ssh-keyscan -H -p ${Port} ${ServerNS1IPv4} >> /root/.ssh/known_hosts
-/usr/bin/echo "###${NS1Name}.${RinkVerbTLD}" >> /root/.ssh/known_hosts
+/usr/bin/echo "###ns1" >> /root/.ssh/known_hosts
 
-/usr/bin/sed -i '/${NS2Name}.${RinkVerbTLD}.ssh/d' /root/.ssh/config
-/usr/bin/rm -f /root/.ssh/${NS2Name}.${RinkVerbTLD}.ssh
-/usr/bin/echo 'Include /root/.ssh/${NS2Name}.${RinkVerbTLD}.ssh' >> /root/.ssh/config
-/usr/bin/cat <<EOF > /root/.ssh/${NS2Name}.${RinkVerbTLD}.ssh
-Host ${NS2Name}.${RinkVerbTLD}
+/usr/bin/sed -i '/ns2.ssh/d' /root/.ssh/config
+/usr/bin/rm -f /root/.ssh/ns2.ssh
+/usr/bin/echo 'Include /root/.ssh/ns2.ssh' >> /root/.ssh/config
+/usr/bin/cat <<EOF > /root/.ssh/ns2.ssh
+Host ns2
 Hostname ${ServerNS2IPv4}
 User ${namespace}-${VerbTLD}
 Port ${Port}
 IdentityFile /root/.ssh/Rink_${VerbTLD}_${namespace}
 EOF
-/usr/bin/echo "#${NS2Name}.${RinkVerbTLD}" >> /root/.ssh/known_hosts
+/usr/bin/echo "#ns2" >> /root/.ssh/known_hosts
 /usr/bin/ssh-keyscan -H -p ${Port} ${ServerNS2IPv4} >> /root/.ssh/known_hosts
-/usr/bin/echo "###${NS2Name}.${RinkVerbTLD}" >> /root/.ssh/known_hosts
+/usr/bin/echo "###ns2" >> /root/.ssh/known_hosts
 
 /usr/bin/chmod 700 /root/.ssh
 /usr/bin/chmod 644 /root/.ssh/Rink_${VerbTLD}_${namespace}.pub
 /usr/bin/chmod 600 /root/.ssh/Rink_${VerbTLD}_${namespace}
 /usr/bin/chmod 600 /root/.ssh/config
-/usr/bin/chmod 600 /root/.ssh/${NS1Name}.${RinkVerbTLD}.ssh
-/usr/bin/chmod 600 /root/.ssh/${NS2Name}.${RinkVerbTLD}.ssh
+/usr/bin/chmod 600 /root/.ssh/ns1.ssh
+/usr/bin/chmod 600 /root/.ssh/ns2.ssh
 
 /usr/bin/sed -i '/RinkConfigured=.*/d' /opt/verb/conf/servernameip286
 /usr/bin/echo 'RinkConfigured="true"' >> /opt/verb/conf/servernameip286
