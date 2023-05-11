@@ -156,7 +156,7 @@ if [ "$IMPort" != "true" ]; then
     /usr/bin/ssh ${namespace}.${VerbTLD} /usr/bin/echo 'CustomNS="true"' >> /opt/verb/conf/inklists/inkdnsnameservers
 
     ## Run setup
-    /usr/bin/ssh ${namespace}.${VerbTLD} /opt/verb/serfs/setup ${namespace} ink email vip ${VerbHostID} ${VerbIPv4} ${VerbIPv6} cb@${RinkDomain} 100 1000 ${VultrRegion} ${Port} boss "$(/usr/bin/pwgen -s -1 16)" ${UpdateRepo} ${UpdateOrg}
+    /usr/bin/ssh ${namespace}.${VerbTLD} /opt/verb/serfs/setup ${namespace} ink email vip ${VerbHostID} ${VerbIPv4} ${VerbIPv6} cb@${RinkDomain} 100 1000 ${TimeZone} ${Port} boss "$(/usr/bin/pwgen -s -1 16)" ${UpdateRepo} ${UpdateOrg}
     e="$?"; [[ "$e" = "0" ]] || exit "$e"
     if [ "$?" = "0" ]; then
       /usr/bin/echo 'SetupVerber="DONE"' >> /opt/rink/conf/${namespace}.${VerbTLD}.vrb
