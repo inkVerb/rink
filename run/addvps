@@ -191,7 +191,7 @@ fi
 . /opt/rink/conf/${namespace}.${VerbTLD}.vrb
 . /opt/rink/conf/${namespace}.${VerbTLD}.srv
 /usr/bin/vultr-cli instance reverse-dns set-ipv4 "${VultrInstanceID}" -e "${hostURI}" -i "${ServerIPv4}"
-/usr/bin/vultr-cli instance reverse-dns set-ipv6 "${VultrInstanceID}" -e "${hostURI}" -i "${ServerIPv6}"
+/usr/bin/vultr-cli instance reverse-dns set-ipv6 "${VultrInstanceID}" -e "${hostURI}" -i "${ServerExpIPv6}"
 
 # Restart the new Verber
 /usr/bin/ssh ${namespace}.${VerbTLD} /usr/bin/reboot
