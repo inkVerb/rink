@@ -260,7 +260,7 @@ IdentityFile /root/.ssh/${SSHKey}
 EOF
 
 # Wait for powerup
-/usr/bin/echo "Waiting for final steps and power up..."
+/usr/bin/echo "Waiting for preparation and power up..."
 /opt/rink/run/waitvpsanswer ${namespace} ${VerbTLD}
 e="$?"; if [ "$e" != "0" ]; then
   /usr/bin/echo "VPS cannot be accessed. It is possible that the keys are not installed. Make sure that they key '${SSHKey}' is properly installed on this VPS, then try again."
