@@ -217,6 +217,8 @@ fi
 
 # inkVmail initiated?
 if [ -n "${MailPath}" ]; then
+  /opt/rink/run/waitvpson ${namespace} ${VerbTLD}
+  /opt/rink/run/waitvpsanswer ${namespace} ${VerbTLD}
   /usr/bin/ssh ${namespace}.${VerbTLD} /opt/verb/serfs/installinkvmail ${MailPath}
   /usr/bin/echo "When DNS is ready, run inkCert for verb domains ('ink cert do -ma' or 'serfs/inkcertdole-all-verbs')"
 fi
