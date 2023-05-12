@@ -43,7 +43,7 @@ if [ -n "$8" ]; then
 ## Get the latest Verb ID number
 elif [ -f "/opt/rink/lastverbid" ]; then
   . /opt/rink/lastverbid
-  hostid=$(( LASTID + 1 ))
+  hostid=$(( LastID + 1 ))
 else
   hostid="1"
 fi
@@ -267,7 +267,8 @@ EOF
 # Wait for powerup
 /usr/bin/echo "Waiting for preparation and power up..."
 /opt/rink/run/waitvpsanswer ${namespace} ${VerbTLD}
-e="$?"; if [ "$e" != "0" ]; then
+e="$?"
+if [ "$e" != "0" ]; then
   /usr/bin/echo "VPS cannot be accessed. It is possible that the keys are not installed. Make sure that they key '${SSHKey}' is properly installed on this VPS, then try again."
   /usr/bin/rm -f "${namespace}.${VerbTLD}.*"
   exit "$e"
@@ -303,7 +304,9 @@ sleep 10 # The server needs to start its reboot
 e="$?"; [[ "$e" = "0" ]] || exit "$e"
 
 # Last ID (Only when we got this far)
-/usr/bin/echo "LASTID=\"$hostid\"" > /opt/rink/lastverbid
+if [ -z "$8" ]; then
+  /usr/bin/echo "LastID=\"$hostid\"" > /opt/rink/lastverbid
+fi
 
 # Finish
 /usr/bin/echo "${namespace}.${VerbTLD} created. Wait a few minutes before accessing."
