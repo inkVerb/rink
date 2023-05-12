@@ -12,6 +12,7 @@
 ## ./newvps name ink john 1gb laemp
 ## ./newvps name ink john 1gb laemp sjc
 ## ./newvps nick red bill vc2-1c-2gb laemp sea America/Los_Angeles
+## ./newvps nick red bill vc2-1c-2gb laemp sea America/Los_Angeles customhostname
 
 
 if [ -z "$5" ]; then
@@ -36,6 +37,17 @@ if [ -n "$7" ] && /usr/bin/grep -q "^$7" /opt/verb/ink/PHPcities; then
   TimeZone="$7" # Overrides timezone from rinknames
 fi
 
+# Host specified?
+if [ -n "$8" ]; then
+  hostid="$8"
+## Get the latest Verb ID number
+elif [ -f "/opt/rink/lastverbid" ]; then
+  . /opt/rink/lastverbid
+  hostid=$(( LASTID + 1 ))
+else
+  hostid="1"
+fi
+
 # Check to see if this verber already exists by this name
 if [ -f /opt/rink/conf/${namespace}.${VerbTLD}.vrb ]; then
   /usr/bin/echo "Verber with name '${VerbTLD}' and TLD '${namespace}' already exists."
@@ -52,17 +64,10 @@ elif [ "${VerbTLD}" != "${RinkVerbTLD}" ] && [ -f "/opt/rink/conf/${namespace}.$
   fi
 fi
 
-# Get the latest Verb ID number
-if [ -f "/opt/rink/lastverbid" ]; then
-  . /opt/rink/lastverbid
-  HOSTID=$(( LASTID + 1 ))
-else
-  HOSTID="1"
-fi
 ## Make sure it is not in use
 ### grep "-s, --no-messages suppress error messages"
-while /usr/bin/grep -qs ^VerbHostID=\"$HOSTID\" /opt/rink/conf/*.vrb > /dev/null; do
-  HOSTID=$(( HOSTID + 1 ))
+while /usr/bin/grep -qs ^VerbHostID=\"$hostid\" /opt/rink/conf/*.vrb > /dev/null; do
+  hostid=$(( hostid + 1 ))
 done
 
 # Spin up the VPS
@@ -114,7 +119,7 @@ fi
 VultrInstanceID="$(/usr/bin/cat /opt/rink/conf/${namespace}.${VerbTLD}.raw | /usr/bin/grep ^ID | /usr/bin/sed s"/ID\t\t\t//")"
 /usr/bin/cat <<EOF > /opt/rink/conf/${namespace}.${VerbTLD}.vrb
 VultrInstanceID="${VultrInstanceID}"
-VerbHostID="${HOSTID}"
+VerbHostID="${hostid}"
 VerbName="${namespace}"
 VerbTLD="${VerbTLD}"
 VerbRegion="${VultrRegion}"
@@ -298,7 +303,7 @@ sleep 10 # The server needs to start its reboot
 e="$?"; [[ "$e" = "0" ]] || exit "$e"
 
 # Last ID (Only when we got this far)
-/usr/bin/echo "LASTID=\"$HOSTID\"" > /opt/rink/lastverbid
+/usr/bin/echo "LASTID=\"$hostid\"" > /opt/rink/lastverbid
 
 # Finish
 /usr/bin/echo "${namespace}.${VerbTLD} created. Wait a few minutes before accessing."

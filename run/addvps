@@ -20,6 +20,10 @@
 ## ./addvps nick red billuser vc2-1c-2gb laemp sjc America/Los_Angeles somepath
 ## ./addvps nick vip billuser vc2-1c-2gb laemp sea America/Los_Angeles - verb-update inkverb
 ## ./addvps nick vip billuser vc2-1c-2gb laemp sea America/Los_Angeles mailpath verb-update inkverb
+## ./addvps nick vip billuser vc2-1c-2gb laemp sea America/Los_Angeles - verb-update inkverb - ink red
+## ./addvps nick vip billuser vc2-1c-2gb laemp sea America/Los_Angeles mailpath verb-update inkverb namedhost
+## ./addvps nick vip billuser vc2-1c-2gb laemp sea America/Los_Angeles - verb-update inkverb namedhost
+## ./addvps nick vip billuser vc2-1c-2gb laemp sea America/Los_Angeles mailpath verb-update inkverb namedhost ink blue red
 ## ./addvps name ink someuser --import s0mElong-An6Cr7z3-ID
 
 
@@ -41,8 +45,8 @@ if [ "${4}" = "--import" ]; then
   VultrInstanceID="$5"
 else
   IMPort="false"
-  VULTRPLAN="$4"
-  SNAPNICK="$5"
+  vultrplan="$4"
+  snapnick="$5"
   if [ -n "$6" ] && /usr/bin/vultr-cli regions list | /usr/bin/grep -q "^$6"; then
     VultrRegion="$6" # Overrides region from rinknames
   else
@@ -64,10 +68,15 @@ else
   if [ -n "${10}" ]; then
     UpdateOrg="${10}" # Overrides update org from rinknames
   fi
+  if [ -n "${11}" ] && [ "${11}" != "-" ]; then
+    hostname="${11}"
+  else
+    hostname=""
+  fi
   # Turn off certain verb domains?
-  if [ "${11}" = "-o" ]; then
+  if [ "${12}" = "-o" ]; then
     verboff=true
-    shift 11
+    shift 12
   fi
 fi
 
@@ -77,7 +86,7 @@ fi
 if [ "$IMPort" != "true" ]; then
   # Create the VPS
   if [ ! -f "/opt/rink/conf/${namespace}.${VerbTLD}.raw" ]; then
-    /opt/rink/run/newvps "$namespace" "$VerbTLD" "$vuser" "$VULTRPLAN" "$SNAPNICK" "$VultrRegion" "$TimeZone"
+    /opt/rink/run/newvps "$namespace" "$VerbTLD" "$vuser" "$vultrplan" "$snapnick" "$VultrRegion" "$TimeZone" "$hostname"
     e="$?"; [[ "$e" = "0" ]] || exit "$e"
   fi
 
