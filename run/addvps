@@ -64,9 +64,13 @@ else
   fi
   if [ -n "$9" ]; then
     UpdateRepo="$9" # Overrides update repo from rinknames
+  else
+    UpdateRepo=""
   fi
   if [ -n "${10}" ]; then
     UpdateOrg="${10}" # Overrides update org from rinknames
+  else
+    UpdateOrg=""
   fi
   if [ -n "${11}" ] && [ "${11}" != "-" ]; then
     hostname="${11}"
