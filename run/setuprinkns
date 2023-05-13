@@ -352,6 +352,16 @@ if /usr/bin/systemctl is-active --quiet named; then
 fi
 /opt/verb/serfs/inkdnsrefreshbind
 
+# inkDNS refresh Bind cron task
+/usr/bin/ssh -T ${NS1Name}.${RinkVerbTLD} <<EOS
+/usr/bin/echo '0 * * * * root /opt/verb/serfs/inkdnsrefreshbind' > /etc/cron.d/refreshbind
+/usr/bin/chmod 0644 /etc/cron.d/refreshbind
+EOS
+/usr/bin/ssh -T ${NS2Name}.${RinkVerbTLD} <<EOS
+/usr/bin/echo '0 * * * * root /opt/verb/serfs/inkdnsrefreshbind' > /etc/cron.d/refreshbind
+/usr/bin/chmod 0644 /etc/cron.d/refreshbind
+EOS
+
 # Set the configured status on this rink and the NS nameservers
 ## Domain hosting and email allowed on the Rink for interactive webapp and verb-level domains
 /usr/bin/sed -i 's/EmailAllowed=.*/EmailAllowed="YES"/' /opt/verb/conf/servernameip
@@ -360,14 +370,14 @@ fi
 /usr/bin/sed -i '/RinkConfigured=.*/d' /opt/verb/conf/servernameip
 /usr/bin/echo 'RinkConfigured="rink"' >> /opt/verb/conf/servernameip
 ## Nameservers are exclusively for DNS, not email or web hosting
-/usr/bin/ssh ${NS1Name}.${RinkVerbTLD} <<EOS
+/usr/bin/ssh -T ${NS1Name}.${RinkVerbTLD} <<EOS
 /usr/bin/sed -i 's/EmailAllowed=.*/EmailAllowed="NO"/' /opt/verb/conf/servernameip
 /usr/bin/sed -i 's/DomHostAllowed=.*/DomHostAllowed="NO"/' /opt/verb/conf/servernameip
 /usr/bin/sed -i 's/VerberType=.*/VerberType="NS"/' /opt/verb/conf/servernameip
 /usr/bin/sed -i '/RinkConfigured=.*/d' /opt/verb/conf/servernameip
 /usr/bin/echo 'RinkConfigured="nameserver"' >> /opt/verb/conf/servernameip
 EOS
-/usr/bin/ssh ${NS2Name}.${RinkVerbTLD} <<EOS
+/usr/bin/ssh -T ${NS2Name}.${RinkVerbTLD} <<EOS
 /usr/bin/sed -i 's/EmailAllowed=.*/EmailAllowed="NO"/' /opt/verb/conf/servernameip
 /usr/bin/sed -i 's/DomHostAllowed=.*/DomHostAllowed="NO"/' /opt/verb/conf/servernameip
 /usr/bin/sed -i 's/VerberType=.*/VerberType="NS"/' /opt/verb/conf/servernameip

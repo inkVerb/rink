@@ -215,10 +215,16 @@ fi
 # Restart the new Verber
 /usr/bin/ssh ${namespace}.${VerbTLD} /usr/bin/reboot
 
+# Refresh Bind on NS servers
+/usr/bin/echo "Refreshing nameservers..."
+/opt/rink/run/waitvpson ${namespace} ${VerbTLD}
+/opt/rink/run/waitvpsanswer ${namespace} ${VerbTLD}
+/usr/bin/ssh ${NS1Name}.${RinkVerbTLD} /opt/verb/serfs/inkdnsrefreshbind
+/usr/bin/ssh ${NS2Name}.${RinkVerbTLD} /opt/verb/serfs/inkdnsrefreshbind
+
 # inkVmail initiated?
 if [ -n "${MailPath}" ]; then
-  /opt/rink/run/waitvpson ${namespace} ${VerbTLD}
-  /opt/rink/run/waitvpsanswer ${namespace} ${VerbTLD}
+  /usr/bin/echo "Installing mail server..."
   /usr/bin/ssh ${namespace}.${VerbTLD} /opt/verb/serfs/installinkvmail ${MailPath}
-  /usr/bin/echo "When DNS is ready, run inkCert for verb domains ('ink cert do -ma' or 'serfs/inkcertdole-all-verbs')"
+  /usr/bin/echo "When DNS listings check out, run inkCert for verb domains ('ink cert do -ma' or 'serfs/inkcertdole-all-verbs')"
 fi
