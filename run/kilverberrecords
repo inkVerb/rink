@@ -40,6 +40,7 @@ fi
 datestamp="$(/usr/bin/date +%Y-%m-%d_%T)"
 /usr/bin/mv /opt/rink/conf/${namespace}.${VerbTLD}.vrb /opt/rink/destroyed/${vuser}.${namespace}.${VerbTLD}.${datestamp}.vrb
 /usr/bin/mv /opt/rink/conf/${namespace}.${VerbTLD}.raw /opt/rink/destroyed/${vuser}.${namespace}.${VerbTLD}.${datestamp}.raw
+/usr/bin/mv /opt/rink/conf/${namespace}.${VerbTLD}.srv /opt/rink/destroyed/${vuser}.${namespace}.${VerbTLD}.${datestamp}.srv
 
 # Remove all SSH identity keys based on our comment system (not necessary, but removes junk)
 /usr/bin/sed -i "/${VerbIPv4}/d" /root/.ssh/known_hosts

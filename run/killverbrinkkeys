@@ -46,27 +46,24 @@ fi
 # fi
 
 # NS 1, NS 2, servernameip, keys
-/usr/bin/ssh -o StrictHostKeyChecking=yes ${namespace}.${VerbTLD} <<EOS
-/usr/bin/sed -i '/${NS1Name}.${RinkVerbTLD}.ssh/d' /root/.ssh/config
-/usr/bin/rm /opt/rink/conf/${NS1Name}.${RinkVerbTLD}.ssh
-
-/usr/bin/sed -i '/${NS2Name}.${RinkVerbTLD}.ssh/d' /root/.ssh/config
-/usr/bin/rm /opt/rink/conf/${NS2Name}.${RinkVerbTLD}.ssh
-
+/usr/bin/ssh -T -o StrictHostKeyChecking=yes ${namespace}.${VerbTLD} <<EOS
+/usr/bin/sed -i '/ns1.ssh/d' /root/.ssh/config
+/usr/bin/rm -f /root/.ssh/ns1.ssh
+/usr/bin/sed -i '/ns2.ssh/d' /root/.ssh/config
+/usr/bin/rm -f /root/.ssh/ns2.ssh
 /usr/bin/sed -i '/RinkConfigured=.*/d' /opt/verb/conf/servernameip
-
 /usr/bin/rm /root/.ssh/Rink_${VerbTLD}_${namespace}.pub
 /usr/bin/rm /root/.ssh/Rink_${VerbTLD}_${namespace}
 EOS
 
 # Delete on the NS rinks
-/usr/bin/ssh -o StrictHostKeyChecking=yes ${NS1Name}.${RinkVerbTLD} <<EOS
+/usr/bin/ssh -T -o StrictHostKeyChecking=yes ${NS1Name}.${RinkVerbTLD} <<EOS
 /usr/bin/userdel ${namespace}-${VerbTLD}
-/usr/bin/groupdel ${namespace}-${VerbTLD}
+#/usr/bin/groupdel ${namespace}-${VerbTLD}
 /usr/bin/rm -rf /srv/sns/${namespace}-${VerbTLD}
 EOS
-/usr/bin/ssh -o StrictHostKeyChecking=yes ${NS2Name}.${RinkVerbTLD} <<EOS
+/usr/bin/ssh -T -o StrictHostKeyChecking=yes ${NS2Name}.${RinkVerbTLD} <<EOS
 /usr/bin/userdel ${namespace}-${VerbTLD}
-/usr/bin/groupdel ${namespace}-${VerbTLD}
+#/usr/bin/groupdel ${namespace}-${VerbTLD}
 /usr/bin/rm -rf /srv/sns/${namespace}-${VerbTLD}
 EOS
