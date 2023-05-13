@@ -47,10 +47,6 @@ fi
 #DEV obsolete, see killdns notes
 #/opt/rink/run/killdns ${namespace} ${VerbTLD} ${vuser}
 
-# Remove controlled users on SNS servers
-/usr/bin/ssh -o StrictHostKeyChecking=yes ${NS1Name}.${RinkVerbTLD} /usr/bin/rm -rf /srv/sns/${namespace}-${VerbTLD}
-/usr/bin/ssh -o StrictHostKeyChecking=yes ${NS2Name}.${RinkVerbTLD} /usr/bin/rm -rf /srv/sns/${namespace}-${VerbTLD}
-
 # Remove pub SSH keys from verber
 /opt/rink/run/killverbrinkkeys ${namespace} ${VerbTLD} ${vuser}
 
