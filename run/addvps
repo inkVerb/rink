@@ -4,13 +4,14 @@
 # This is the master command to add a new VPS, complete with all requirements
 
 # How to use:
-## ./addvps [verb-namespace] [tld] [user] [vultr-plan (1gb shortcut for lowest)] [snapshot-nickname] [vultr-region] [PHP-timezone] [mail path - optional] [hostname - optional] [update repo - optional, default is verb-update] [update GitHub org - optional, default is inkverb]
+## ./addvps [verb-namespace] [tld] [user] [vultr-plan (1gb shortcut for lowest)] [snapshot-nickname] [vultr-region - optional] [PHP-timezone - optional] [mail path - optional] [hostname - optional] [update repo - optional, default is verb-update] [update GitHub org - optional, default is inkverb]
 
+## If specifying later arguments, but not earlier options, use dash `-`
+### This is for vultr-region, PHP-timezone, mail path, and hostname
 ## If you don't specify the hostname, auto-incremented numbers are used for the host
 ### Custom mail path is preferred and the web UI should ask for this at creation
 ### The auto-host naming is preferred and should be mandatory when managed through a web UI
 ### Specifying a custom host name is only for verbers not managed or accessible from the web UI
-## If specifying repos, but not mail path and/or hostname, use dash `-` for the mail path argument
 
 # Eg:
 ## ./addvps name ink someuser 1gb laemp ord America/Chicago
@@ -21,13 +22,13 @@
 ## ./addvps name ink someuser 1gb laemp nrt Asia/Tokyo
 ## ./addvps name ink someuser 1gb laemp sgp Asia/Singapore emailhere
 ## ./addvps john ink otheruser 1gb laemp lax America/Los_Angeles inboxword
-## ./addvps nick red billuser vc2-1c-2gb laemp sjc America/Los_Angeles somepath
-## ./addvps nick vip billuser vc2-1c-2gb laemp sea America/Los_Angeles - - verb-update inkverb
-## ./addvps nick vip billuser vc2-1c-2gb laemp sea America/Los_Angeles mailpath verb-update inkverb
-## ./addvps nick vip billuser vc2-1c-2gb laemp sea America/Los_Angeles - - verb-update inkverb ink red
-## ./addvps nick vip billuser vc2-1c-2gb laemp sea America/Los_Angeles mailpath namedhost verb-update inkverb
+## ./addvps nick red billuser vc2-1c-2gb laemp - - somepath
+## ./addvps nick vip billuser vc2-1c-2gb laemp sjc America/Los_Angeles - - verb-update inkverb
+## ./addvps nick vip billuser vc2-1c-2gb laemp - - mailpath verb-update inkverb
+## ./addvps nick vip billuser vc2-1c-2gb laemp - - - - verb-update inkverb ink red
+## ./addvps nick vip billuser vc2-1c-2gb laemp sea America/Los_Angeles mailpath namedhost verb-update inkverb kiwi
 ## ./addvps nick vip billuser vc2-1c-2gb laemp sea America/Los_Angeles - namedhost verb-update inkverb
-## ./addvps nick vip billuser vc2-1c-2gb laemp sea America/Los_Angeles mailpath namedhost verb-update inkverb ink blue red
+## ./addvps nick vip billuser vc2-1c-2gb laemp sea America/Los_Angeles mailpath - verb-update inkverb ink blue red
 ## ./addvps name ink someuser --import s0mElong-An6Cr7z3-ID
 
 
@@ -51,17 +52,15 @@ else
   IMPort="false"
   vultrplan="$4"
   snapnick="$5"
-  if [ -n "$6" ] && /usr/bin/vultr-cli regions list | /usr/bin/grep -q "^$6"; then
+  if [ -n "$6" ] && [ "$6" != "-" ] && /usr/bin/vultr-cli regions list | /usr/bin/grep -q "^$6"; then
     VultrRegion="$6" # Overrides region from rinknames
   else
-    /usr/bin/echo "Server region not valid. I quit."
-    exit 5
+    /usr/bin/echo "Using default region ${VultrRegion}"
   fi
-  if [ -n "$7" ] && /usr/bin/grep -q "^$7" /opt/verb/ink/PHPcities; then
+  if [ -n "$7" ] && [ "$6" != "-" ] && /usr/bin/grep -q "^$7" /opt/verb/ink/PHPcities; then
     TimeZone="$7" # Overrides timezone from rinknames
   else
-    /usr/bin/echo "Time zone not valid. I quit."
-    exit 5
+    /usr/bin/echo "Using default timezone ${TimeZone}"
   fi
   if [ -n "$8" ] && [ "$8" != "-" ]; then
     MailPath="$8"
