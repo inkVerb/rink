@@ -30,6 +30,7 @@ if ! grep -q "VerbUser=\"$vuser\"" "/opt/rink/conf/${namespace}.${VerbTLD}.vrb";
 fi
 
 # Config
+. /opt/rink/rinknames
 . /opt/rink/conf/${namespace}.${VerbTLD}.vrb
 . /opt/rink/ns/${VerbNameServersConfig}
 
@@ -52,6 +53,10 @@ fi
 
 # Remove other 
 /opt/rink/run/kilverberrecords ${namespace} ${VerbTLD} ${vuser}
+
+# Refresh nameservers
+/usr/bin/ssh ${NS1Name}.${RinkVerbTLD} /opt/verb/serfs/inkdnsrefreshbind
+/usr/bin/ssh ${NS2Name}.${RinkVerbTLD} /opt/verb/serfs/inkdnsrefreshbind
 
 # Destroy it
 /usr/bin/vultr-cli instance delete ${VultrInstanceID}
