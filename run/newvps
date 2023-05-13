@@ -270,9 +270,11 @@ EOF
 e="$?"
 if [ "$e" != "0" ]; then
   /usr/bin/echo "VPS cannot be accessed. It is possible that the keys are not installed. Make sure that they key '${SSHKey}' is properly installed on this VPS, then try again."
-  /usr/bin/rm -f "${namespace}.${VerbTLD}.*"
+  /usr/bin/rm -f /opt/rink/conf/${namespace}.${VerbTLD}.*
   exit "$e"
 fi
+
+/usr/bin/echo "VPS is live, now setting up for use..."
 
 # Refresh the SSHD keys on the server (they are still original from the snapshot and will seem like a duplicate in /root/.ssh/known_hosts)
 ## Do this in a loop
