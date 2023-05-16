@@ -278,7 +278,11 @@ fi
 
 # Refresh the SSHD keys on the server (they are still original from the snapshot and will seem like a duplicate in /root/.ssh/known_hosts)
 ## Do this in a loop
-/usr/bin/ssh -o StrictHostKeyChecking=no -o ConnectTimeout=3 -q ${namespace}.${VerbTLD} "/usr/bin/rm /etc/ssh/ssh_host_* && /usr/bin/ssh-keygen -A && /usr/bin/reboot"
+/usr/bin/ssh -o StrictHostKeyChecking=no -o ConnectTimeout=3 -q ${namespace}.${VerbTLD} <<EOS
+/usr/bin/rm /etc/ssh/ssh_host_*
+/usr/bin/ssh-keygen -A
+/usr/bin/reboot
+EOS
 sshresetstatus="$?"
 count=0
 while [ "$sshresetstatus" != "0" ]; do
