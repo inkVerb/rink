@@ -354,11 +354,11 @@ fi
 
 # inkDNS refresh Bind cron task
 /usr/bin/ssh -T ${NS1Name}.${RinkVerbTLD} <<EOS
-/usr/bin/echo '0 * * * * root /opt/verb/serfs/inkdnsrefreshbind' > /etc/cron.d/refreshbind
+/usr/bin/echo '*/15 * * * * root /opt/verb/serfs/inkdnsrefreshbind' > /etc/cron.d/refreshbind
 /usr/bin/chmod 0644 /etc/cron.d/refreshbind
 EOS
 /usr/bin/ssh -T ${NS2Name}.${RinkVerbTLD} <<EOS
-/usr/bin/echo '0 * * * * root /opt/verb/serfs/inkdnsrefreshbind' > /etc/cron.d/refreshbind
+/usr/bin/echo '*/15 * * * * root /opt/verb/serfs/inkdnsrefreshbind' > /etc/cron.d/refreshbind
 /usr/bin/chmod 0644 /etc/cron.d/refreshbind
 EOS
 
