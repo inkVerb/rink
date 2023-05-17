@@ -129,29 +129,29 @@ VerbNameServersConfig="${NameServersConfig}"
 EOF
 
 # Get the first IP addresses
-FIRSTIPv4PLACEHOLDER="$(/usr/bin/vultr-cli instance ipv4 list $VultrInstanceID | /usr/bin/grep main_ip | /usr/bin/sed 's/\s.*$//')"
-FIRSTIPv6PLACEHOLDER="$(/usr/bin/vultr-cli instance ipv6 list $VultrInstanceID | /usr/bin/grep main_ip | /usr/bin/sed 's/\s.*$//')"
+FIRSTIPv4PLACEHOLDER="$(/usr/bin/vultr-cli instance ipv4 list ${VultrInstanceID} | /usr/bin/grep main_ip | /usr/bin/sed 's/\s.*$//')"
+FIRSTIPv6PLACEHOLDER="$(/usr/bin/vultr-cli instance ipv6 list ${VultrInstanceID} | /usr/bin/grep main_ip | /usr/bin/sed 's/\s.*$//')"
 
 # IP address
 /usr/bin/echo "New VPS instance ${namespace}.${VerbTLD} initiated. Waiting a few seconds for details to populate..."
 /usr/bin/sleep 5
 
 ## Check the IPv4 (Default until set: 0.0.0.0)
-IPv4="$(/usr/bin/vultr-cli instance ipv4 list $VultrInstanceID | /usr/bin/grep main_ip | /usr/bin/sed 's/\s.*$//')"
+IPv4="$(/usr/bin/vultr-cli instance ipv4 list ${VultrInstanceID} | /usr/bin/grep main_ip | /usr/bin/sed 's/\s.*$//')"
 while [ "$IPv4" = "0.0.0.0" ] || [ "$IPv4" = "$FIRSTIPv4PLACEHOLDER" ]; do
-  IPv4="$(/usr/bin/vultr-cli instance ipv4 list $VultrInstanceID | /usr/bin/grep main_ip | /usr/bin/sed 's/\s.*$//')"
+  IPv4="$(/usr/bin/vultr-cli instance ipv4 list ${VultrInstanceID} | /usr/bin/grep main_ip | /usr/bin/sed 's/\s.*$//')"
   /usr/bin/sleep 1
 done
 /usr/bin/echo "IPv4: $IPv4"
 
-## Check the IPv6 (Default until set is empty; a temp IPv6 is set when the final IPv4 is set, found with $FIRSTIPv6PLACEHOLDER and $SECONDIPv6PLACEHOLDER)
-SECONDIPv6PLACEHOLDER="$(/usr/bin/vultr-cli instance ipv6 list $VultrInstanceID | /usr/bin/grep main_ip | /usr/bin/sed 's/\s.*$//')"
-IPv6="$(/usr/bin/vultr-cli instance ipv6 list $VultrInstanceID | /usr/bin/grep main_ip | /usr/bin/sed 's/\s.*$//')"
+## Check the IPv6 (Default until set is empty; a temp IPv6 is set when the final IPv4 is set, found with ${FIRSTIPv6PLACEHOLDER} and ${SECONDIPv6PLACEHOLDER})
+SECONDIPv6PLACEHOLDER="$(/usr/bin/vultr-cli instance ipv6 list ${VultrInstanceID} | /usr/bin/grep main_ip | /usr/bin/sed 's/\s.*$//')"
+IPv6="$(/usr/bin/vultr-cli instance ipv6 list ${VultrInstanceID} | /usr/bin/grep main_ip | /usr/bin/sed 's/\s.*$//')"
 counter=1
-while [ "$IPv6" = "$FIRSTIPv6PLACEHOLDER" ] || [ "$IPv6" = "$SECONDIPv6PLACEHOLDER" ] && [ "$counter" -lt "15" ]; do
-  IPv6="$(/usr/bin/vultr-cli instance ipv6 list $VultrInstanceID | /usr/bin/grep main_ip | /usr/bin/sed 's/\s.*$//')"
+while [ "$IPv6" = "${FIRSTIPv6PLACEHOLDER}" ] || [ "$IPv6" = "${SECONDIPv6PLACEHOLDER}" ] && [ "${counter}" -lt "15" ]; do
+  IPv6="$(/usr/bin/vultr-cli instance ipv6 list ${VultrInstanceID} | /usr/bin/grep main_ip | /usr/bin/sed 's/\s.*$//')"
   /usr/bin/sleep 1
-  counter=$[$counter +1]
+  counter=$[${counter} +1]
 done
 /usr/bin/echo "IPv6: $IPv6"
 
@@ -238,19 +238,9 @@ rarpa_ipv6() {
   printf 'ip6.arpa\n'
 }
 
-IPv6New=$(compress_ipv6 ${IPv6})
-IPv6Exp=$(expand_ipv6 ${IPv6})
-IPv4ARPA=$(/usr/bin/echo ${IPv4} | sed -r 's/^([0-9]{1,3}).([0-9]{1,3}).([0-9]{1,3}).([0-9]{1,3})$/\4.\3.\2.\1.in-addr.arpa/')
-IPv6ARPA=$(rarpa_ipv6 ${IPv6Exp})
-
-## Append IP addresses to config
+## Append only IPv4 address to config (because IPv6 will keep changing more than twice)
 /usr/bin/cat <<EOF >> /opt/rink/conf/${namespace}.${VerbTLD}.vrb
 VerbIPv4="${IPv4}"
-VerbIPv6="${IPv6New}"
-VerbIPv6Exp="${IPv6Exp}"
-VerbARPAIPv4="${IPv4ARPA}"
-VerbARPAIPv6="${IPv6ARPA}"
-VerbNameServersConfig="${NameServersConfig}"
 EOF
 
 # Create the .ssh/config entry
@@ -312,6 +302,24 @@ sleep 10 # The server needs to start its reboot
 /opt/rink/run/waitvpsanswer ${namespace} ${VerbTLD}
 /opt/rink/run/keyscan ${namespace} ${VerbTLD}
 e="$?"; [[ "$e" = "0" ]] || exit "$e"
+
+# Finalize the IPv6 (because it keeps changing in spinup)
+IPv6="$(/usr/bin/vultr-cli instance ipv6 list ${VultrInstanceID} | /usr/bin/grep main_ip | /usr/bin/sed 's/\s.*$//')"
+
+IPv6New=$(compress_ipv6 ${IPv6})
+IPv6Exp=$(expand_ipv6 ${IPv6})
+IPv4ARPA=$(/usr/bin/echo ${IPv4} | sed -r 's/^([0-9]{1,3}).([0-9]{1,3}).([0-9]{1,3}).([0-9]{1,3})$/\4.\3.\2.\1.in-addr.arpa/')
+IPv6ARPA=$(rarpa_ipv6 ${IPv6Exp})
+
+## Append IP addresses to config
+/usr/bin/cat <<EOF >> /opt/rink/conf/${namespace}.${VerbTLD}.vrb
+VerbIPv4="${IPv4}"
+VerbIPv6="${IPv6New}"
+VerbIPv6Exp="${IPv6Exp}"
+VerbARPAIPv4="${IPv4ARPA}"
+VerbARPAIPv6="${IPv6ARPA}"
+VerbNameServersConfig="${NameServersConfig}"
+EOF
 
 # Last ID (Only when we got this far)
 if [ -z "$8" ]; then
