@@ -4,6 +4,7 @@
 # This creates SSH keys on a newly-creaed controlled verber and adds them to the NS rinks
 ## This must be run AFTER verb/inst/preverboff (if applicable), but BEFORE verb/inst/setup on the new verber
 ## This is used by addvps
+## This is undone by killverbrinkkeys and killverbnsaccounts
 
 # How to use:
 ## ./newverbrinkkeys [verb-namespace] [tld] [user]
@@ -103,7 +104,7 @@ EOS
 /usr/bin/ssh -T ${NS1Name}.${RinkVerbTLD} <<EOS
 /usr/bin/groupadd ${namespace}-${VerbTLD}
 /usr/bin/useradd -g ${namespace}-${VerbTLD} ${namespace}-${VerbTLD}
-/usr/bin/mkdir -p /srv/sns/${namespace}-${VerbTLD}/.ssh /srv/sns/${namespace}-${VerbTLD}/calls /srv/sns/${namespace}-${VerbTLD}/domains/served /srv/sns/${namespace}-${VerbTLD}/domains/parked
+/usr/bin/mkdir -p /srv/sns/${namespace}-${VerbTLD}/.ssh /srv/sns/${namespace}-${VerbTLD}/domains/served /srv/sns/${namespace}-${VerbTLD}/domains/parked
 /usr/bin/usermod -d /srv/sns/${namespace}-${VerbTLD} ${namespace}-${VerbTLD}
 /usr/bin/cat <<EOF > /srv/sns/${namespace}-${VerbTLD}/conf
 VerbHostID="${VerbHostID}"
@@ -121,7 +122,7 @@ EOS
 /usr/bin/ssh -T ${NS2Name}.${RinkVerbTLD} <<EOS
 /usr/bin/groupadd ${namespace}-${VerbTLD}
 /usr/bin/useradd -g ${namespace}-${VerbTLD} ${namespace}-${VerbTLD}
-/usr/bin/mkdir -p /srv/sns/${namespace}-${VerbTLD}/.ssh /srv/sns/${namespace}-${VerbTLD}/calls /srv/sns/${namespace}-${VerbTLD}/domains/served /srv/sns/${namespace}-${VerbTLD}/domains/parked
+/usr/bin/mkdir -p /srv/sns/${namespace}-${VerbTLD}/.ssh /srv/sns/${namespace}-${VerbTLD}/domains/served /srv/sns/${namespace}-${VerbTLD}/domains/parked
 /usr/bin/usermod -d /srv/sns/${namespace}-${VerbTLD} ${namespace}-${VerbTLD}
 /usr/bin/cat <<EOF > /srv/sns/${namespace}-${VerbTLD}/conf
 VerbHostID="${VerbHostID}"

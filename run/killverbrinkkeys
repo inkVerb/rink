@@ -1,7 +1,9 @@
 #!/bin/bash
 #inkVerbRunner! verb.ink
 
-# This removes SSH keys created with newverbrinkkeys, both from the controlled verber and the NS rinks
+# This removes SSH keys created with newverbrinkkeys from the controlled verber
+## This does NOT removed the accounts on the NS servers created with newverbrinkkeys, for that use killverbnsaccounts so as to handle domains also
+## This is used by killvps in the process of complete deletion of that verber's VPS
 
 # How to use:
 ## ./killverbrinkkeys [ verb-namespace ] [ tld ] [ user ]
@@ -31,21 +33,10 @@ fi
 
 # Include the configs
 . /opt/rink/rinknames
-. /opt/rink/portnum
-. /opt/verb/conf/servernameip
-. /opt/rink/sshkey
 . /opt/rink/conf/${namespace}.${VerbTLD}.vrb
 . /opt/rink/ns/${VerbNameServersConfig}
 
-#DEV these keys should already be accepted
-# if [ -z "${FIRSTSSH}" ]; then
-#   /usr/bin/ssh -t -o StrictHostKeyChecking=accept-new ${namespace}.${VerbTLD} cat /etc/ssh/ssh_host_dsa_key.pub >> /root/.ssh/known_hosts
-#   if [ "$?" = "0" ]; then
-#     /usr/bin/echo "FIRSTSSH=\"true\"" >> /opt/rink/conf/${namespace}.${VerbTLD}.vrb
-#   fi
-# fi
-
-# NS 1, NS 2, servernameip, keys
+# Update servernameip, kill keys (created with newverbrinkkeys)
 /usr/bin/ssh -T -o StrictHostKeyChecking=yes ${namespace}.${VerbTLD} <<EOS
 /usr/bin/sed -i '/ns1.ssh/d' /root/.ssh/config
 /usr/bin/rm -f /root/.ssh/ns1.ssh
@@ -55,15 +46,4 @@ fi
 /usr/bin/rm /root/.ssh/Rink_${VerbTLD}_${namespace}.pub
 /usr/bin/rm /root/.ssh/Rink_${VerbTLD}_${namespace}
 EOS
-
-# Delete on the NS rinks
-/usr/bin/ssh -T -o StrictHostKeyChecking=yes ${NS1Name}.${RinkVerbTLD} <<EOS
-/usr/bin/userdel ${namespace}-${VerbTLD}
-#/usr/bin/groupdel ${namespace}-${VerbTLD}
-/usr/bin/rm -rf /srv/sns/${namespace}-${VerbTLD}
-EOS
-/usr/bin/ssh -T -o StrictHostKeyChecking=yes ${NS2Name}.${RinkVerbTLD} <<EOS
-/usr/bin/userdel ${namespace}-${VerbTLD}
-#/usr/bin/groupdel ${namespace}-${VerbTLD}
-/usr/bin/rm -rf /srv/sns/${namespace}-${VerbTLD}
-EOS
+e="$?"; [[ "$e" = "0" ]] || exit "$e"

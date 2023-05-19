@@ -1,0 +1,87 @@
+#!/bin/bash
+#inkVerbRunner! verb.ink
+
+# This kills all domains and hosting records of a verber on the NS servers, then kills the user account on the NS server
+## This is used by killvps in the process of complete deletion of that verber's VPS
+
+# How to use:
+## ./killverbnsaccounts [ verb-namespace ] [ tld ] [ user ]
+
+# Eg:
+## ./killverbnsaccounts name ink john
+
+
+if [ -z "$3" ]; then
+  /usr/bin/echo "Needs namespace, TLD & user arguments, I quit."
+  exit 0
+fi
+
+namespace="$1"
+VerbTLD="$2"
+vuser="$3"
+
+if [ ! -f "/opt/rink/conf/${namespace}.${VerbTLD}.vrb" ]; then
+  /usr/bin/echo "${namespace}.${VerbTLD} does not exist! I quit."
+  exit 0
+fi
+
+if ! grep -q "VerbUser=\"$vuser\"" "/opt/rink/conf/${namespace}.${VerbTLD}.vrb"; then
+  /usr/bin/echo "${namespace}.${VerbTLD} not owned by user ${vuser}! I quit."
+  exit 0
+fi
+
+# Include the configs
+. /opt/rink/rinknames
+. /opt/rink/conf/${namespace}.${VerbTLD}.vrb
+. /opt/rink/ns/${VerbNameServersConfig}
+timestamp=$(date +'%Y-%m-%d_%H:%M:%S')
+
+# Remove each domain from Bind, then kill all domains
+ssh -T -o StrictHostKeyChecking=yes ${NS1Name}.${RinkVerbTLD} <<EOS
+cd /srv/sns/pen-ink/domains/served
+for dom in *; do
+if [ "\${dom}" = '*' ]; then continue; fi
+/usr/bin/rm -f /var/named/db.\${dom}
+done
+cd /srv/sns/pen-ink/domains/parked
+for dom in *; do
+if [ "\${dom}" = '*' ]; then continue; fi
+/usr/bin/rm -f /var/named/db.\${dom}
+done
+/usr/bin/mkdir -p /srv/sns/${namespace}-${VerbTLD}/domains/killed /srv/sns/killed/${timestamp}
+/usr/bin/mv /srv/sns/${namespace}-${VerbTLD}/domains/${parkserve}/${servedomain} /srv/sns/${namespace}-${VerbTLD}/domains/killed/
+/usr/bin/echo "rink-killed at ${timestamp}" >> /srv/sns/${namespace}-${VerbTLD}/domains/killed/${servedomain}
+/usr/bin/mv /srv/sns/${namespace}-${VerbTLD} /srv/sns/killed/${timestamp}/
+/usr/bin/chown -R root:root /srv/sns/killed/${timestamp}/${namespace}-${VerbTLD}
+EOS
+e="$?"; [[ "$e" = "0" ]] || exit "$e"
+ssh -T -o StrictHostKeyChecking=yes ${NS2Name}.${RinkVerbTLD} <<EOS
+cd /srv/sns/pen-ink/domains/served
+for dom in *; do
+if [ "\${dom}" = '*' ]; then continue; fi
+/usr/bin/rm -f /var/named/db.\${dom}
+done
+cd /srv/sns/pen-ink/domains/parked
+for dom in *; do
+if [ "\${dom}" = '*' ]; then continue; fi
+/usr/bin/rm -f /var/named/db.\${dom}
+done
+/usr/bin/mkdir -p /srv/sns/${namespace}-${VerbTLD}/domains/killed /srv/sns/killed/${timestamp}
+/usr/bin/mv /srv/sns/${namespace}-${VerbTLD}/domains/${parkserve}/${servedomain} /srv/sns/${namespace}-${VerbTLD}/domains/killed/
+/usr/bin/echo "rink-killed at ${timestamp}" >> /srv/sns/${namespace}-${VerbTLD}/domains/killed/${servedomain}
+/usr/bin/mv /srv/sns/${namespace}-${VerbTLD} /srv/sns/killed/${timestamp}/
+/usr/bin/chown -R root:root /srv/sns/killed/${timestamp}/${namespace}-${VerbTLD}
+EOS
+e="$?"; [[ "$e" = "0" ]] || exit "$e"
+
+# Delete verber accounts on the NS rinks (created with newverbrinkkeys)
+/usr/bin/ssh -T -o StrictHostKeyChecking=yes ${NS1Name}.${RinkVerbTLD} <<EOS
+/usr/bin/userdel ${namespace}-${VerbTLD}
+#/usr/bin/groupdel ${namespace}-${VerbTLD}
+EOS
+e="$?"; [[ "$e" = "0" ]] || exit "$e"
+/usr/bin/ssh -T -o StrictHostKeyChecking=yes ${NS2Name}.${RinkVerbTLD} <<EOS
+/usr/bin/userdel ${namespace}-${VerbTLD}
+#/usr/bin/groupdel ${namespace}-${VerbTLD}
+EOS
+e="$?"; [[ "$e" = "0" ]] || exit "$e"

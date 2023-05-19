@@ -49,10 +49,13 @@ fi
 #/opt/rink/run/killdns ${namespace} ${VerbTLD} ${vuser}
 
 # Remove pub SSH keys from verber
+## Do this first so that the verber cannot make any changes while later commands are processed
 /opt/rink/run/killverbrinkkeys ${namespace} ${VerbTLD} ${vuser}
+e="$?"; [[ "$e" = "0" ]] || exit "$e"
 
-# Remove other 
-/opt/rink/run/kilverberrecords ${namespace} ${VerbTLD} ${vuser}
+# Remove records on the verber
+/opt/rink/run/killverberrecords ${namespace} ${VerbTLD} ${vuser}
+e="$?"; [[ "$e" = "0" ]] || exit "$e"
 
 # Refresh nameservers
 /usr/bin/ssh ${NS1Name}.${RinkVerbTLD} /opt/verb/serfs/inkdnsrefreshbind
