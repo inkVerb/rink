@@ -53,7 +53,11 @@ fi
 /opt/rink/run/killverbrinkkeys ${namespace} ${VerbTLD} ${vuser}
 e="$?"; [[ "$e" = "0" ]] || exit "$e"
 
-# Remove records on the verber
+# Close accounts on NS servers
+/opt/rink/run/killverbnsaccounts ${namespace} ${VerbTLD} ${vuser}
+e="$?"; [[ "$e" = "0" ]] || exit "$e"
+
+# Remove records on the rink
 /opt/rink/run/killverberrecords ${namespace} ${VerbTLD} ${vuser}
 e="$?"; [[ "$e" = "0" ]] || exit "$e"
 
