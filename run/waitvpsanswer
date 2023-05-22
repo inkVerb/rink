@@ -24,25 +24,90 @@ if [ ! -f "/opt/rink/conf/${namespace}.${VerbTLD}.vrb" ]; then
   exit 0
 fi
 
-# Wait for powerup
-/usr/bin/ssh -o StrictHostKeyChecking=yes -o ConnectTimeout=4 ${namespace}.${VerbTLD} "exit 0" 1> /opt/rink/tmp/waiton.${namespace}.${VerbTLD} 2> /opt/rink/tmp/waiton.${namespace}.${VerbTLD}
-sshexit="$?"
-/usr/bin/grep -q 'key' /opt/rink/tmp/waiton.${namespace}.${VerbTLD}
-greptest="$?"
-count=0
-while [ "${greptest}" != "0" ] && [ "${sshexit}" != "0" ]; do
-  sleep 2
-  /usr/bin/ssh -o StrictHostKeyChecking=yes -o ConnectTimeout=3 ${namespace}.${VerbTLD} "exit 0" 1> /opt/rink/tmp/waiton.${namespace}.${VerbTLD} 2> /opt/rink/tmp/waiton.${namespace}.${VerbTLD}
+# Configs
+. "/opt/rink/conf/${namespace}.${VerbTLD}.vrb"
+. /opt/rink/sshkey
+
+# IP check functions
+## IP4
+### Thanks http://www.linuxjournal.com/content/validating-ip-address-bash-script
+isIP4() {
+local ip4="$1"
+local vvar="$2"
+local validregex="^([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})"
+if [[ "${ip4}" =~ ${validregex} ]]; then
+isIP4="true"; else
+isIP4="false"; fi
+}
+## IP6
+### Expanded or compressed IPv6 formats both work
+isIP6() {
+local ip6="$1"
+local vvar="$2"
+local validregex="(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:)|fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(ffff(:0{1,4}){0,1}:){0,1}((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])|([0-9a-fA-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]))"
+if [[ "${ip6}" =~ ${validregex} ]]; then
+isIP6="true"; else
+isIP6="false"; fi
+}
+
+# Wait for powerup on IPv4
+## Prep loop
+IPv4="$(/usr/bin/vultr-cli instance ipv4 list ${VultrInstanceID} | /usr/bin/grep main_ip | /usr/bin/sed 's/\s.*$//')"
+isIP4 ${IPv4}
+if [ "${isIP4}" = "true" ]; then
+  sshCall="root@${IPv4} -p ${VerbPort} -i /root/.ssh/${SSHKey}"
+  /usr/bin/ssh -o StrictHostKeyChecking=yes -o ConnectTimeout=4 ${sshCall} "exit 0" 1> /opt/rink/tmp/waiton.${namespace}.${VerbTLD} 2> /opt/rink/tmp/waiton.${namespace}.${VerbTLD}
   sshexit="$?"
   /usr/bin/grep -q 'key' /opt/rink/tmp/waiton.${namespace}.${VerbTLD}
   greptest="$?"
-  # If we have been trying 10 minutes, restart
-  if [ "$count" -gt "60" ]; then
-    /opt/rink/run/powercycle ${namespace} ${VerbTLD}
-    count=0
-  fi
-  ((count++))
-done
+  count=0
+  # Loop
+  while [ "${greptest}" != "0" ] && [ "${sshexit}" != "0" ]; do
+    sleep 2
+    /usr/bin/ssh -o StrictHostKeyChecking=yes -o ConnectTimeout=3 ${sshCall} "exit 0" 1> /opt/rink/tmp/waiton.${namespace}.${VerbTLD} 2> /opt/rink/tmp/waiton.${namespace}.${VerbTLD}
+    sshexit="$?"
+    /usr/bin/grep -q 'key' /opt/rink/tmp/waiton.${namespace}.${VerbTLD}
+    greptest="$?"
+    ### If we have been trying 10 minutes, restart
+    if [ "$count" -gt "60" ]; then
+      /opt/rink/run/powercycle ${namespace} ${VerbTLD}
+      count=0
+    fi
+    ((count++))
+  done
+  ## Cleanup
+  /usr/bin/rm -f /opt/rink/tmp/waiton.${namespace}.${VerbTLD}
 
-# Cleanup
-/usr/bin/rm -f /opt/rink/tmp/waiton.${namespace}.${VerbTLD}
+
+# Wait for powerup on IPv4
+## Keep checking the IPv6 (because it keeps changing in spinup)
+IPv6="$(/usr/bin/vultr-cli instance ipv6 list ${VultrInstanceID} | /usr/bin/grep main_ip | /usr/bin/sed 's/\s.*$//')"
+isIP6 ${IPv6}
+if [ "${isIP6}" = "true" ]; then
+  ## Prep loop
+  sshCall="root@${IPv6} -p ${VerbPort} -i /root/.ssh/${SSHKey}"
+  /usr/bin/ssh -o StrictHostKeyChecking=yes -o ConnectTimeout=4 ${sshCall} "exit 0" 1> /opt/rink/tmp/waiton.${namespace}.${VerbTLD} 2> /opt/rink/tmp/waiton.${namespace}.${VerbTLD}
+  sshexit="$?"
+  /usr/bin/grep -q 'key' /opt/rink/tmp/waiton.${namespace}.${VerbTLD}
+  greptest="$?"
+  count=0
+  # Loop
+  while [ "${greptest}" != "0" ] && [ "${sshexit}" != "0" ]; do
+    sleep 2
+    /usr/bin/ssh -o StrictHostKeyChecking=yes -o ConnectTimeout=3 ${sshCall} "exit 0" 1> /opt/rink/tmp/waiton.${namespace}.${VerbTLD} 2> /opt/rink/tmp/waiton.${namespace}.${VerbTLD}
+    sshexit="$?"
+    /usr/bin/grep -q 'key' /opt/rink/tmp/waiton.${namespace}.${VerbTLD}
+    greptest="$?"
+    ### Keep checking the IPv6 (because it keeps changing in spinup)
+    IPv6="$(/usr/bin/vultr-cli instance ipv6 list ${VultrInstanceID} | /usr/bin/grep main_ip | /usr/bin/sed 's/\s.*$//')"
+    sshCall="root@${IPv6} -p ${VerbPort} -i /root/.ssh/${SSHKey}"
+    ### If we have been trying 10 minutes, restart
+    if [ "$count" -gt "60" ]; then
+      /opt/rink/run/powercycle ${namespace} ${VerbTLD}
+      count=0
+    fi
+    ((count++))
+  done
+  ## Cleanup
+  /usr/bin/rm -f /opt/rink/tmp/waiton.${namespace}.${VerbTLD}
+fi

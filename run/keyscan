@@ -42,7 +42,9 @@ if [ -z "${Keyscan}" ] || [ "${Keyscan}" != "DONE" ] || [ -n "${rescan}" ]; then
     # Use our comment system
     /usr/bin/echo "#${namespace}.${VerbTLD}" >> /root/.ssh/known_hosts
     # Three hashes is the writer's "final cookie"
-    /usr/bin/echo "$(/usr/bin/ssh-keyscan -H -p ${VerbPort} ${VerbIPv4}) ###${namespace}.${VerbTLD}" >> /root/.ssh/known_hosts
+    /usr/bin/echo "$(/usr/bin/ssh-keyscan -H -p ${VerbPort} ${VerbIPv4})" >> /root/.ssh/known_hosts
+    /usr/bin/echo "$(/usr/bin/ssh-keyscan -H -p ${VerbPort} ${VerbIPv6})" >> /root/.ssh/known_hosts
+    /usr/bin/echo "###${namespace}.${VerbTLD}" >> /root/.ssh/known_hosts
     if [ "$?" != "0" ]; then
       /usr/bin/sleep 1
     else
