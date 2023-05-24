@@ -28,7 +28,7 @@ drivesize="$4"
 drivetype="$5"
 
 # Credential checks
-if [ -z "${6}" ]; then
+if [ -z "${5}" ]; then
   /usr/bin/echo "Enter all credentials; read instructions."
   exit 5
 fi
