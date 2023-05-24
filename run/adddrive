@@ -89,8 +89,7 @@ else
 fi
 
 # Create the drive
-echo "/usr/bin/vultr-cli bs c -s=${drivesize} -b=${typecreate} -r=${driveregion} > /opt/rink/drive/${namespace}.${VerbTLD}.${drivetype}.raw"
-exit 0
+/usr/bin/vultr-cli bs c -s=${drivesize} -b=${typecreate} -r=${driveregion} > /opt/rink/drive/${namespace}.${VerbTLD}.${drivetype}.raw
 e="$?"; [[ "$e" = "0" ]] || exit "$e"
 
 # Process the output
