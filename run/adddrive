@@ -4,10 +4,11 @@
 # This is the master command to add a new VPS, complete with all requirements
 
 # How to use:
-## ./adddrive [verb-namespace] [tld] [user] [size] [type] [region]
+## ./adddrive [verb-namespace] [tld] [user] [size (in GB)] [type] [region]
 
 # Eg:
-## ./adddrive name ink someuser
+## ./adddrive name ink someuser 20 ssd ord
+## ./adddrive blink ink johnuser 10 hdd syd
 
 
 if [ -z "$5" ]; then
@@ -33,13 +34,13 @@ fi
 
 if [ ! -f "/opt/rink/conf/${namespace}.${VerbTLD}.vrb" ]; then
   /usr/bin/echo "${namespace}.${VerbTLD} does not exist! I quit."
-  exit 0
+  exit 5
 fi
 
 # Check verber config
 if ! grep -q "VerbUser=\"$vuser\"" "/opt/rink/conf/${namespace}.${VerbTLD}.vrb"; then
   /usr/bin/echo "${namespace}.${VerbTLD} not owned by user ${vuser}! I quit."
-  exit 0
+  exit 5
 else
   . /opt/rink/conf/${namespace}.${VerbTLD}.vrb
 fi
@@ -63,6 +64,9 @@ if [ "${drivetype}" = "ssd" ]; then
 elif [ "${drivetype}" = "hdd" ]; then
   typetest="block_storage_storage_opt"
   typecreate="storage_opt"
+else
+  /usr/bin/echo "Drive type must be ssh or hdd"
+  exit 5
 fi
 
 # Check region availability
