@@ -150,5 +150,8 @@ fi
 # Record the device name in /opt/rink/drive/${namespace}.${VerbTLD}.${drivename}.drive
 /usr/bin/echo "DriveDev=\"${DriveDev}\"" >> /opt/rink/drive/${namespace}.${VerbTLD}.${drivename}.drive
 
+# Cleanup
+/usr/bin/rm -f /opt/rink/tmp/${namespace}.${VerbTLD}.${drivename}.drive
+
 # Mount the drive on the verber
 /usr/bin/ssh ${namespace}.${VerbTLD} /opt/verb/serfs/inkdriveadd ${DriveDev} ${drivename} ${drivetype}
