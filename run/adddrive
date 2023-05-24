@@ -62,9 +62,17 @@ done
 if [ "${drivetype}" = "ssd" ]; then
   typetest="block_storage_high_perf"
   typecreate="high_perf"
+  if [ "${drivesize}" -lt "10" ] || [ "${drivesize}" -gt "10000" ]; then
+  /usr/bin/echo "SSD must be between 10 and 10000 GB! I quit."
+  exit 5
+fi
 elif [ "${drivetype}" = "hdd" ]; then
   typetest="block_storage_storage_opt"
   typecreate="storage_opt"
+  if [ "${drivesize}" -lt "40" ] || [ "${drivesize}" -gt "40000" ]; then
+    /usr/bin/echo "HDD must be between 40 and 40000 GB! I quit."
+    exit 5
+  fi
 else
   /usr/bin/echo "Drive type must be ssh or hdd"
   exit 5
