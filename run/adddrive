@@ -4,11 +4,13 @@
 # This is the master command to add a new VPS, complete with all requirements
 
 # How to use:
-## ./adddrive [verb-namespace] [tld] [user] [size (in GB)] [type] [region]
+## ./adddrive [verb-namespace] [tld] [user] [size (in GB)] [type]
 
 # Eg:
-## ./adddrive name ink someuser 20 ssd ord
-## ./adddrive blink ink johnuser 10 hdd syd
+## ./adddrive name ink someuser 20 hdd
+## ./adddrive blink ink johnuser 10 ssd
+## ./adddrive blink ink otheruser 50 ssd
+## ./adddrive name ink johnuser 40 hdd
 
 
 if [ -z "$5" ]; then
@@ -24,7 +26,6 @@ VerbTLD="$2"
 vuser="$3"
 drivesize="$4"
 drivetype="$5"
-driveregion="$6"
 
 # Credential checks
 if [ -z "${6}" ]; then
@@ -69,18 +70,19 @@ else
   exit 5
 fi
 
-# Check region availability
+# Drive region same as verber, inherited from .vrb config
+driveregion="${VerbRegion}"
+## Check region availability
 if /usr/bin/vultr-cli regions list | /usr/bin/grep "^${driveregion}" | /usr/bin/grep -q "${typetest}"; then
   /usr/bin/echo "Creating ${drivesize} GB ${drivetype} drive in ${driveregion} region..."
 else
-  /usr/bin/echo "Region not available for that drive type, I quit."
+  /usr/bin/echo "Verber region is ${driveregion}, but ${drivetype} is not available there. I quit."
   exit 5
 fi
 
 # Create the drive
 /usr/bin/vultr-cli bs c -s=${drivesize} -b=${typecreate} -r=${driveregion} > /opt/rink/drive/${namespace}.${VerbTLD}.${drivetype}.raw
 e="$?"; [[ "$e" = "0" ]] || exit "$e"
-
 
 # Process the output
 /usr/bin/tail -n +2 /opt/rink/drive/${namespace}.${VerbTLD}.${drivetype}.raw > /opt/rink/drive/${namespace}.${VerbTLD}.${drivetype}.line
