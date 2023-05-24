@@ -20,7 +20,7 @@ fi
 . /opt/rink/rinknames
 
 namespace="$1"
-verbTLD="$2"
+VerbTLD="$2"
 vuser="$3"
 drivesize="$4"
 drivetype="$5"
