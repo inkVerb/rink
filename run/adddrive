@@ -128,20 +128,20 @@ done
 
 # Find the device name in /dev/vdb etc
 /usr/bin/ssh ${namespace}.${VerbTLD} "/usr/bin/ls /dev/vd*" > /opt/rink/tmp/${namespace}.${VerbTLD}.${drivename}.drive
-if ! /usr/bin/grep -q vdb /opt/rink/tmp/${namespace}.${VerbTLD}.${drivename}.drive; then
-  DriveDev="vdb"
-elif ! /usr/bin/grep -q vdc /opt/rink/tmp/${namespace}.${VerbTLD}.${drivename}.drive; then
-  DriveDev="vdc"
-elif ! /usr/bin/grep -q vdd /opt/rink/tmp/${namespace}.${VerbTLD}.${drivename}.drive; then
-  DriveDev="vdd"
-elif ! /usr/bin/grep -q vde /opt/rink/tmp/${namespace}.${VerbTLD}.${drivename}.drive; then
-  DriveDev="vde"
-elif ! /usr/bin/grep -q vdf /opt/rink/tmp/${namespace}.${VerbTLD}.${drivename}.drive; then
-  DriveDev="vdf"
-elif ! /usr/bin/grep -q vdg /opt/rink/tmp/${namespace}.${VerbTLD}.${drivename}.drive; then
-  DriveDev="vdg"
-elif ! /usr/bin/grep -q vdh /opt/rink/tmp/${namespace}.${VerbTLD}.${drivename}.drive; then
+if /usr/bin/grep -q vdh /opt/rink/tmp/${namespace}.${VerbTLD}.${drivename}.drive; then
   DriveDev="vdh"
+elif /usr/bin/grep -q vdg /opt/rink/tmp/${namespace}.${VerbTLD}.${drivename}.drive; then
+  DriveDev="vdg"
+elif /usr/bin/grep -q vdf /opt/rink/tmp/${namespace}.${VerbTLD}.${drivename}.drive; then
+  DriveDev="vdf"
+elif /usr/bin/grep -q vde /opt/rink/tmp/${namespace}.${VerbTLD}.${drivename}.drive; then
+  DriveDev="vde"
+elif /usr/bin/grep -q vdd /opt/rink/tmp/${namespace}.${VerbTLD}.${drivename}.drive; then
+  DriveDev="vdd"
+elif /usr/bin/grep -q vdc /opt/rink/tmp/${namespace}.${VerbTLD}.${drivename}.drive; then
+  DriveDev="vdc"
+elif /usr/bin/grep -q vdb /opt/rink/tmp/${namespace}.${VerbTLD}.${drivename}.drive; then
+  DriveDev="vdb"
 else
   /usr/bin/echo "Cannot have more than eight drives mounted to one verber. I quit."
   exit 7
