@@ -48,7 +48,7 @@ fi
 # Confirm mount name for device
 drivename="${drivetype}"
 i=1
-while [ -f "/opt/rink/drive/${namespace}.${verbTLD}.${drivename}.drive" ]; do
+while [ -f "/opt/rink/drive/${namespace}.${VerbTLD}.${drivename}.drive" ]; do
   drivename="${drivetype}${i}"
   ((i++))
   if [ "${i}" = "5" ]; then
@@ -78,20 +78,20 @@ else
 fi
 
 # Create the drive
-/usr/bin/vultr-cli bs c -s=${drivesize} -b=${typecreate} -r=${driveregion} > /opt/rink/drive/${namespace}.${verbTLD}.${drivetype}.raw
+/usr/bin/vultr-cli bs c -s=${drivesize} -b=${typecreate} -r=${driveregion} > /opt/rink/drive/${namespace}.${VerbTLD}.${drivetype}.raw
 e="$?"; [[ "$e" = "0" ]] || exit "$e"
 
 
 # Process the output
-/usr/bin/tail -n +2 /opt/rink/drive/${namespace}.${verbTLD}.${drivetype}.raw > /opt/rink/drive/${namespace}.${verbTLD}.${drivetype}.line
-DriveID="$(/usr/bin/cat /opt/rink/drive/${namespace}.${verbTLD}.${drivetype}.line | /usr/bin/sed 's#[[:space:]].*##')"
-/usr/bin/rm -f /opt/rink/drive/${namespace}.${verbTLD}.${drivetype}.line
+/usr/bin/tail -n +2 /opt/rink/drive/${namespace}.${VerbTLD}.${drivetype}.raw > /opt/rink/drive/${namespace}.${VerbTLD}.${drivetype}.line
+DriveID="$(/usr/bin/cat /opt/rink/drive/${namespace}.${VerbTLD}.${drivetype}.line | /usr/bin/sed 's#[[:space:]].*##')"
+/usr/bin/rm -f /opt/rink/drive/${namespace}.${VerbTLD}.${drivetype}.line
 /usr/bin/echo "DriveID=\"${DriveID}\"
-DriveVerber=\"${namespace}.${verbTLD}\"
+DriveVerber=\"${namespace}.${VerbTLD}\"
 DriveSize=\"${drivesize}\"
-DriveRegion=\"${driveregion}\"" > /opt/rink/drive/${namespace}.${verbTLD}.${drivename}.drive
+DriveRegion=\"${driveregion}\"" > /opt/rink/drive/${namespace}.${VerbTLD}.${drivename}.drive
 
-. /opt/rink/drive/${namespace}.${verbTLD}.${drivename}.drive
+. /opt/rink/drive/${namespace}.${VerbTLD}.${drivename}.drive
 
 # Wait for the drive to be ready
 /usr/bin/vultr-cli bs g ${DriveID} | /usr/bin/grep -q 'active'
@@ -111,34 +111,34 @@ while [ "${driveactive}" = "1" ]; do
   fi
 done
 
-. /opt/rink/drive/${namespace}.${verbTLD}.${drivename}.drive
+. /opt/rink/drive/${namespace}.${VerbTLD}.${drivename}.drive
 
 # Attach the instance
 /usr/bin/vultr-cli bs a ${DriveID} -i=${VultrInstanceID}
 
 # Find the device name in /dev/vdb etc
-/usr/bin/ssh ${namespace}.${verbTLD} "/usr/bin/ls /dev/vd*" > /opt/rink/tmp/${namespace}.${verbTLD}.${drivename}.drive
-if ! /usr/bin/grep -q vdb /opt/rink/tmp/${namespace}.${verbTLD}.${drivename}.drive; then
+/usr/bin/ssh ${namespace}.${VerbTLD} "/usr/bin/ls /dev/vd*" > /opt/rink/tmp/${namespace}.${VerbTLD}.${drivename}.drive
+if ! /usr/bin/grep -q vdb /opt/rink/tmp/${namespace}.${VerbTLD}.${drivename}.drive; then
   DriveDev="vdb"
-elif ! /usr/bin/grep -q vdc /opt/rink/tmp/${namespace}.${verbTLD}.${drivename}.drive; then
+elif ! /usr/bin/grep -q vdc /opt/rink/tmp/${namespace}.${VerbTLD}.${drivename}.drive; then
   DriveDev="vdc"
-elif ! /usr/bin/grep -q vdd /opt/rink/tmp/${namespace}.${verbTLD}.${drivename}.drive; then
+elif ! /usr/bin/grep -q vdd /opt/rink/tmp/${namespace}.${VerbTLD}.${drivename}.drive; then
   DriveDev="vdd"
-elif ! /usr/bin/grep -q vde /opt/rink/tmp/${namespace}.${verbTLD}.${drivename}.drive; then
+elif ! /usr/bin/grep -q vde /opt/rink/tmp/${namespace}.${VerbTLD}.${drivename}.drive; then
   DriveDev="vde"
-elif ! /usr/bin/grep -q vdf /opt/rink/tmp/${namespace}.${verbTLD}.${drivename}.drive; then
+elif ! /usr/bin/grep -q vdf /opt/rink/tmp/${namespace}.${VerbTLD}.${drivename}.drive; then
   DriveDev="vdf"
-elif ! /usr/bin/grep -q vdg /opt/rink/tmp/${namespace}.${verbTLD}.${drivename}.drive; then
+elif ! /usr/bin/grep -q vdg /opt/rink/tmp/${namespace}.${VerbTLD}.${drivename}.drive; then
   DriveDev="vdg"
-elif ! /usr/bin/grep -q vdh /opt/rink/tmp/${namespace}.${verbTLD}.${drivename}.drive; then
+elif ! /usr/bin/grep -q vdh /opt/rink/tmp/${namespace}.${VerbTLD}.${drivename}.drive; then
   DriveDev="vdh"
 else
   /usr/bin/echo "Cannot have more than eight drives mounted to one verber. I quit."
   exit 7
 fi 
 
-# Record the device name in /opt/rink/drive/${namespace}.${verbTLD}.${drivename}.drive
-/usr/bin/echo "DriveDev=\"${DriveDev}\"" >> /opt/rink/drive/${namespace}.${verbTLD}.${drivename}.drive
+# Record the device name in /opt/rink/drive/${namespace}.${VerbTLD}.${drivename}.drive
+/usr/bin/echo "DriveDev=\"${DriveDev}\"" >> /opt/rink/drive/${namespace}.${VerbTLD}.${drivename}.drive
 
 # Mount the drive on the verber
-/usr/bin/ssh ${namespace}.${verbTLD} /opt/verb/serfs/inkdriveadd ${DriveDev} ${drivename} ${drivetype}
+/usr/bin/ssh ${namespace}.${VerbTLD} /opt/verb/serfs/inkdriveadd ${DriveDev} ${drivename} ${drivetype}
