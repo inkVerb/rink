@@ -77,7 +77,7 @@ if [ "${isIP4}" = "true" ]; then
   done
   ## Cleanup
   /usr/bin/rm -f /opt/rink/tmp/waiton.${namespace}.${VerbTLD}
-
+fi
 
 # Wait for powerup on IPv4
 ## Keep checking the IPv6 (because it keeps changing in spinup)
