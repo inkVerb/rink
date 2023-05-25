@@ -1,0 +1,87 @@
+#!/bin/bash
+#inkVerbRunner! verb.ink
+
+# This disconnects a drive from its connected VPS
+
+# How to use:
+## ./unplugdrive [verb-namespace] [tld] [user] [drive-nickname]
+
+# Eg:
+## ./unplugdrive name ink someuser twentyhard
+## ./unplugdrive blink ink johnuser tensolid
+
+# Get our Rink-NS name settings
+. /opt/rink/rinknames
+
+namespace="$1"
+VerbTLD="$2"
+vuser="$3"
+drivenickname="$4"
+
+# Credential checks
+if [ -z "${4}" ]; then
+  /usr/bin/echo "Enter all credentials; read instructions."
+  exit 5
+fi
+
+if [ ! -f "/opt/rink/conf/${namespace}.${VerbTLD}.vrb" ]; then
+  /usr/bin/echo "${namespace}.${VerbTLD} does not exist! I quit."
+  exit 5
+fi
+
+if [ ! -f "/opt/rink/drive/${drivenickname}.${vuser}.drive" ]; then
+  /usr/bin/echo "No drive exists by this nickname for this user. Nothing to do."
+  exit 5
+fi
+
+# Check verber config
+if ! grep -q "VerbUser=\"${vuser}\"" "/opt/rink/conf/${namespace}.${VerbTLD}.vrb"; then
+  /usr/bin/echo "${namespace}.${VerbTLD} not owned by user ${vuser}! I quit."
+  exit 5
+else
+  . "/opt/rink/conf/${namespace}.${VerbTLD}.vrb"
+fi
+
+if ! grep -q "DriveVerber=\"${namespace}.${VerbTLD}\"" "/opt/rink/drive/${drivenickname}.${vuser}.drive"; then
+  /usr/bin/echo "${namespace}.${VerbTLD} not assigned to drive ${drivenickname}! I quit."
+  exit 5
+else
+  . "/opt/rink/drive/${drivenickname}.${vuser}.drive"
+fi
+
+# Check verber config
+if ! grep -q "VerbUser=\"$vuser\"" "/opt/rink/conf/${namespace}.${VerbTLD}.vrb"; then
+  /usr/bin/echo "${namespace}.${VerbTLD} not owned by user ${vuser}! I quit."
+  exit 5
+else
+  . /opt/rink/conf/${namespace}.${VerbTLD}.vrb # Keep this even though it may not be used, it keeps the if tests consistent and allows an "else"
+fi
+
+# DEV available variables
+# ${DriveID}
+# ${DriveNickName}
+# ${DriveVerber}
+# ${DriveName}
+# ${DriveType}
+# ${DriveSize}
+# ${DriveRegion}
+# ${DriveDev}
+
+# Unmount the drive on the verber
+/usr/bin/ssh ${namespace}.${VerbTLD} /opt/verb/serfs/inkdrivekill ${DriveDev} ${DriveName} ${DriveType} ignore
+e="$?"; [[ "$e" = "0" ]] || exit "$e"
+
+# Disconnect the drive
+/usr/bin/vultr-cli bs detach ${DriveID}
+e="$?"; [[ "$e" = "0" ]] || exit "$e"
+
+# Records
+datestamp="$(/usr/bin/date +%Y-%m-%d_%T)"
+/usr/bin/cp /opt/rink/drive/${drivenickname}.${vuser}.drive /opt/rink/smashed/${vuser}.${drivenickname}.${datestamp}.unplugged
+/usr/bin/echo "DriveUnplugged=\"${datestamp}\"" >> /opt/rink/smashed/${vuser}.${drivenickname}.${datestamp}.unplugged
+
+# Update the config
+/usr/bin/sed -i "s/DriveDev=.*/DriveDev=\"UNPLUGGED\"/" /opt/rink/drive/${drivenickname}.${vuser}.drive
+
+# Finish
+/usr/bin/echo "Drive ${DriveName} unplugged from ${DriveVerber}"

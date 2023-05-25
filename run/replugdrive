@@ -1,0 +1,119 @@
+#!/bin/bash
+#inkVerbRunner! verb.ink
+
+# This connects a disconnected drive to a VPS (same or different)
+## Both the VPS and the drive must be owned by the same user
+
+# How to use:
+## ./replugdrive [verb-namespace] [tld] [user] [drive-nickname]
+
+# Eg:
+## ./replugdrive name ink someuser twentyhard
+## ./replugdrive blink ink johnuser tensolid
+
+# Get our Rink-NS name settings
+. /opt/rink/rinknames
+
+namespace="$1"
+VerbTLD="$2"
+vuser="$3"
+drivenickname="$4"
+
+# Credential checks
+if [ -z "${4}" ]; then
+  /usr/bin/echo "Enter all credentials; read instructions."
+  exit 5
+fi
+
+if [ ! -f "/opt/rink/conf/${namespace}.${VerbTLD}.vrb" ]; then
+  /usr/bin/echo "${namespace}.${VerbTLD} does not exist! I quit."
+  exit 5
+fi
+
+if [ ! -f "/opt/rink/drive/${drivenickname}.${vuser}.drive" ]; then
+  /usr/bin/echo "No drive exists by this nickname for this user. Nothing to do."
+  exit 5
+fi
+
+# Check verber config
+if ! grep -q "VerbUser=\"${vuser}\"" "/opt/rink/conf/${namespace}.${VerbTLD}.vrb"; then
+  /usr/bin/echo "${namespace}.${VerbTLD} not owned by user ${vuser}! I quit."
+  exit 5
+else
+  . "/opt/rink/conf/${namespace}.${VerbTLD}.vrb"
+fi
+
+if ! grep -q "DriveDev=\"UNPLUGGED\"" "/opt/rink/drive/${drivenickname}.${vuser}.drive"; then
+  /usr/bin/echo "Drive ${drivenickname} isn't unplugged yet! I quit."
+  exit 5
+else
+  . "/opt/rink/drive/${drivenickname}.${vuser}.drive"
+fi
+
+if ! grep -q "DriveNickName=\"${drivenickname}\"" "/opt/rink/drive/${drivenickname}.${vuser}.drive"; then
+  /usr/bin/echo "Drive ${drivenickname} nickname doesn't match up! Something is very wrong."
+  exit 6
+fi
+
+# Check verber config
+if ! grep -q "VerbUser=\"$vuser\"" "/opt/rink/conf/${namespace}.${VerbTLD}.vrb"; then
+  /usr/bin/echo "${namespace}.${VerbTLD} not owned by user ${vuser}! I quit."
+  exit 5
+else
+  . /opt/rink/conf/${namespace}.${VerbTLD}.vrb
+fi
+
+# DEV available variables
+# ${DriveID}
+# ${DriveNickName}
+# ${DriveVerber} # Most recent connected drive
+# ${DriveName}
+# ${DriveType}
+# ${DriveSize}
+# ${DriveRegion}
+# ${DriveDev}
+
+# Check if drive is attached
+if /usr/bin/vultr-cli bs g ${DriveID} | /usr/bin/grep -q "${VultrInstanceID}"; then
+  /usr/bin/echo "Somehow drive ${DriveNickName} is still pulgged into its old verber. Something is very wrong!"
+  exit 6
+else
+  # Make sure it is not attached so that the delete will work, even if somehow it got attached
+  /usr/bin/vultr-cli bs detach ${DriveID}
+  e="$?"; [[ "$e" = "0" ]] || exit "$e"
+fi
+
+# Attach the instance
+/usr/bin/vultr-cli bs a ${DriveID} -i=${VultrInstanceID}
+e="$?"; [[ "$e" = "0" ]] || exit "$e"
+
+# Find the device name in /dev/vdb etc
+/usr/bin/ssh ${namespace}.${VerbTLD} "/usr/bin/ls /dev/vd*" > /opt/rink/tmp/${DriveNickName}.${vuser}.drive
+if /usr/bin/grep -q vdh /opt/rink/tmp/${DriveNickName}.${vuser}.drive; then
+  DriveDev="vdh"
+elif /usr/bin/grep -q vdg /opt/rink/tmp/${DriveNickName}.${vuser}.drive; then
+  DriveDev="vdg"
+elif /usr/bin/grep -q vdf /opt/rink/tmp/${DriveNickName}.${vuser}.drive; then
+  DriveDev="vdf"
+elif /usr/bin/grep -q vde /opt/rink/tmp/${DriveNickName}.${vuser}.drive; then
+  DriveDev="vde"
+elif /usr/bin/grep -q vdd /opt/rink/tmp/${DriveNickName}.${vuser}.drive; then
+  DriveDev="vdd"
+elif /usr/bin/grep -q vdc /opt/rink/tmp/${DriveNickName}.${vuser}.drive; then
+  DriveDev="vdc"
+elif /usr/bin/grep -q vdb /opt/rink/tmp/${DriveNickName}.${vuser}.drive; then
+  DriveDev="vdb"
+else
+  /usr/bin/echo "Cannot have more than eight drives mounted to one verber. I quit."
+  exit 7
+fi 
+
+# Update the device name in /opt/rink/drive/${DriveNickName}.${vuser}.drive
+/usr/bin/sed -i "s/DriveDev=.*/DriveDev=\"${DriveDev}\"/" /opt/rink/drive/${DriveNickName}.${vuser}.drive
+/usr/bin/sed -i "s/DriveVerber=.*/DriveVerber=\"${namespace}.${VerbTLD}\"/" /opt/rink/drive/${DriveNickName}.${vuser}.drive
+
+# Cleanup
+/usr/bin/rm -f /opt/rink/tmp/${DriveNickName}.${vuser}.drive
+
+# Mount the drive on the verber
+/usr/bin/ssh ${namespace}.${VerbTLD} /opt/verb/serfs/inkdriveadd ${DriveDev} ${DriveName} ${DriveType}
