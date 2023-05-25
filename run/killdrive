@@ -54,10 +54,6 @@ fi
 /usr/bin/vultr-cli bs delete ${DriveID}
 e="$?"; [[ "$e" = "0" ]] || exit "$e"
 
-# Mount the drive on the verber
-/usr/bin/ssh ${namespace}.${VerbTLD} /opt/verb/serfs/inkdriveadd ${DriveDev} ${DriveName} ${DriveType}
-e="$?"; [[ "$e" = "0" ]] || exit "$e"
-
 # Records
 datestamp="$(/usr/bin/date +%Y-%m-%d_%T)"
 /usr/bin/mv /opt/rink/drive/${DriveNickName}.${vuser}.drive /opt/rink/smashed/${vuser}.${DriveNickName}.${datestamp}.drive
