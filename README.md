@@ -120,7 +120,27 @@ Each created-controlled verber has three configs in `rink/conf`
 - These are recorded in `conf/vrb.*` files as `$VerbNameServersConfig`
 - The current new VPS nameserver pair config is recorded in the rink master `rink/rinknames` file as `$NameServersConfig`
 
-### TO-DO
+## Basic commands
+
+```bash
+cd rink/run
+```
+
+### VPS
+```bash
+./addvps vname ink user 1gb laemp1 lax America/Los_Angeles popath customhost # so host isn't a number and isn't incremented
+./addvps vname ink user 1gb laemp1 lax America/Los_Angeles popath
+./killvps vname ink user
+```
+
+### Drive
+
+```bash
+./adddrive vname ink user drivenick 20 ssd lax # creates and attaches the drive to the vname.ink drive created/killed above
+./unplugdrive name ink someuser drivenick
+```
+
+## TO-DO
 - A "runner" script needs to be written that inherits code from setuprinkns to only create an additional pair of nameservers
   - This should increment host ID based on `ns1` and `ns2` formats, not single digits
   - This should update the `rink/rinknames` file's `$NameServersConfig` setting to reflect the new pair
