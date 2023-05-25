@@ -42,38 +42,42 @@ fi
 timestamp=$(date +'%Y-%m-%d_%H:%M:%S')
 
 # Remove each domain from Bind, then kill all domains
-ssh -T -o StrictHostKeyChecking=yes ${NS1Name}.${RinkVerbTLD} <<EOS
+/usr/bin/ssh -T -o StrictHostKeyChecking=yes ${NS1Name}.${RinkVerbTLD} <<EOS
+/usr/bin/mkdir -p /srv/sns/${namespace}-${VerbTLD}/domains/killed/parked /srv/sns/${namespace}-${VerbTLD}/domains/killed/served /srv/sns/killed/${timestamp}
 cd /srv/sns/pen-ink/domains/served
 for dom in *; do
 if [ "\${dom}" = '*' ]; then continue; fi
 /usr/bin/rm -f /var/named/db.\${dom}
+/usr/bin/mv /srv/sns/${namespace}-${VerbTLD}/domains/served/\${dom} /srv/sns/${namespace}-${VerbTLD}/domains/killed/served/
+/usr/bin/echo "rink-killed at ${timestamp}" >> /srv/sns/${namespace}-${VerbTLD}/domains/killed/served/\${dom}
 done
 cd /srv/sns/pen-ink/domains/parked
 for dom in *; do
 if [ "\${dom}" = '*' ]; then continue; fi
 /usr/bin/rm -f /var/named/db.\${dom}
+/usr/bin/mv /srv/sns/${namespace}-${VerbTLD}/domains/parked/\${dom} /srv/sns/${namespace}-${VerbTLD}/domains/killed/parked/
+/usr/bin/echo "rink-killed at ${timestamp}" >> /srv/sns/${namespace}-${VerbTLD}/domains/killed/parked/\${dom}
 done
-/usr/bin/mkdir -p /srv/sns/${namespace}-${VerbTLD}/domains/killed /srv/sns/killed/${timestamp}
-/usr/bin/mv /srv/sns/${namespace}-${VerbTLD}/domains/${parkserve}/${servedomain} /srv/sns/${namespace}-${VerbTLD}/domains/killed/
-/usr/bin/echo "rink-killed at ${timestamp}" >> /srv/sns/${namespace}-${VerbTLD}/domains/killed/${servedomain}
 /usr/bin/mv /srv/sns/${namespace}-${VerbTLD} /srv/sns/killed/${timestamp}/
 /usr/bin/chown -R root:root /srv/sns/killed/${timestamp}/${namespace}-${VerbTLD}
 EOS
 e="$?"; [[ "$e" = "0" ]] || exit "$e"
-ssh -T -o StrictHostKeyChecking=yes ${NS2Name}.${RinkVerbTLD} <<EOS
+/usr/bin/ssh -T -o StrictHostKeyChecking=yes ${NS2Name}.${RinkVerbTLD} <<EOS
+/usr/bin/mkdir -p /srv/sns/${namespace}-${VerbTLD}/domains/killed/parked /srv/sns/${namespace}-${VerbTLD}/domains/killed/served /srv/sns/killed/${timestamp}
 cd /srv/sns/pen-ink/domains/served
 for dom in *; do
 if [ "\${dom}" = '*' ]; then continue; fi
 /usr/bin/rm -f /var/named/db.\${dom}
+/usr/bin/mv /srv/sns/${namespace}-${VerbTLD}/domains/served/\${dom} /srv/sns/${namespace}-${VerbTLD}/domains/killed/served/
+/usr/bin/echo "rink-killed at ${timestamp}" >> /srv/sns/${namespace}-${VerbTLD}/domains/killed/served/\${dom}
 done
 cd /srv/sns/pen-ink/domains/parked
 for dom in *; do
 if [ "\${dom}" = '*' ]; then continue; fi
 /usr/bin/rm -f /var/named/db.\${dom}
+/usr/bin/mv /srv/sns/${namespace}-${VerbTLD}/domains/parked/\${dom} /srv/sns/${namespace}-${VerbTLD}/domains/killed/parked/
+/usr/bin/echo "rink-killed at ${timestamp}" >> /srv/sns/${namespace}-${VerbTLD}/domains/killed/parked/\${dom}
 done
-/usr/bin/mkdir -p /srv/sns/${namespace}-${VerbTLD}/domains/killed /srv/sns/killed/${timestamp}
-/usr/bin/mv /srv/sns/${namespace}-${VerbTLD}/domains/${parkserve}/${servedomain} /srv/sns/${namespace}-${VerbTLD}/domains/killed/
-/usr/bin/echo "rink-killed at ${timestamp}" >> /srv/sns/${namespace}-${VerbTLD}/domains/killed/${servedomain}
 /usr/bin/mv /srv/sns/${namespace}-${VerbTLD} /srv/sns/killed/${timestamp}/
 /usr/bin/chown -R root:root /srv/sns/killed/${timestamp}/${namespace}-${VerbTLD}
 EOS

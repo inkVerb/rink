@@ -140,8 +140,8 @@ VerbNameServersConfig="${NameServersConfig}"
 EOF
 
 # Get the first IP addresses
-FIRSTIPv4PLACEHOLDER="$(/usr/bin/vultr-cli instance ipv4 list ${VultrInstanceID} | /usr/bin/grep main_ip | /usr/bin/sed 's/\s.*$//')"
-FIRSTIPv6PLACEHOLDER="$(/usr/bin/vultr-cli instance ipv6 list ${VultrInstanceID} | /usr/bin/grep main_ip | /usr/bin/sed 's/\s.*$//')"
+firstIPv4PLACEHOLDER="$(/usr/bin/vultr-cli instance ipv4 list ${VultrInstanceID} | /usr/bin/grep main_ip | /usr/bin/sed 's/\s.*$//')"
+firstIPv6PLACEHOLDER="$(/usr/bin/vultr-cli instance ipv6 list ${VultrInstanceID} | /usr/bin/grep main_ip | /usr/bin/sed 's/\s.*$//')"
 
 # IP address
 /usr/bin/echo "New VPS instance ${namespace}.${VerbTLD} initiated. Waiting a few seconds for details to populate..."
@@ -149,22 +149,22 @@ FIRSTIPv6PLACEHOLDER="$(/usr/bin/vultr-cli instance ipv6 list ${VultrInstanceID}
 
 ## Check the IPv4 (Default until set: 0.0.0.0)
 IPv4="$(/usr/bin/vultr-cli instance ipv4 list ${VultrInstanceID} | /usr/bin/grep main_ip | /usr/bin/sed 's/\s.*$//')"
-while [ "$IPv4" = "0.0.0.0" ] || [ "$IPv4" = "$FIRSTIPv4PLACEHOLDER" ]; do
+while [ "${IPv4}" = "0.0.0.0" ] || [ "${IPv4}" = "$firstIPv4PLACEHOLDER" ]; do
   IPv4="$(/usr/bin/vultr-cli instance ipv4 list ${VultrInstanceID} | /usr/bin/grep main_ip | /usr/bin/sed 's/\s.*$//')"
   /usr/bin/sleep 1
 done
-/usr/bin/echo "IPv4: $IPv4"
+# /usr/bin/echo "IPv4: ${IPv4}" #DEV do this after we check the connection for answer
 
-## Check the IPv6 (Default until set is empty; a temp IPv6 is set when the final IPv4 is set, found with ${FIRSTIPv6PLACEHOLDER} and ${SECONDIPv6PLACEHOLDER})
-SECONDIPv6PLACEHOLDER="$(/usr/bin/vultr-cli instance ipv6 list ${VultrInstanceID} | /usr/bin/grep main_ip | /usr/bin/sed 's/\s.*$//')"
-IPv6="$(/usr/bin/vultr-cli instance ipv6 list ${VultrInstanceID} | /usr/bin/grep main_ip | /usr/bin/sed 's/\s.*$//')"
+## Check the IPv6 (Default until set is empty; a temp IPv6 is set when the final IPv4 is set, found with ${firstIPv6PLACEHOLDER} and ${secondIPv6PLACEHOLDER})
+secondIPv6PLACEHOLDER="$(/usr/bin/vultr-cli instance ipv6 list ${VultrInstanceID} | /usr/bin/grep main_ip | /usr/bin/sed 's/\s.*$//')"
+IPv6third="$(/usr/bin/vultr-cli instance ipv6 list ${VultrInstanceID} | /usr/bin/grep main_ip | /usr/bin/sed 's/\s.*$//')"
 counter=1
-while [ "$IPv6" = "${FIRSTIPv6PLACEHOLDER}" ] || [ "$IPv6" = "${SECONDIPv6PLACEHOLDER}" ] && [ "${counter}" -lt "15" ]; do
-  IPv6="$(/usr/bin/vultr-cli instance ipv6 list ${VultrInstanceID} | /usr/bin/grep main_ip | /usr/bin/sed 's/\s.*$//')"
+while [ "${IPv6third}" = "${firstIPv6PLACEHOLDER}" ] || [ "${IPv6third}" = "${secondIPv6PLACEHOLDER}" ] && [ "${counter}" -lt "15" ]; do
+  IPv6third="$(/usr/bin/vultr-cli instance ipv6 list ${VultrInstanceID} | /usr/bin/grep main_ip | /usr/bin/sed 's/\s.*$//')"
   /usr/bin/sleep 1
   counter=$[${counter} +1]
 done
-/usr/bin/echo "IPv6: $IPv6"
+#/usr/bin/echo "IPv6: ${IPv6}" #DEV This could change, let's wait until after we process it
 
 ## IP processing
 ### Compress IPv6
@@ -249,16 +249,16 @@ rarpa_ipv6() {
   printf 'ip6.arpa\n'
 }
 
-# Create the .ssh/config entry
-. /opt/rink/sshkey
-/usr/bin/echo "Include /opt/rink/conf/${namespace}.${VerbTLD}.ssh" >> /root/.ssh/config
-/usr/bin/cat <<EOF > /opt/rink/conf/${namespace}.${VerbTLD}.ssh
-Host ${namespace}.${VerbTLD}
-Hostname ${IPv4}
-User root
-Port ${Port}
-IdentityFile /root/.ssh/${SSHKey}
-EOF
+# # Create the .ssh/config entry
+# . /opt/rink/sshkey
+# /usr/bin/echo "Include /opt/rink/conf/${namespace}.${VerbTLD}.ssh" >> /root/.ssh/config
+# /usr/bin/cat <<EOF > /opt/rink/conf/${namespace}.${VerbTLD}.ssh
+# Host ${namespace}.${VerbTLD}
+# Hostname ${IPv4}
+# User root
+# Port ${Port}
+# IdentityFile /root/.ssh/${SSHKey}
+# EOF
 
 # Wait for powerup
 /usr/bin/echo "Waiting for preparation and power up..."
@@ -270,6 +270,45 @@ if [ "$e" != "0" ]; then
   /usr/bin/rm -f /opt/rink/conf/${namespace}.${VerbTLD}.*
   exit "$e"
 fi
+
+# Process IPs to list for keyscan
+
+## Finalize the IPv6 (because it keeps changing in spinup)
+IPv6Raw="$(/usr/bin/vultr-cli instance ipv6 list ${VultrInstanceID} | /usr/bin/grep main_ip | /usr/bin/sed 's/\s.*$//')"
+IPv6Cmp=$(compress_ipv6 ${IPv6Raw})
+IPv6Exp=$(expand_ipv6 ${IPv6Raw})
+IPv4ARPA=$(/usr/bin/echo ${IPv4} | sed -r 's/^([0-9]{1,3}).([0-9]{1,3}).([0-9]{1,3}).([0-9]{1,3})$/\4.\3.\2.\1.in-addr.arpa/')
+IPv6ARPA=$(rarpa_ipv6 ${IPv6Exp})
+
+## Remove the local server finkerfprint
+/usr/bin/sed -i "/${IPv4}/d" /root/.ssh/known_hosts
+/usr/bin/sed -i "/${IPv6}/d" /root/.ssh/known_hosts
+
+## Append IP addresses to config
+/usr/bin/cat <<EOF >> /opt/rink/conf/${namespace}.${VerbTLD}.vrb
+VerbIPv4="${IPv4}"
+VerbIPv6="${IPv6Cmp}"
+VerbIPv6Exp="${IPv6Exp}"
+VerbARPAIPv4="${IPv4ARPA}"
+VerbARPAIPv6="${IPv6ARPA}"
+VerbNameServersConfig="${NameServersConfig}"
+EOF
+
+## Rebuild the ssh config to include both IPv4 and IPv6
+. /opt/rink/sshkey
+/usr/bin/echo "Include /opt/rink/conf/${namespace}.${VerbTLD}.ssh" >> /root/.ssh/config
+/usr/bin/cat <<EOF > /opt/rink/conf/${namespace}.${VerbTLD}.ssh
+Host ${namespace}.${VerbTLD}
+Hostname ${IPv4}
+Hostname ${IPv6Cmp}
+User root
+Port ${Port}
+IdentityFile /root/.ssh/${SSHKey}
+EOF
+
+# Now IPv6 is ready and IPv4 is also tested
+/usr/bin/echo "IPv4: ${IPv4}"
+/usr/bin/echo "IPv6: ${IPv6Cmp}" 
 
 /usr/bin/echo "VPS is live, now setting up for use..."
 
@@ -299,39 +338,6 @@ EOS
   fi
   ((count++))
 done
-
-# Process IPs to list for keyscan
-
-## Finalize the IPv6 (because it keeps changing in spinup)
-IPv6Raw="$(/usr/bin/vultr-cli instance ipv6 list ${VultrInstanceID} | /usr/bin/grep main_ip | /usr/bin/sed 's/\s.*$//')"
-IPv6Cmp=$(compress_ipv6 ${IPv6Raw})
-IPv6Exp=$(expand_ipv6 ${IPv6Raw})
-IPv4ARPA=$(/usr/bin/echo ${IPv4} | sed -r 's/^([0-9]{1,3}).([0-9]{1,3}).([0-9]{1,3}).([0-9]{1,3})$/\4.\3.\2.\1.in-addr.arpa/')
-IPv6ARPA=$(rarpa_ipv6 ${IPv6Exp})
-
-## Remove the local server finkerfprint
-/usr/bin/sed -i "/${IPv4}/d" /root/.ssh/known_hosts
-/usr/bin/sed -i "/${IPv6}/d" /root/.ssh/known_hosts
-
-## Append IP addresses to config
-/usr/bin/cat <<EOF >> /opt/rink/conf/${namespace}.${VerbTLD}.vrb
-VerbIPv4="${IPv4}"
-VerbIPv6="${IPv6Cmp}"
-VerbIPv6Exp="${IPv6Exp}"
-VerbARPAIPv4="${IPv4ARPA}"
-VerbARPAIPv6="${IPv6ARPA}"
-VerbNameServersConfig="${NameServersConfig}"
-EOF
-
-## Rebuild the ssh config to include both IPv4 and IPv6
-/usr/bin/cat <<EOF > /opt/rink/conf/${namespace}.${VerbTLD}.ssh
-Host ${namespace}.${VerbTLD}
-Hostname ${IPv4}
-Hostname ${IPv6Cmp}
-User root
-Port ${Port}
-IdentityFile /root/.ssh/${SSHKey}
-EOF
 
 # Add the hashed key
 sleep 10 # The server needs to start its reboot
