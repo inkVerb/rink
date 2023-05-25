@@ -2,6 +2,7 @@
 #inkVerbRunner! verb.ink
 
 # This checks and kills a drive once it is no longer connected to a VPS
+## The drive must be unplugged first, even if the VPS it was attached to is destroyed (it can still be unplugged)
 
 # How to use:
 ## ./killdrive [user] [drive-nickname]
@@ -23,15 +24,15 @@ if [ -z "${2}" ]; then
 fi
 
 if [ ! -f "/opt/rink/drive/${drivenickname}.${vuser}.drive" ]; then
-  /usr/bin/echo "No drive exists by this nickname for this user. Nothing to do."
+  /usr/bin/echo "Drive does not exist for this user! I quit."
   exit 5
+else
+  . "/opt/rink/drive/${drivenickname}.${vuser}.drive"
 fi
 
 if ! grep -q "DriveDev=\"UNPLUGGED\"" "/opt/rink/drive/${drivenickname}.${vuser}.drive"; then
   /usr/bin/echo "Drive ${drivenickname} isn't unplugged yet! I quit."
   exit 5
-else
-  . "/opt/rink/drive/${drivenickname}.${vuser}.drive"
 fi
 
 if ! grep -q "DriveNickName=\"${drivenickname}\"" "/opt/rink/drive/${drivenickname}.${vuser}.drive"; then
