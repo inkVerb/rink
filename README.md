@@ -128,16 +128,19 @@ cd rink/run
 
 ### VPS
 ```bash
-./addvps vname ink user 1gb laemp1 lax America/Los_Angeles popath customhost # so host isn't a number and isn't incremented
-./addvps vname ink user 1gb laemp1 lax America/Los_Angeles popath
-./killvps vname ink user
+./addvps vname ink someuser 1gb laemp1 lax America/Los_Angeles popath customhost # so host isn't a number and isn't incremented
+./addvps vname ink someuser 1gb laemp1 lax America/Los_Angeles popath
+./killvps vname ink someuser
 ```
 
 ### Drive
 
 ```bash
-./adddrive vname ink user drivenick 20 ssd lax # creates and attaches the drive to the vname.ink drive created/killed above
-./unplugdrive name ink someuser drivenick
+./adddrive vname ink someuser drivenick 20 ssd lax # creates and attaches the drive to the vname.ink verber created/killed above
+./unplugdrive vname ink someuser drivenick # disconnects drive from the vname.ink verber
+# unplugdrive is a prerequesite for the following two commands, no shortcut for this
+./replugdrive vnametwo ink someuser drivenick # connects same drive to a different vnametwo.ink verber (all must be owned by same user)
+./killdrive someuser drivenick # deletes a drive
 ```
 
 ## TO-DO
