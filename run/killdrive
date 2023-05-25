@@ -50,10 +50,6 @@ fi
 # ${DriveRegion}
 # ${DriveDev}
 
-# Make sure it is not attached so that the delete will work, even if somehow it got attached
-/usr/bin/vultr-cli bs detach ${DriveID}
-e="$?"; [[ "$e" = "0" ]] || exit "$e"
-
 # Delete the drive
 /usr/bin/vultr-cli bs delete ${DriveID}
 e="$?"; [[ "$e" = "0" ]] || exit "$e"
