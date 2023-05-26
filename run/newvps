@@ -156,18 +156,20 @@ while [ "${IPv4}" = "0.0.0.0" ] || [ "${IPv4}" = "$firstIPv4PLACEHOLDER" ]; do
   IPv4="$(/usr/bin/vultr-cli instance ipv4 list ${VultrInstanceID} | /usr/bin/grep main_ip | /usr/bin/sed 's/\s.*$//')"
   /usr/bin/sleep 1
 done
-# /usr/bin/echo "IPv4: ${IPv4}" #DEV do this after we check the connection for answer
 
 ## Check the IPv6 (Default until set is empty; a temp IPv6 is set when the final IPv4 is set, found with ${firstIPv6PLACEHOLDER} and ${secondIPv6PLACEHOLDER})
-secondIPv6PLACEHOLDER="$(/usr/bin/vultr-cli instance ipv6 list ${VultrInstanceID} | /usr/bin/grep main_ip | /usr/bin/sed 's/\s.*$//')"
-IPv6third="$(/usr/bin/vultr-cli instance ipv6 list ${VultrInstanceID} | /usr/bin/grep main_ip | /usr/bin/sed 's/\s.*$//')"
-counter=1
-while [ "${IPv6third}" = "${firstIPv6PLACEHOLDER}" ] || [ "${IPv6third}" = "${secondIPv6PLACEHOLDER}" ] && [ "${counter}" -lt "15" ]; do
-  IPv6third="$(/usr/bin/vultr-cli instance ipv6 list ${VultrInstanceID} | /usr/bin/grep main_ip | /usr/bin/sed 's/\s.*$//')"
-  /usr/bin/sleep 1
-  counter=$[${counter} +1]
-done
-#/usr/bin/echo "IPv6: ${IPv6}" #DEV This could change, let's wait until after we process it
+# secondIPv6PLACEHOLDER="$(/usr/bin/vultr-cli instance ipv6 list ${VultrInstanceID} | /usr/bin/grep main_ip | /usr/bin/sed 's/\s.*$//')"
+# IPv6third="$(/usr/bin/vultr-cli instance ipv6 list ${VultrInstanceID} | /usr/bin/grep main_ip | /usr/bin/sed 's/\s.*$//')"
+# counter=1
+# while [ "${IPv6third}" = "${firstIPv6PLACEHOLDER}" ] || [ "${IPv6third}" = "${secondIPv6PLACEHOLDER}" ] && [ "${counter}" -lt "15" ]; do
+#   IPv6third="$(/usr/bin/vultr-cli instance ipv6 list ${VultrInstanceID} | /usr/bin/grep main_ip | /usr/bin/sed 's/\s.*$//')"
+#   /usr/bin/sleep 1
+#   counter=$[${counter} +1]
+# done
+#DEV above won't matter anyway, IPv6 can't be found until the server is actually on waitvpson and then waitvpsanswer is the best determiner of a final IPv6
+
+# /usr/bin/echo "IPv4: ${IPv4}" #DEV do this after we check the connection for answer
+# /usr/bin/echo "IPv6: ${IPv6}" #DEV This could change, let's wait until after we process it
 
 ## IP processing
 ### Compress IPv6
@@ -276,6 +278,7 @@ fi
 # Process IPs to list for keyscan
 
 ## Finalize the IPv6 (because it keeps changing in spinup)
+IPv6Raw="$(/usr/bin/vultr-cli instance ipv6 list ${VultrInstanceID} | /usr/bin/grep main_ip | /usr/bin/sed 's/\s.*$//')"
 IPv6Cmp=$(compress_ipv6 ${IPv6Raw})
 IPv6Exp=$(expand_ipv6 ${IPv6Raw})
 IPv4ARPA=$(/usr/bin/echo ${IPv4} | /usr/bin/sed -r 's/^([0-9]{1,3}).([0-9]{1,3}).([0-9]{1,3}).([0-9]{1,3})$/\4.\3.\2.\1.in-addr.arpa/')
