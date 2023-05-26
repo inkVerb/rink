@@ -107,12 +107,14 @@ if [ "$IMPort" != "true" ]; then
     fi
     if ! /usr/bin/grep -q ^VerbIPv4 /opt/rink/conf/${namespace}.${VerbTLD}.vrb || ! /usr/bin/grep -q "${VerbIPv4}" /opt/rink/conf/${namespace}.${VerbTLD}.ssh; then
       /usr/bin/echo "Verber was not created correctly. Run this again to try again."
+      /usr/bin/echo "Waiting to delete instance..."
+      /opt/rink/run/waitvpson ${namespace} ${VerbTLD}
+      /usr/bin/vultr-cli instance delete ${VultrInstanceID}
       datestamp="$(/usr/bin/date +%Y-%m-%d_%T)"
       /usr/bin/mv /opt/rink/conf/${namespace}.${VerbTLD}.vrb /opt/rink/destroyed/${vuser}.${namespace}.${VerbTLD}.${datestamp}.vrb
       /usr/bin/mv /opt/rink/conf/${namespace}.${VerbTLD}.raw /opt/rink/destroyed/${vuser}.${namespace}.${VerbTLD}.${datestamp}.raw
       /usr/bin/rm -f /opt/rink/conf/${namespace}.${VerbTLD}.ssh
       /usr/bin/sed -i "/${namespace}.${VerbTLD}.ssh/d" /root/.ssh/config
-      /usr/bin/vultr-cli instance delete ${VultrInstanceID}
       exit 0
     fi
   else
