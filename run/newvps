@@ -266,6 +266,7 @@ rarpa_ipv6() {
 # Wait for powerup
 /usr/bin/echo "Waiting for preparation and power up..."
 /opt/rink/run/waitvpson ${namespace} ${VerbTLD}
+echo DEV1
 /opt/rink/run/waitvpsanswer ${namespace} ${VerbTLD}
 e="$?"
 if [ "$e" != "0" ]; then
@@ -273,15 +274,20 @@ if [ "$e" != "0" ]; then
   /usr/bin/rm -f /opt/rink/conf/${namespace}.${VerbTLD}.*
   exit "$e"
 fi
-
+echo DEV2
 # Process IPs to list for keyscan
 
 ## Finalize the IPv6 (because it keeps changing in spinup)
 IPv6Raw="$(/usr/bin/vultr-cli instance ipv6 list ${VultrInstanceID} | /usr/bin/grep main_ip | /usr/bin/sed 's/\s.*$//')"
+echo DEV3
 IPv6Cmp=$(compress_ipv6 ${IPv6Raw})
+echo DEV4
 IPv6Exp=$(expand_ipv6 ${IPv6Raw})
+echo DEV5
 IPv4ARPA=$(/usr/bin/echo ${IPv4} | sed -r 's/^([0-9]{1,3}).([0-9]{1,3}).([0-9]{1,3}).([0-9]{1,3})$/\4.\3.\2.\1.in-addr.arpa/')
+echo DEV6
 IPv6ARPA=$(rarpa_ipv6 ${IPv6Exp})
+echo DEV7
 
 ## Remove the local server finkerfprint
 /usr/bin/sed -i "/${IPv4}/d" /root/.ssh/known_hosts
