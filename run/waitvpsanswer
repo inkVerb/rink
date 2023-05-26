@@ -57,6 +57,11 @@ isIP4 ${IPv4}
 if [ "${isIP4}" = "true" ]; then
   sshCall="root@${IPv4} -p ${VerbPort} -i /root/.ssh/${SSHKey}"
   /usr/bin/ssh -o StrictHostKeyChecking=yes -o ConnectTimeout=4 ${sshCall} "exit 0" 1> /opt/rink/tmp/waiton.${namespace}.${VerbTLD} 2> /opt/rink/tmp/waiton.${namespace}.${VerbTLD}
+  if [ ! -f "/opt/rink/tmp/waiton.${namespace}.${VerbTLD}" ]; then
+    echo "/usr/bin/ssh -o StrictHostKeyChecking=yes -o ConnectTimeout=4 ${sshCall} \"exit 0\""
+    echo waiton file does not exist: /opt/rink/tmp/waiton.${namespace}.${VerbTLD}
+    exit 4
+  fi
   sshexit="$?"
   /usr/bin/grep -q 'key' /opt/rink/tmp/waiton.${namespace}.${VerbTLD}
   greptest="$?"
