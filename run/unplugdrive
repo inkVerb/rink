@@ -33,7 +33,7 @@ else
 fi
 
 if grep -q "DriveDev=\"UNPLUGGED\"" "/opt/rink/drive/${drivenickname}.${vuser}.drive"; then
-  /usr/bin/echo "Drive ${drivenickname} is already unplugged yet! Nothing to do."
+  /usr/bin/echo "Drive ${drivenickname} is already unplugged! Nothing to do."
   exit 0
 fi
 
