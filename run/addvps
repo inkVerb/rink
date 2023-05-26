@@ -4,7 +4,7 @@
 # This is the master command to add a new VPS, complete with all requirements
 
 # How to use:
-## ./addvps [verb-namespace] [tld] [user] [vultr-plan (1gb shortcut for lowest)] [snapshot-nickname] [vultr-region - optional] [PHP-timezone - optional] [mail path - optional] [hostname - optional] [update repo - optional, default is verb-update] [update GitHub org - optional, default is inkverb]
+## ./addvps [verb-namespace] [tld] [user] [vultr-plan (1gb shortcut for lowest, 2gb shortcut for second-lowest: vc2-1c-2gb)] [snapshot-nickname] [vultr-region - optional] [PHP-timezone - optional] [mail path - optional] [hostname - optional] [update repo - optional, default is verb-update] [update GitHub org - optional, default is inkverb]
 
 ## If specifying later arguments, but not earlier options, use dash `-`
 ### This is for vultr-region, PHP-timezone, mail path, and hostname
@@ -16,10 +16,10 @@
 # Eg:
 ## ./addvps name ink someuser 1gb laemp ord America/Chicago
 ## ./addvps name ink someuser 1gb laemp dfw America/Chicago
-## ./addvps name ink someuser 1gb laemp ewr America/New_York
+## ./addvps name ink someuser 2gb laemp ewr America/New_York
 ## ./addvps name ink someuser 1gb laemp yto America/Toronto
 ## ./addvps name ink someuser 1gb laemp itm Asia/Tokyo
-## ./addvps name ink someuser 1gb laemp nrt Asia/Tokyo
+## ./addvps name ink someuser 2gb laemp nrt Asia/Tokyo
 ## ./addvps name ink someuser 1gb laemp sgp Asia/Singapore emailhere
 ## ./addvps john ink otheruser 1gb laemp lax America/Los_Angeles inboxword
 ## ./addvps nick red billuser vc2-1c-2gb laemp - - somepath

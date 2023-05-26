@@ -1,0 +1,80 @@
+#!/bin/bash
+#inkVerbRunner! verb.ink
+
+# This upgrades the size and usage plan of an existing Vultr VPS
+## Generally, this cannot be reversed
+
+
+# How to use:
+## ./growvps [verb-namespace] [tld] [user] [vultr-plan (1gb shortcut for lowest, 2gb shortcut for second-lowest: vc2-1c-2gb)]
+
+# Eg:
+## ./growvps name ink john 2gb
+## ./growvps name ink john 1gb
+
+
+if [ -z "$5" ]; then
+  /usr/bin/echo "Needs namespace, TLD, user plan, region, & snapshot arguments, I quit."
+  exit 0
+fi
+
+# Defaults
+. /opt/rink/rinknames
+
+namespace="$1"
+VerbTLD="$2"
+vuser="$3"
+vultrplan="$4"
+
+
+# Check to see if this verber already exists by this name
+if [ ! -f /opt/rink/conf/${namespace}.${VerbTLD}.vrb ]; then
+  /usr/bin/echo "Verber with name '${VerbTLD}' and TLD '${namespace}' does not exist. Can't grow it."
+  exit 5
+else
+  . /opt/rink/conf/${namespace}.${VerbTLD}.vrb
+fi
+
+# Usage plan
+if [ "${vultrplan}" = "1gb" ]; then
+  vultrplan="vc2-1c-1gb"
+elif [ "${vultrplan}" = "2gb" ]; then
+  vultrplan="vc2-1c-2gb"
+fi
+
+# Check the plan availability
+if ! /usr/bin/vultr-cli plan list | /usr/bin/grep -q "^${vultrplan}"; then
+  /usr/bin/echo "Usage plan ${vultrplan} not available. I quit."
+  exit 5
+fi
+
+
+# Upgrade the instance
+/usr/bin/vultr-cli instance plan upgrade ${VultrInstanceID} --plan "${vultrplan}" >> /opt/rink/conf/${namespace}.${VerbTLD}.upgrade.raw 2>> /opt/rink/conf/${namespace}.${VerbTLD}.upgradefail.raw
+
+# Exit status?
+e="$?"; if [ "$e" != "0" ]; then
+  /usr/bin/echo "VPS upgrade failed"
+  exit "$e"
+fi
+
+# Did it work?
+if [ -f /opt/rink/conf/${namespace}.${VerbTLD}.upgrade.raw ]; then
+  if ! /usr/bin/grep -q ^ID /opt/rink/conf/${namespace}.${VerbTLD}.upgrade.raw; then
+    /usr/bin/echo "Upgrade output file is not correct, start over."
+    /usr/bin/rm -f "${namespace}.${VerbTLD}.upgrade.raw"
+    exit 4
+  fi
+else
+  /usr/bin/echo "Upgrade output file does not exist, start over."
+  exit 4
+fi
+
+# Get the VPS instance ID
+/usr/bin/sed -i "s/VultrPlan=.*/VultrPlan=\"${vultrplan}\"/" /opt/rink/conf/${namespace}.${VerbTLD}.vrb
+
+# Restart the new Verber
+/usr/bin/ssh ${namespace}.${VerbTLD} /usr/bin/reboot
+
+# Finish
+/usr/bin/echo "${namespace}.${VerbTLD} upgraded. Wait a few seconds for the server to reboot."

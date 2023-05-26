@@ -7,11 +7,11 @@
 ##DEV the noip4 argument is in development and not yet supported by vultr-cli
 
 # How to use:
-## ./newvps [verb-namespace] [tld] [user] [vultr-plan (1gb shortcut for lowest)] [snapshot-nickname] [vultr-region] [PHP-timezone - optional; "-" placeholder] [turn-off IPv4 - optional DEV]
+## ./newvps [verb-namespace] [tld] [user] [vultr-plan (1gb shortcut for lowest, 2gb shortcut for second-lowest: vc2-1c-2gb)] [snapshot-nickname] [vultr-region] [PHP-timezone - optional; "-" placeholder] [turn-off IPv4 - optional DEV]
 
 # Eg:
 ## ./newvps name ink john 1gb laemp
-## ./newvps name ink john 1gb laemp sjc
+## ./newvps name ink john 2gb laemp sjc
 ## ./newvps nick red bill vc2-1c-2gb laemp sea America/Los_Angeles
 ## ./newvps nick red bill vc2-1c-2gb laemp sea America/Los_Angeles customhostname
 ## ./newvps nick red bill vc2-1c-2gb laemp sea America/Los_Angeles - noip4
@@ -102,7 +102,7 @@ fi
 . /opt/rink/portnum
 
 # Create the instance
-#DEV at a later date, 
+#DEV at a later date, I will complete this thought, but I don't know what I was going to do initially. If you are the intern who found this line, you win. Inform your supervisor to inform Jesse ASAP!
 /usr/bin/vultr-cli instance create --region "${VultrRegion}" --plan "${vultrplan}" --snapshot "${SnapshotID}" --label "${namespace}.${VerbTLD}" ${ip46statement} > /opt/rink/conf/${namespace}.${VerbTLD}.raw
 
 # Exit status?
@@ -130,6 +130,7 @@ fi
 VultrInstanceID="$(/usr/bin/cat /opt/rink/conf/${namespace}.${VerbTLD}.raw | /usr/bin/grep ^ID | /usr/bin/sed s"/ID\t\t\t//")"
 /usr/bin/cat <<EOF > /opt/rink/conf/${namespace}.${VerbTLD}.vrb
 VultrInstanceID="${VultrInstanceID}"
+VultrPlan="${vultrplan}"
 VerbHostID="${hostid}"
 VerbName="${namespace}"
 VerbTLD="${VerbTLD}"

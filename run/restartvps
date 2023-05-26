@@ -1,7 +1,8 @@
 #!/bin/bash
 #inkVerbRunner! verb.ink
 
-# This restarts an existing Vultr VPS, based on Verber namespace and TLD
+# This restarts an existing Vultr VPS using the Vultr system, based on Verber namespace and TLD
+## This is not generally recommended if ssh ... reboot is available
 
 # How to use:
 ## ./restartvps [verb-namespace] [tld] [user]
