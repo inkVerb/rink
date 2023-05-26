@@ -48,7 +48,6 @@ if ! /usr/bin/vultr-cli plan list | /usr/bin/grep -q "^${vultrplan}"; then
   exit 5
 fi
 
-
 # Upgrade the instance
 /usr/bin/vultr-cli instance plan upgrade ${VultrInstanceID} --plan "${vultrplan}" >> /opt/rink/conf/${namespace}.${VerbTLD}.upgrade.raw 2>> /opt/rink/conf/${namespace}.${VerbTLD}.upgradefail.raw
 
@@ -70,7 +69,9 @@ else
   exit 4
 fi
 
-# Get the VPS instance ID
+# Update the config info
+datestamp="$(/usr/bin/date +%Y-%m-%d_%T)"
+/usr/bin/echo "# ${datestamp} upgraded to ${vultrplan}"
 /usr/bin/sed -i "s/VultrPlan=.*/VultrPlan=\"${vultrplan}\"/" /opt/rink/conf/${namespace}.${VerbTLD}.vrb
 
 # Restart the new Verber

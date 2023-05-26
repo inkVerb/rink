@@ -128,9 +128,11 @@ fi
 
 # Get the VPS instance ID
 VultrInstanceID="$(/usr/bin/cat /opt/rink/conf/${namespace}.${VerbTLD}.raw | /usr/bin/grep ^ID | /usr/bin/sed s"/ID\t\t\t//")"
+datestamp="$(/usr/bin/date +%Y-%m-%d_%T)"
 /usr/bin/cat <<EOF > /opt/rink/conf/${namespace}.${VerbTLD}.vrb
 VultrInstanceID="${VultrInstanceID}"
 VultrPlan="${vultrplan}"
+DateCreated="${datestamp}"
 VerbHostID="${hostid}"
 VerbName="${namespace}"
 VerbTLD="${VerbTLD}"
