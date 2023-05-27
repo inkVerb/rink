@@ -400,6 +400,14 @@ EOF
 /usr/bin/ssh ${NS1Name}.${RinkVerbTLD} reboot
 /usr/bin/ssh ${NS2Name}.${RinkVerbTLD} reboot
 
+# Update NS file
+/usr/bin/cat <<EOF >> "/opt/rink/ns/${NS1Host}${NS2Host}"
+NS1IPv4="${NS1ip4}"
+NS1IPv6="${NS1ip6}"
+NS2IPv4="${NS2ip4}"
+NS2IPv6="${NS2ip6}"
+EOF
+
 # Finish
 /usr/bin/echo "
 The inkDNS nameservers are now set. This should be updated in the public verb repo...

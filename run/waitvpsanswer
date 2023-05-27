@@ -5,10 +5,11 @@
 ## This script will loop until finished, whether ssh keys are either accepted or rejected, so long as the server is up and responsive
 
 # How to use:
-## ./waitvpsanswer [verb-namespace] [tld]
+## ./waitvpsanswer [verb-namespace] [tld] [poweronce - optional to only run power cycle once]
 
 # Eg:
 ## ./waitvpsanswer name ink
+## ./waitvpsanswer name ink poweronce
 
 
 if [ -z "$2" ]; then
@@ -18,6 +19,10 @@ fi
 
 namespace="$1"
 VerbTLD="$2"
+
+if [ -n "$3" ] && [ "$3" = "poweronce" ]; then
+  poweronce="true"
+fi
 
 if [ ! -f "/opt/rink/conf/${namespace}.${VerbTLD}.vrb" ]; then
   /usr/bin/echo "${namespace}.${VerbTLD} does not exist! I quit."
@@ -78,10 +83,21 @@ if [ "${isIP4}" = "true" ]; then
   fi
     /usr/bin/grep -q 'key' /opt/rink/tmp/waiton.${namespace}.${VerbTLD}
     greptest="$?"
+    ### If a fast test, fail after a short time
+    if [ -n "${poweronce}" ] && [ "${poweronce}" = "true" ]; then
+        if [ "$count" -gt "7" ]; then
+          fail="true"
+          break
+        elif [ "$count" -gt "5" ]; then
+          /opt/rink/run/powercycle ${namespace} ${VerbTLD}
+          sleep 15
+        fi
     ### If we have been trying 10 minutes, restart
-    if [ "$count" -gt "60" ]; then
-      /opt/rink/run/powercycle ${namespace} ${VerbTLD}
-      count=0
+    else 
+      if [ "$count" -gt "60" ]; then
+        /opt/rink/run/powercycle ${namespace} ${VerbTLD}
+        count=0
+      fi
     fi
     ((count++))
   done
@@ -111,13 +127,30 @@ if [ "${isIP6}" = "true" ]; then
     ### Keep checking the IPv6 (because it keeps changing in spinup)
     IPv6="$(/usr/bin/vultr-cli instance ipv6 list ${VultrInstanceID} | /usr/bin/grep main_ip | /usr/bin/sed 's/\s.*$//')"
     sshCall="root@${IPv6} -p ${VerbPort} -i /root/.ssh/${SSHKey}"
+        ### If a fast test, fail after a short time
+    if [ -n "${poweronce}" ] && [ "${poweronce}" = "true" ]; then
+        if [ "$count" -gt "7" ]; then
+          fail="true"
+          break
+        elif [ "$count" -gt "5" ]; then
+          /opt/rink/run/powercycle ${namespace} ${VerbTLD}
+          sleep 15
+        fi
     ### If we have been trying 10 minutes, restart
-    if [ "$count" -gt "60" ]; then
-      /opt/rink/run/powercycle ${namespace} ${VerbTLD}
-      count=0
+    else
+      if [ "$count" -gt "60" ]; then
+        /opt/rink/run/powercycle ${namespace} ${VerbTLD}
+        count=0
+      fi
     fi
     ((count++))
   done
   ## Cleanup
   /usr/bin/rm -f /opt/rink/tmp/waiton.${namespace}.${VerbTLD}
+fi
+
+# Poweronce test?
+if [ -n "${poweronce}" ] && [ "${poweronce}" = "true" ] && [ "${fail}" = "true" ]; then
+  /usr/bin/echo "Verber is NR."
+  exit 6
 fi

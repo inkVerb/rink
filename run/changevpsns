@@ -1,0 +1,63 @@
+#!/bin/bash
+#inkVerbRunner! verb.ink
+
+# This updates a working verber to a new ns configuration
+## The "ns file" must exist at ring/ns/nsfile
+
+
+# How to use:
+## ./checkvpchangevpsnsshealth [verb-namespace] [tld] [user] [ns file]
+
+# Eg:
+## ./changevpsns name ink john ns1ns2
+## ./changevpsns name ink john ns3ns4
+
+
+if [ -z "$4" ]; then
+  /usr/bin/echo "Needs namespace, TLD, user & NS arguments, I quit."
+  exit 0
+fi
+
+# Defaults
+. /opt/rink/rinknames
+
+namespace="$1"
+VerbTLD="$2"
+vuser="$3"
+newnsfile="$4"
+
+# Check the existence of the verber
+if [ ! -f "/opt/rink/ns/${newnsfile}" ]; then
+  /usr/bin/echo "NS config does not exist."
+  exit 8
+else
+  . "/opt/rink/ns/${newnsfile}"
+fi
+
+# Update the configs on this server
+/usr/bin/sed -i "s/VerbNameServersConfig=.*/VerbNameServersConfig=\"${newnsfile}\"/" /opt/rink/conf/${namespace}.${VerbTLD}.vrb
+
+# Update the verber
+/usr/bin/ssh -o StrictHostKeyChecking=no -o ConnectTimeout=3 -q -T ${namespace}.${VerbTLD} <<EOS
+/opt/verb/serfs/inkdnssetns1 ${NS1Host}.${RinkDomain} ${NS1IPv4} ${NS1IPv6} || exit 4
+/opt/verb/serfs/inkdnssetns2 ${NA2Host}.${RinkDomain} ${NS2IPv4} ${NS2IPv6} || exit 4
+EOS
+e="$?"; [[ "$e" = "0" ]] || exit "$e"
+
+# Set up the keys
+/opt/rink/run/newverbrinkkeys ${namespace} ${VerbTLD} ${vuser}
+e="$?"; [[ "$e" = "0" ]] || exit "$e"
+
+# Update to latest NS servers
+/usr/bin/ssh ${namespace}.${VerbTLD} /opt/verb/serfs/rinkupdatekeys
+e="$?"; [[ "$e" = "0" ]] || exit "$e"
+/usr/bin/ssh ${namespace}.${VerbTLD} /opt/verb/serfs/rinkupdateallverbs
+e="$?"; [[ "$e" = "0" ]] || exit "$e"
+/usr/bin/ssh ${namespace}.${VerbTLD} /opt/verb/serfs/inkdnsrefreshbind
+e="$?"; [[ "$e" = "0" ]] || exit "$e"
+
+# Verber info
+/usr/bin/echo "# servernameip" > /opt/rink/conf/${namespace}.${VerbTLD}.srv
+/usr/bin/ssh ${namespace}.${VerbTLD} "/usr/bin/cat /opt/verb/conf/servernameip" >> /opt/rink/conf/${namespace}.${VerbTLD}.srv
+/usr/bin/echo "# siteurlist" >> /opt/rink/conf/${namespace}.${VerbTLD}.srv
+/usr/bin/ssh ${namespace}.${VerbTLD} "/usr/bin/cat /opt/verb/conf/siteurilist" >> /opt/rink/conf/${namespace}.${VerbTLD}.srv

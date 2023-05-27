@@ -15,7 +15,7 @@
 
 
 if [ -z "$3" ]; then
-  /usr/bin/echo "Needs namespace, TLD, user plan, region, & snapshot arguments, I quit."
+  /usr/bin/echo "Needs namespace, TLD & user arguments, I quit."
   exit 0
 fi
 
@@ -29,8 +29,8 @@ vuser="$3"
 
 # Check the existence of the verber
 if [ ! -f "/opt/rink/conf/${namespace}.${VerbTLD}.raw" ]; then
-  /usr/bin/echo "No raw conf file exists. Checking for drives..."
-  if [ -n "$(/usr/bin/ls /opt/rink/drive/*."${vuser}".drive)" ]; then
+  /usr/bin/echo "No raw conf file exists. Checking for orphaned drives..."
+  if [ ! -f "/opt/rink/conf/${namespace}.${VerbTLD}.vrb" ] && [ -n "$(/usr/bin/ls /opt/rink/drive/*."${vuser}".drive)" ]; then
     # put each listed drive's config file (with absolute path) in an array so we can loop through and check each
     driveConfigs=($(/usr/bin/grep -HRl "${namespace}.${VerbTLD}" /opt/rink/drive/*."${vuser}".drive))
     # the variable form ${#driveConfigs[@]} shows how many items in the $driveConfigs array
@@ -44,15 +44,25 @@ if [ ! -f "/opt/rink/conf/${namespace}.${VerbTLD}.raw" ]; then
     if [ "${#driveConfigs[@]}" -gt "0" ]; then
       for drive in ${driveConfigs}; do
         . ${drive}
-        /opt/rink/run/unplugdrive ${namespace} ${VerbTLD} ${vuser} ${drive}
-        /opt/rink/run/killdrive ${vuser} ${drive}
+        /opt/rink/run/unplugdrive ${namespace} ${VerbTLD} ${vuser} ${DriveNickName}
+        /opt/rink/run/killdrive ${vuser} ${DriveNickName}
       done
     fi
+  elif [ ! -f "/opt/rink/conf/${namespace}.${VerbTLD}.vrb" ]; then
+    /usr/bin/echo "No orphaned drives for user. Nothing to do here."
+    exit 0
   else
-    /usr/bin/echo "No drives for user"
+    /usr/bin/echo "Other configs exist, checking integrity..."
+  fi
+elif [ -f "/opt/rink/conf/${namespace}.${VerbTLD}.vrb" ]; then
+  /usr/bin/echo "Configs exist, checking integrity..."
+  /opt/rink/run/checkvpshealth ${namespace} ${VerbTLD} ${vuser}
+  if [ "$?" = "0" ]; then
+    /usr/bin/echo "Verber checks out healthy. Cannot purge!"
+    exit 4
   fi
 else
-  /usr/bin/echo ".raw file found..."
+  /usr/bin/echo "Only .raw config file found..."
 fi
 
 # Get some basic information

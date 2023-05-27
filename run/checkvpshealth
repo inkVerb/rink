@@ -15,7 +15,7 @@
 
 
 if [ -z "$3" ]; then
-  /usr/bin/echo "Needs namespace, TLD, user plan, region, & snapshot arguments, I quit."
+  /usr/bin/echo "Needs namespace, TLD & user arguments, I quit."
   exit 0
 fi
 
@@ -27,24 +27,34 @@ checkVerbTLD="$2"
 vuser="$3"
 
 # Check the existence of the verber
-if [ ! -f "/opt/rink/conf/${namespace}.${checkVerbTLD}.raw" ]; then
-  /usr/bin/echo "No raw conf file exists. Verber does not exist."
-  exit 0
+if [ ! -f "/opt/rink/conf/${namespace}.${checkVerbTLD}.raw" ] && [ ! -f "/opt/rink/conf/${namespace}.${checkVerbTLD}.vrb" ]; then
+  /usr/bin/echo "No config files exist. Nothing to check."
+  exit 8
+elif [ ! -f "/opt/rink/conf/${namespace}.${checkVerbTLD}.raw" ]; then
+  /usr/bin/echo "No .raw file exists."
+  /usr/bin/echo "Verber is not healthy!"
+  exit 6
+elif [ ! -f "/opt/rink/conf/${namespace}.${checkVerbTLD}.vrb" ]; then
+  /usr/bin/echo "No .vrb file exists."
+  /usr/bin/echo "Verber is not healthy!"
+  exit 6
 fi
 
-# Get the instance ID
-if [ -f "/opt/rink/conf/${namespace}.${checkVerbTLD}.vrb" ]; then
-  /usr/bin/echo ".vrb file found..."
+# Verify the instance ID and that the files in deed exist
+if [ -f "/opt/rink/conf/${namespace}.${checkVerbTLD}.vrb" ] && [ -f "/opt/rink/conf/${namespace}.${checkVerbTLD}.raw" ]; then
+  /usr/bin/echo "Config files found..."
   . /opt/rink/conf/${namespace}.${checkVerbTLD}.vrb
   . /opt/rink/ns/${VerbNameServersConfig}
   ## we can now use ${VultrInstanceID}
-  RawVultrInstanceID="$(/usr/bin/cat /opt/rink/conf/${namespace}.${checkVerbTLD}.raw | /usr/bin/grep ^ID | /usr/bin/sed s"/ID\t\t\t//")"
+  RawVultrInstanceID="$(/usr/bin/cat /opt/rink/conf/${namespace}.${VerbTLD}.raw | /usr/bin/grep ^ID | /usr/bin/sed s"/ID\t\t\t//")"
   if [ "${RawVultrInstanceID}" != "${VultrInstanceID}" ]; then
     /usr/bin/echo ".raw and .vrb conf files conflict."
-    unhealthy="true"
+    /usr/bin/echo "Verber is not healthy!"
+    exit 6
+  fi
 else
-  /usr/bin/echo "No .vrb file."
-  unhealthy="true"
+  /usr/bin/echo "Verber is not healthy!"
+  exit 6
 fi
 
 # Check conf credentials
@@ -74,6 +84,20 @@ rarpa_ipv6() {
   done
   printf 'ip6.arpa\n'
 }
+
+# Check VPS for responsiveness
+## Abbreviated waitvpson
+powerstatus="$(/usr/bin/vultr-cli instance get ${VultrInstanceID} | /usr/bin/grep '^POWER STATUS' | /usr/bin/sed s"/POWER STATUS\t\t//")"
+if [ "${powerstatus}" != "running" ]; then
+    /usr/bin/vultr-cli instance restart ${VultrInstanceID}
+    sleep 10
+fi
+## Check if responsive
+/opt/rink/run/waitvpsanswer ${namespace} ${VerbTLD} poweronce
+if [ "$?" != "0" ]; then
+  /usr/bin/echo "Verber is not healthy!"
+  exit 6
+fi
 
 # Conf file and settings
 /usr/bin/echo "Config settings"
@@ -109,7 +133,7 @@ else
     /usr/bin/echo "No valid IP to access Verber."
     unhealthy="true"
   fi
-  if [ "${checkHost}" != "${VerbHostID}.${namespace}.verb.${checkVerbTLD}" ]; then
+  if [ "${checkHost}" != "${VerbHostID}.${namespace}.verb.${VerbTLD}" ]; then
     . /opt/rink/inkdnsnameservers
     if [ "${checkHost}" = "${DefaultNS1}" ] && [ "${NameserverNS1IPv4}" = "${VerbIPv4}" ] && ( [ "${NameserverNS1IPv6}" = "${VerbIPv6}" ] || [ "${NameserverNS1IPv6}" = "${VerbIPv6Exp}" ] ); then
       /usr/bin/echo "Nameserver: ${checkHost}"
@@ -134,7 +158,7 @@ if [ -z "${VerbTLD}" ]; then
   /usr/bin/echo "VerbTLD missing from conf."
   unhealthy="true"
 else
-  if [ "${VerbTLD}" != "${checkVerbTLD}" ]; then
+  if [ "${VerbTLD}" != "${VerbTLD}" ]; then
     /usr/bin/echo "User doesn't match."
     unhealthy="true"
   fi
@@ -229,7 +253,7 @@ else
     unhealthy="true"
   else
     if ! /opt/rink/run/sshrun ${namespace} ${VerbTLD} ${vuser} "exit 0"; then
-      /usr/bin/echo "Verber can't be accessed."
+      /usr/bin/echo "Verber can't be accessed by normal means."
       unhealthy="true"
     fi
   fi
@@ -243,12 +267,12 @@ fi
 
 # Check nameservers
 /usr/bin/echo "Nameservers"
-if ! /usr/bin/ssh ${NS1Name}.${RinkVerbTLD} "exit 0"; then
-  /usr/bin/echo "Can't connect to ${NS1Host}."
+if ! /usr/bin/ssh -T -o StrictHostKeyChecking=yes root@${VerbIPv6} -p ${VerbPort} "/usr/bin/ssh ns1 'exit 0'"; then
+  /usr/bin/echo "It can't connect to ${NS1Host}."
   unhealthy="true"
 fi
-if ! /usr/bin/ssh ${NS2Name}.${RinkVerbTLD} "exit 0"; then
-  /usr/bin/echo "Can't connect to ${NS2Host}."
+if ! /usr/bin/ssh -T -o StrictHostKeyChecking=yes root@${VerbIPv6} -p ${VerbPort} "/usr/bin/ssh ns2 'exit 0'"; then
+  /usr/bin/echo "It can't connect to ${NS2Host}."
   unhealthy="true"
 fi
 if ! /usr/bin/ssh ${NS1Name}.${RinkVerbTLD} "/usr/bin/ls /srv/sns/${namespace}-${VerbTLD}"; then
@@ -260,7 +284,7 @@ if ! /usr/bin/ssh ${NS2Name}.${RinkVerbTLD} "/usr/bin/ls /srv/sns/${namespace}-$
   unhealthy="true"
 fi
 
-## Check ssh
+## Check ssh configs
 /usr/bin/echo "SSH config"
 if ! /usr/bin/grep -q "${IPv4}" /root/.ssh/known_hosts; then
   /usr/bin/echo "IPv4 not a known host."
@@ -269,7 +293,6 @@ fi
 if ! /usr/bin/grep -q "${IPv6Cmp}" /root/.ssh/known_hosts && ! /usr/bin/grep -q "${IPv6Exp}" /root/.ssh/known_hosts; then
   /usr/bin/echo "IPv6 not a known host."
   unhealthy="true"
-
 fi
 if ! /usr/bin/grep -q "Include" /root/.ssh/config | /usr/bin/grep -q "${namespace}.${VerbTLD}.ssh"; then
   /usr/bin/echo "SSH config not listed."
@@ -288,7 +311,11 @@ fi
 /usr/bin/grep -q '^ServerARPAIPv4="${VerbARPAIPv4}"' /opt/verb/conf/servernameip || exit 6
 /usr/bin/grep -q '^ServerARPAIPv6="${VerbARPAIPv6}"' /opt/verb/conf/servernameip || exit 6
 /usr/bin/grep -q '^ServerNS1DNS="${NS1Host}.${RinkDomain}"' /opt/verb/conf/servernameip || exit 6
+/usr/bin/grep -q '^ServerNS1IPv4="${NS1IPv4}"' /opt/verb/conf/servernameip || exit 6
+/usr/bin/grep -q '^ServerNS1IPv6="${NS1IPv6}"' /opt/verb/conf/servernameip || exit 6
 /usr/bin/grep -q '^ServerNS2DNS="${NA2Host}.${RinkDomain}"' /opt/verb/conf/servernameip || exit 6
+/usr/bin/grep -q '^ServerNS2IPv4="${NS2IPv4}"' /opt/verb/conf/servernameip || exit 6
+/usr/bin/grep -q '^ServerNS2IPv6="${NS2IPv6}"' /opt/verb/conf/servernameip || exit 6
 /usr/bin/grep -q '^127.0.1.1 ${VerbHostID}.${namespace}.verb.${VerbTLD} ${VerbHostID}' /opt/verb/conf/servernameip || exit 6
 /usr/bin/grep -q '^${VerbIPv4} ${VerbHostID}.${namespace}.verb.${VerbTLD} ${VerbHostID}' /opt/verb/conf/servernameip || exit 6
 /usr/bin/grep -q '^${VerbIPv6} ${VerbHostID}.${namespace}.verb.${VerbTLD} ${VerbHostID}' /etc/hosts || /usr/bin/grep -q '^${VerbIPv6Exp} ${VerbHostID}.${namespace}.verb.${VerbTLD} ${VerbHostID}' /etc/hosts || exit 6
