@@ -42,6 +42,8 @@ e="$?"; [[ "$e" = "0" ]] || exit "$e"
 
 # Update the configs on this server
 /usr/bin/sed -i "s/VerbNameServersConfig=.*/VerbNameServersConfig=\"${newnsfile}\"/" /opt/rink/conf/${namespace}.${VerbTLD}.vrb
+e="$?"; [[ "$e" = "0" ]] || exit "$e"
+. /opt/rink/conf/${namespace}.${VerbTLD}.vrb
 
 # Update the verber
 /usr/bin/ssh -o StrictHostKeyChecking=no -o ConnectTimeout=3 -q -T ${namespace}.${VerbTLD} <<EOS
@@ -65,5 +67,11 @@ e="$?"; [[ "$e" = "0" ]] || exit "$e"
 # Verber info
 /usr/bin/echo "# servernameip" > /opt/rink/conf/${namespace}.${VerbTLD}.srv
 /usr/bin/ssh ${namespace}.${VerbTLD} "/usr/bin/cat /opt/verb/conf/servernameip" >> /opt/rink/conf/${namespace}.${VerbTLD}.srv
+e="$?"; [[ "$e" = "0" ]] || exit "$e"
 /usr/bin/echo "# siteurlist" >> /opt/rink/conf/${namespace}.${VerbTLD}.srv
 /usr/bin/ssh ${namespace}.${VerbTLD} "/usr/bin/cat /opt/verb/conf/siteurilist" >> /opt/rink/conf/${namespace}.${VerbTLD}.srv
+e="$?"; [[ "$e" = "0" ]] || exit "$e"
+
+# Finish
+
+/usr/bin/echo "Verber ${namespace}.${VerbTLD} now using ${newnsfile} for nameservers."
