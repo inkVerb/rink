@@ -50,7 +50,7 @@ fi
 # Confirm mount name for device
 drivename="${drivetype}"
 i=1
-while [ -f "/opt/rink/drive/${drivenickname}.${vuser}.drive" ]; do
+while /usr/bin/grep -q DriveName=\"${drivename}\" /opt/rink/drive/*."${vuser}".drive; do
   drivename="${drivetype}${i}"
   ((i++))
   if [ "${i}" = "5" ]; then

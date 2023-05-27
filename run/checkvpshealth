@@ -260,8 +260,6 @@ if ! /usr/bin/ssh ${NS2Name}.${RinkVerbTLD} "/usr/bin/ls /srv/sns/${namespace}-$
   unhealthy="true"
 fi
 
-
-
 ## Check ssh
 /usr/bin/echo "SSH config"
 if ! /usr/bin/grep -q "${IPv4}" /root/.ssh/known_hosts; then
@@ -278,6 +276,65 @@ if ! /usr/bin/grep -q "Include" /root/.ssh/config | /usr/bin/grep -q "${namespac
   unhealthy="true"
 fi
 
+# Check settings on Verber
+/usr/bin/echo "Check if Verber knows its name and IP"
+/usr/bin/ssh -o StrictHostKeyChecking=no -o ConnectTimeout=3 -T ${namespace}.${VerbTLD} <<EOS
+/usr/bin/grep -q '^ServerName="${namespace}"' /opt/verb/conf/servernameip || exit 6
+/usr/bin/grep -q '^ServerHost="${VerbHostID}"' /opt/verb/conf/servernameip || exit 6
+/usr/bin/grep -q '^ServerTLD="${VerbTLD}"' /opt/verb/conf/servernameip || exit 6
+/usr/bin/grep -q '^ServerIPv4="${VerbIPv4}"' /opt/verb/conf/servernameip || exit 6
+/usr/bin/grep -q '^ServerIPv6="${VerbIPv6}"' /opt/verb/conf/servernameip || exit 6
+/usr/bin/grep -q '^ServerExpIPv6="${VerbIPv6Exp}"' /opt/verb/conf/servernameip || exit 6
+/usr/bin/grep -q '^ServerARPAIPv4="${VerbARPAIPv4}"' /opt/verb/conf/servernameip || exit 6
+/usr/bin/grep -q '^ServerARPAIPv6="${VerbARPAIPv6}"' /opt/verb/conf/servernameip || exit 6
+/usr/bin/grep -q '^ServerNS1DNS="${NS1Host}.${RinkDomain}"' /opt/verb/conf/servernameip || exit 6
+/usr/bin/grep -q '^ServerNS2DNS="${NA2Host}.${RinkDomain}"' /opt/verb/conf/servernameip || exit 6
+/usr/bin/grep -q '^127.0.1.1 ${VerbHostID}.${namespace}.verb.${VerbTLD} ${VerbHostID}' /opt/verb/conf/servernameip || exit 6
+/usr/bin/grep -q '^${VerbIPv4} ${VerbHostID}.${namespace}.verb.${VerbTLD} ${VerbHostID}' /opt/verb/conf/servernameip || exit 6
+/usr/bin/grep -q '^${VerbIPv6} ${VerbHostID}.${namespace}.verb.${VerbTLD} ${VerbHostID}' /etc/hosts || /usr/bin/grep -q '^${VerbIPv6Exp} ${VerbHostID}.${namespace}.verb.${VerbTLD} ${VerbHostID}' /etc/hosts || exit 6
+exit 0
+EOS
+if [ "$?" != "0" ]; then
+  /usr/bin/echo "Verber doesn't proerly know its own name and IP."
+  unhealthy="true"
+fi
+
+# Check any connected drives
+#SRC: /usr/bin/grep -HRl "pen.ink" /opt/rink/drive/*."paper".drive
+if [ -n "$(/usr/bin/ls /opt/rink/drive/*."${vuser}".drive)" ]; then
+  driveConfigs=($(/usr/bin/grep -HRl "${namespace}.${VerbTLD}" /opt/rink/drive/*."${vuser}".drive))
+  if [ "${#driveConfigs[@]}" = "1" ]; then
+    /usr/bin/echo "Check the connected drive"
+  elif [ "${#driveConfigs[@]}" -gt "1" ]; then
+    /usr/bin/echo "Check the ${#driveConfigs[@]} connected drives"
+  else
+    /usr/bin/echo "No connected drives"
+  fi
+  if [ "${#driveConfigs[@]}" -gt "0" ]; then
+    for drive in ${driveConfigs}; do
+      . ${drive}
+      if ! /usr/bin/vultr-cli bs get ${DriveID}; then
+        /usr/bin/echo "Drive '${DriveNickName}' does not exist."
+        unhealthy="true"
+      else
+        /usr/bin/ssh -o StrictHostKeyChecking=no -o ConnectTimeout=3 -T ${DriveVerber} <<EOS
+if [ ! -e "/dev/${DriveDev}" ]; then /usr/bin/echo "Device for ${DriveNickName} not found."; exit 6; fi
+if [ ! -f "/opt/verb/conf/inkdrive/${DriveType}.${DriveName}" ]; then /usr/bin/echo "Config for ${DriveNickName} not found."; exit 6; fi
+/usr/bin/grep -q "^Device=${DriveDev}" /opt/verb/conf/inkdrive/"${DriveType}"."${DriveName}" || /usr/bin/echo "Drive device for ${DriveNickName} incorrect."; exit 6
+/usr/bin/grep -q "^Mount=${DriveName}" /opt/verb/conf/inkdrive/"${DriveType}"."${DriveName}" || /usr/bin/echo "Drive mount name for ${DriveNickName} incorrect."; exit 6
+/usr/bin/grep -q "^Type=${DriveType}" /opt/verb/conf/inkdrive/"${DriveType}"."${DriveName}" || /usr/bin/echo "Drive type for ${DriveNickName} incorrect."; exit 6
+/usr/bin/grep -q "^/dev/${DriveDev}1" /etc/fstab | grep -q "/mnt/${DriveName}" || /usr/bin/echo "Device for ${DriveNickName} not mounted."; exit 6
+EOS
+        if [ "$?" != "0" ]; then
+          /usr/bin/echo "Drive '${DriveNickName}' not connected correctly."
+          unhealthy="true"
+        fi
+      fi
+    done
+  fi
+else
+  /usr/bin/echo "No drives for user"
+fi
 # Finish
 if [ -n "${unhealthy}" ] && [ "${unhealthy}" = "true" ]; then
   /usr/bin/echo "Verber is not healthy!"
