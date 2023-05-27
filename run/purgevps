@@ -50,19 +50,19 @@ if [ -f "/opt/rink/conf/${namespace}.${VerbTLD}.vrb" ]; then
     exit 6 # We don't want anything else happening until a human can have a look
   # .vrb files is in tact and we can proceed normally
   else
-  /usr/bin/echo "${datestamp}" > /opt/rink/conf/${namespace}.${VerbTLD}.ssh.${datestamp}.purged
-  /usr/bin/echo "ID: ${VultrInstanceID}" >> /opt/rink/destroyed/${namespace}.${VerbTLD}.${datestamp}.purged
-  /usr/bin/echo "IPv4: ${IPv4}" >> /opt/rink/destroyed/${namespace}.${VerbTLD}.${datestamp}.purged
-  /usr/bin/echo "IPv6: ${IPv6Raw}" >> /opt/rink/destroyed/${namespace}.${VerbTLD}.${datestamp}.purged
-  /usr/bin/echo ".vrb file in tact, proceeding normally" >> /opt/rink/destroyed/${namespace}.${VerbTLD}.${datestamp}.purged
-  # Do as much normal as possible
-  /rink/run/killvps "${namespace}" "${VerbTLD}" "${vuser}" >> /opt/rink/destroyed/${namespace}.${VerbTLD}.${datestamp}.purged 2>> /opt/rink/destroyed/${namespace}.${VerbTLD}.${datestamp}.purged
-  # Make sure it's gone
-  /usr/bin/vultr-cli instance delete ${VultrInstanceID} >> /opt/rink/destroyed/${namespace}.${VerbTLD}.${datestamp}.purged 2>> /opt/rink/destroyed/${namespace}.${VerbTLD}.${datestamp}.purged
-  /usr/bin/mv /opt/rink/conf/${namespace}.${VerbTLD}.vrb /opt/rink/destroyed/${namespace}.${VerbTLD}.vrb.${datestamp}.problem >> /opt/rink/destroyed/${namespace}.${VerbTLD}.${datestamp}.purged 2>> /opt/rink/destroyed/${namespace}.${VerbTLD}.${datestamp}.purged
-  /usr/bin/mv /opt/rink/conf/${namespace}.${VerbTLD}.raw /opt/rink/destroyed/${namespace}.${VerbTLD}.raw.${datestamp}.problem >> /opt/rink/destroyed/${namespace}.${VerbTLD}.${datestamp}.purged 2>> /opt/rink/destroyed/${namespace}.${VerbTLD}.${datestamp}.purged
-  /usr/bin/mv /opt/rink/conf/${namespace}.${VerbTLD}.ssh /opt/rink/destroyed/${namespace}.${VerbTLD}.ssh.${datestamp}.problem >> /opt/rink/destroyed/${namespace}.${VerbTLD}.${datestamp}.purged 2>> /opt/rink/destroyed/${namespace}.${VerbTLD}.${datestamp}.purged
-
+    /usr/bin/echo "${datestamp}" > /opt/rink/conf/${namespace}.${VerbTLD}.ssh.${datestamp}.purged
+    /usr/bin/echo "ID: ${VultrInstanceID}" >> /opt/rink/destroyed/${namespace}.${VerbTLD}.${datestamp}.purged
+    /usr/bin/echo "IPv4: ${IPv4}" >> /opt/rink/destroyed/${namespace}.${VerbTLD}.${datestamp}.purged
+    /usr/bin/echo "IPv6: ${IPv6Raw}" >> /opt/rink/destroyed/${namespace}.${VerbTLD}.${datestamp}.purged
+    /usr/bin/echo ".vrb file in tact, proceeding normally" >> /opt/rink/destroyed/${namespace}.${VerbTLD}.${datestamp}.purged
+    # Do as much normal as possible
+    /rink/run/killvps "${namespace}" "${VerbTLD}" "${vuser}" >> /opt/rink/destroyed/${namespace}.${VerbTLD}.${datestamp}.purged 2>> /opt/rink/destroyed/${namespace}.${VerbTLD}.${datestamp}.purged
+    # Make sure it's gone
+    /usr/bin/vultr-cli instance delete ${VultrInstanceID} >> /opt/rink/destroyed/${namespace}.${VerbTLD}.${datestamp}.purged 2>> /opt/rink/destroyed/${namespace}.${VerbTLD}.${datestamp}.purged
+    /usr/bin/mv /opt/rink/conf/${namespace}.${VerbTLD}.vrb /opt/rink/destroyed/${namespace}.${VerbTLD}.vrb.${datestamp}.problem >> /opt/rink/destroyed/${namespace}.${VerbTLD}.${datestamp}.purged 2>> /opt/rink/destroyed/${namespace}.${VerbTLD}.${datestamp}.purged
+    /usr/bin/mv /opt/rink/conf/${namespace}.${VerbTLD}.raw /opt/rink/destroyed/${namespace}.${VerbTLD}.raw.${datestamp}.problem >> /opt/rink/destroyed/${namespace}.${VerbTLD}.${datestamp}.purged 2>> /opt/rink/destroyed/${namespace}.${VerbTLD}.${datestamp}.purged
+    /usr/bin/mv /opt/rink/conf/${namespace}.${VerbTLD}.ssh /opt/rink/destroyed/${namespace}.${VerbTLD}.ssh.${datestamp}.problem >> /opt/rink/destroyed/${namespace}.${VerbTLD}.${datestamp}.purged 2>> /opt/rink/destroyed/${namespace}.${VerbTLD}.${datestamp}.purged
+  fi
 # No .vrb file, proceeding with a sledge hammer
 else
   /usr/bin/echo "${datestamp}" > /opt/rink/conf/${namespace}.${VerbTLD}.ssh.${datestamp}.purged
