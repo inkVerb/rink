@@ -34,6 +34,12 @@ else
   . "/opt/rink/ns/${newnsfile}"
 fi
 
+# Remove the old
+/opt/rink/run/killverbnsaccounts ${namespace} ${VerbTLD} ${vuser}
+e="$?"; [[ "$e" = "0" ]] || exit "$e"
+/opt/rink/run/killverbrinkkeys ${namespace} ${VerbTLD} ${vuser}
+e="$?"; [[ "$e" = "0" ]] || exit "$e"
+
 # Update the configs on this server
 /usr/bin/sed -i "s/VerbNameServersConfig=.*/VerbNameServersConfig=\"${newnsfile}\"/" /opt/rink/conf/${namespace}.${VerbTLD}.vrb
 
