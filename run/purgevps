@@ -29,8 +29,28 @@ vuser="$3"
 
 # Check the existence of the verber
 if [ ! -f "/opt/rink/conf/${namespace}.${VerbTLD}.raw" ]; then
-  /usr/bin/echo "No raw conf file exists. Nothing to do."
-  exit 0
+  /usr/bin/echo "No raw conf file exists. Checking for drives..."
+  if [ -n "$(/usr/bin/ls /opt/rink/drive/*."${vuser}".drive)" ]; then
+    # put each listed drive's config file (with absolute path) in an array so we can loop through and check each
+    driveConfigs=($(/usr/bin/grep -HRl "${namespace}.${VerbTLD}" /opt/rink/drive/*."${vuser}".drive))
+    # the variable form ${#driveConfigs[@]} shows how many items in the $driveConfigs array
+    if [ "${#driveConfigs[@]}" = "1" ]; then
+      /usr/bin/echo "Check the connected drive"
+    elif [ "${#driveConfigs[@]}" -gt "1" ]; then
+      /usr/bin/echo "Check the ${#driveConfigs[@]} connected drives"
+    else
+      /usr/bin/echo "No connected drives"
+    fi
+    if [ "${#driveConfigs[@]}" -gt "0" ]; then
+      for drive in ${driveConfigs}; do
+        . ${drive}
+        /opt/rink/run/unplugdrive ${namespace} ${VerbTLD} ${vuser} ${drive}
+        /opt/rink/run/killdrive ${vuser} ${drive}
+      done
+    fi
+  else
+    /usr/bin/echo "No drives for user"
+  fi
 else
   /usr/bin/echo ".raw file found..."
 fi
