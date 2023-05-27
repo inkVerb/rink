@@ -2,8 +2,10 @@
 #inkVerbRunner! verb.ink
 
 # This completely destroys a VPS in such a case where it was not created properly
-## This uses various means to ascertain a VPS and its status and delete it as much as possible
+## This uses various means to ascertain a VPS and its status and delete as much as possible
 ## This is less dependent on config files and can theoretically delete an instance with nothing but the .raw file
+## If it is able, it uses killvps as early as possible, but takes other steps to be certain
+## If there is a conflict between .vrb and .raw files, it will copy them to .problem files and exit without making changes, with a high-level tech support message
 
 # How to use:
 ## ./purgevps [verb-namespace] [tld] [user]
@@ -27,7 +29,7 @@ vuser="$3"
 
 # Check the existence of the verber
 if [ ! -f "/opt/rink/conf/${namespace}.${VerbTLD}.raw" ]; then
-  /usr/bin/echo "No raw conf file exists. Nothing to do"
+  /usr/bin/echo "No raw conf file exists. Nothing to do."
   exit 0
 else
   /usr/bin/echo ".raw file found..."
@@ -46,7 +48,7 @@ if [ -f "/opt/rink/conf/${namespace}.${VerbTLD}.vrb" ]; then
   ## we can now use ${VultrInstanceID}
   RawVultrInstanceID="$(/usr/bin/cat /opt/rink/conf/${namespace}.${VerbTLD}.raw | /usr/bin/grep ^ID | /usr/bin/sed s"/ID\t\t\t//")"
   if [ "${RawVultrInstanceID}" != "${VultrInstanceID}" ]; then
-    /usr/bin/echo ".raw and .vrb conf files conflict. High-level tech support is needed! Copied as .problem files" | /usr/bin/tee /opt/rink/conf/${namespace}.${VerbTLD}.ssh.${datestamp}.purged
+    /usr/bin/echo ".raw and .vrb conf files conflict. High-level tech support is needed! Copied as .problem files" | /usr/bin/tee /opt/rink/destroyed/${namespace}.${VerbTLD}.${datestamp}.purged
     /usr/bin/echo ".raw: ${RawVultrInstanceID} .vrb: ${VultrInstanceID}" >> /opt/rink/destroyed/${namespace}.${VerbTLD}.${datestamp}.purged
     /usr/bin/cp /opt/rink/conf/${namespace}.${VerbTLD}.vrb /opt/rink/conf/${namespace}.${VerbTLD}.vrb.${datestamp}.problem >> /opt/rink/destroyed/${namespace}.${VerbTLD}.${datestamp}.purged 2>> /opt/rink/destroyed/${namespace}.${VerbTLD}.${datestamp}.purged
     /usr/bin/cp /opt/rink/conf/${namespace}.${VerbTLD}.raw /opt/rink/conf/${namespace}.${VerbTLD}.raw.${datestamp}.problem >> /opt/rink/destroyed/${namespace}.${VerbTLD}.${datestamp}.purged 2>> /opt/rink/destroyed/${namespace}.${VerbTLD}.${datestamp}.purged
@@ -61,7 +63,7 @@ if [ -f "/opt/rink/conf/${namespace}.${VerbTLD}.vrb" ]; then
     /usr/bin/echo "IPv6: ${IPv6Raw}" >> /opt/rink/destroyed/${namespace}.${VerbTLD}.${datestamp}.purged
     /usr/bin/echo ".vrb file in tact, proceeding normally" >> /opt/rink/destroyed/${namespace}.${VerbTLD}.${datestamp}.purged
     # Do as much normal as possible
-    /rink/run/killvps "${namespace}" "${VerbTLD}" "${vuser}" >> /opt/rink/destroyed/${namespace}.${VerbTLD}.${datestamp}.purged 2>> /opt/rink/destroyed/${namespace}.${VerbTLD}.${datestamp}.purged
+    /opt/rink/run/killvps "${namespace}" "${VerbTLD}" "${vuser}" >> /opt/rink/destroyed/${namespace}.${VerbTLD}.${datestamp}.purged 2>> /opt/rink/destroyed/${namespace}.${VerbTLD}.${datestamp}.purged
     # Make sure it's gone
     /usr/bin/vultr-cli instance delete ${VultrInstanceID} >> /opt/rink/destroyed/${namespace}.${VerbTLD}.${datestamp}.purged 2>> /opt/rink/destroyed/${namespace}.${VerbTLD}.${datestamp}.purged
     /usr/bin/mv /opt/rink/conf/${namespace}.${VerbTLD}.vrb /opt/rink/destroyed/${namespace}.${VerbTLD}.vrb.${datestamp}.problem >> /opt/rink/destroyed/${namespace}.${VerbTLD}.${datestamp}.purged 2>> /opt/rink/destroyed/${namespace}.${VerbTLD}.${datestamp}.purged

@@ -76,7 +76,7 @@ fi
 
 ## Make sure it is not in use
 ### grep "-s, --no-messages suppress error messages"
-while /usr/bin/grep -qs ^VerbHostID=\"$hostid\" /opt/rink/conf/*.vrb > /dev/null; do
+while /usr/bin/grep -qs ^VerbHostID=\"${hostid}\" /opt/rink/conf/*.vrb > /dev/null; do
   hostid=$(( hostid + 1 ))
 done
 
