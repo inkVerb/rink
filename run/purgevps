@@ -1,0 +1,198 @@
+#!/bin/bash
+#inkVerbRunner! verb.ink
+
+# This completely destroys a VPS in such a case where it was not created properly
+## This uses various means to ascertain a VPS and its status and delete it as much as possible
+## This is less dependent on config files and can theoretically delete an instance with nothing but the .raw file
+
+# How to use:
+## ./purgevps [verb-namespace] [tld] [user]
+
+# Eg:
+## ./purgevps name ink john
+
+
+if [ -z "$3" ]; then
+  /usr/bin/echo "Needs namespace, TLD, user plan, region, & snapshot arguments, I quit."
+  exit 0
+fi
+
+# Defaults
+. /opt/rink/rinknames
+. /opt/rink/portnum
+
+namespace="$1"
+VerbTLD="$2"
+vuser="$3"
+
+# Check the existence of the verber
+if [ ! -f "/opt/rink/conf/${namespace}.${VerbTLD}.raw" ]; then
+  /usr/bin/echo "No raw conf file exists. Nothing to do"
+  exit 0
+fi
+
+# Get some basic information
+datestamp="$(/usr/bin/date +%Y-%m-%d_%T)"
+TempVultrInstanceID="$(/usr/bin/cat /opt/rink/conf/${namespace}.${VerbTLD}.raw | /usr/bin/grep ^ID | /usr/bin/sed s"/ID\t\t\t//")"
+IPv4="$(/usr/bin/vultr-cli instance ipv4 list ${TempVultrInstanceID} | /usr/bin/grep main_ip | /usr/bin/sed 's/\s.*$//')"
+IPv6Raw="$(/usr/bin/vultr-cli instance ipv6 list ${TempVultrInstanceID} | /usr/bin/grep main_ip | /usr/bin/sed 's/\s.*$//')"
+
+# Get the instance ID
+if [ -f "/opt/rink/conf/${namespace}.${VerbTLD}.vrb" ]; then
+  . /opt/rink/conf/${namespace}.${VerbTLD}.vrb
+  RawVultrInstanceID="$(/usr/bin/cat /opt/rink/conf/${namespace}.${VerbTLD}.raw | /usr/bin/grep ^ID | /usr/bin/sed s"/ID\t\t\t//")"
+  if [ "${RawVultrInstanceID}" != "${VultrInstanceID}" ]; then
+    /usr/bin/echo ".raw and .vrb conf files conflict. High-level tech support is needed! Copied as .problem files" | /usr/bin/tee /opt/rink/conf/${namespace}.${VerbTLD}.ssh.${datestamp}.purged
+    /usr/bin/echo ".raw: ${RawVultrInstanceID} .vrb: ${VultrInstanceID}" >> /opt/rink/destroyed/${namespace}.${VerbTLD}.${datestamp}.purged
+    /usr/bin/cp /opt/rink/conf/${namespace}.${VerbTLD}.vrb /opt/rink/conf/${namespace}.${VerbTLD}.vrb.${datestamp}.problem >> /opt/rink/destroyed/${namespace}.${VerbTLD}.${datestamp}.purged 2>> /opt/rink/destroyed/${namespace}.${VerbTLD}.${datestamp}.purged
+    /usr/bin/cp /opt/rink/conf/${namespace}.${VerbTLD}.raw /opt/rink/conf/${namespace}.${VerbTLD}.raw.${datestamp}.problem >> /opt/rink/destroyed/${namespace}.${VerbTLD}.${datestamp}.purged 2>> /opt/rink/destroyed/${namespace}.${VerbTLD}.${datestamp}.purged
+    /usr/bin/cp /opt/rink/conf/${namespace}.${VerbTLD}.ssh /opt/rink/conf/${namespace}.${VerbTLD}.ssh.${datestamp}.problem >> /opt/rink/destroyed/${namespace}.${VerbTLD}.${datestamp}.purged 2>> /opt/rink/destroyed/${namespace}.${VerbTLD}.${datestamp}.purged
+    exit 6 # We don't want anything else happening until a human can have a look
+  # .vrb files is in tact and we can proceed normally
+  else
+  /usr/bin/echo "${datestamp}" > /opt/rink/conf/${namespace}.${VerbTLD}.ssh.${datestamp}.purged
+  /usr/bin/echo "ID: ${VultrInstanceID}" >> /opt/rink/destroyed/${namespace}.${VerbTLD}.${datestamp}.purged
+  /usr/bin/echo "IPv4: ${IPv4}" >> /opt/rink/destroyed/${namespace}.${VerbTLD}.${datestamp}.purged
+  /usr/bin/echo "IPv6: ${IPv6Raw}" >> /opt/rink/destroyed/${namespace}.${VerbTLD}.${datestamp}.purged
+  /usr/bin/echo ".vrb file in tact, proceeding normally" >> /opt/rink/destroyed/${namespace}.${VerbTLD}.${datestamp}.purged
+  # Do as much normal as possible
+  /rink/run/killvps "${namespace}" "${VerbTLD}" "${vuser}" >> /opt/rink/destroyed/${namespace}.${VerbTLD}.${datestamp}.purged 2>> /opt/rink/destroyed/${namespace}.${VerbTLD}.${datestamp}.purged
+  # Make sure it's gone
+  /usr/bin/vultr-cli instance delete ${VultrInstanceID} >> /opt/rink/destroyed/${namespace}.${VerbTLD}.${datestamp}.purged 2>> /opt/rink/destroyed/${namespace}.${VerbTLD}.${datestamp}.purged
+  /usr/bin/mv /opt/rink/conf/${namespace}.${VerbTLD}.vrb /opt/rink/destroyed/${namespace}.${VerbTLD}.vrb.${datestamp}.problem >> /opt/rink/destroyed/${namespace}.${VerbTLD}.${datestamp}.purged 2>> /opt/rink/destroyed/${namespace}.${VerbTLD}.${datestamp}.purged
+  /usr/bin/mv /opt/rink/conf/${namespace}.${VerbTLD}.raw /opt/rink/destroyed/${namespace}.${VerbTLD}.raw.${datestamp}.problem >> /opt/rink/destroyed/${namespace}.${VerbTLD}.${datestamp}.purged 2>> /opt/rink/destroyed/${namespace}.${VerbTLD}.${datestamp}.purged
+  /usr/bin/mv /opt/rink/conf/${namespace}.${VerbTLD}.ssh /opt/rink/destroyed/${namespace}.${VerbTLD}.ssh.${datestamp}.problem >> /opt/rink/destroyed/${namespace}.${VerbTLD}.${datestamp}.purged 2>> /opt/rink/destroyed/${namespace}.${VerbTLD}.${datestamp}.purged
+
+# No .vrb file, proceeding with a sledge hammer
+else
+  /usr/bin/echo "${datestamp}" > /opt/rink/conf/${namespace}.${VerbTLD}.ssh.${datestamp}.purged
+  /usr/bin/echo "No .vrb file, proceeding with a sledge hammer" >> /opt/rink/destroyed/${namespace}.${VerbTLD}.${datestamp}.purged
+  VultrInstanceID="$(/usr/bin/cat /opt/rink/conf/${namespace}.${VerbTLD}.raw | /usr/bin/grep ^ID | /usr/bin/sed s"/ID\t\t\t//")"
+  /usr/bin/echo "ID: ${VultrInstanceID}" >> /opt/rink/destroyed/${namespace}.${VerbTLD}.${datestamp}.purged
+  /usr/bin/echo "IPv4: ${IPv4}" >> /opt/rink/destroyed/${namespace}.${VerbTLD}.${datestamp}.purged
+  /usr/bin/echo "IPv6: ${IPv6Raw}" >> /opt/rink/destroyed/${namespace}.${VerbTLD}.${datestamp}.purged
+  /usr/bin/vultr-cli instance delete ${VultrInstanceID} >> /opt/rink/destroyed/${namespace}.${VerbTLD}.${datestamp}.purged 2>> /opt/rink/destroyed/${namespace}.${VerbTLD}.${datestamp}.purged
+  /usr/bin/mv /opt/rink/conf/${namespace}.${VerbTLD}.vrb /opt/rink/destroyed/${namespace}.${VerbTLD}.vrb.${datestamp}.problem >> /opt/rink/destroyed/${namespace}.${VerbTLD}.${datestamp}.purged 2>> /opt/rink/destroyed/${namespace}.${VerbTLD}.${datestamp}.purged
+  /usr/bin/mv /opt/rink/conf/${namespace}.${VerbTLD}.raw /opt/rink/destroyed/${namespace}.${VerbTLD}.raw.${datestamp}.problem >> /opt/rink/destroyed/${namespace}.${VerbTLD}.${datestamp}.purged 2>> /opt/rink/destroyed/${namespace}.${VerbTLD}.${datestamp}.purged
+  /usr/bin/mv /opt/rink/conf/${namespace}.${VerbTLD}.ssh /opt/rink/destroyed/${namespace}.${VerbTLD}.ssh.${datestamp}.problem >> /opt/rink/destroyed/${namespace}.${VerbTLD}.${datestamp}.purged 2>> /opt/rink/destroyed/${namespace}.${VerbTLD}.${datestamp}.purged
+fi
+
+# In theory, the VPS should be deleted or we should have exited, but we will double check anyway (maybe it couldn't be deleted because it was still being created, etc)
+# If a .vrb file existed, every normal attemped should have been made to cleanup the nameservers
+# Regardless, we will also purge ssh records and erase what was on the nameservers
+
+# Other standard cleanup
+/usr/bin/echo "Proceeding to verify everything is deleted" >> /opt/rink/destroyed/${namespace}.${VerbTLD}.${datestamp}.purged
+
+# Make sure its powered up
+# Wait for powerup
+count=0
+powerstatus="$(/usr/bin/vultr-cli instance get $VultrInstanceID | /usr/bin/grep '^POWER STATUS' | /usr/bin/sed s"/POWER STATUS\t\t//")"
+while [ "$powerstatus" != "running" ]; do
+  sleep 5
+  powerstatus="$(/usr/bin/vultr-cli instance get $VultrInstanceID | /usr/bin/grep '^POWER STATUS' | /usr/bin/sed s"/POWER STATUS\t\t//")"
+    # If we have been trying 10 minutes, restart
+  if [ "$count" -gt "60" ]; then
+    /usr/bin/vultr-cli instance restart ${VultrInstanceID}
+    count=0
+  fi
+  ((count++))
+done
+
+# Final delete
+/usr/bin/vultr-cli instance delete ${VultrInstanceID} >> /opt/rink/destroyed/${namespace}.${VerbTLD}.${datestamp}.purged 2>> /opt/rink/destroyed/${namespace}.${VerbTLD}.${datestamp}.purged
+
+## IP processing
+### Compress IPv6
+hex2dec(){
+    [ "$1" != "" ] && printf "%d" "$(( 0x$1 ))"
+}
+compress_ipv6() {
+    ip=$1
+
+    blocks=$(/bin/echo $ip | /bin/grep -o "[0-9a-f]\+")
+    set $blocks
+
+    # compress leading zeros
+    ip=$(printf "%x:%x:%x:%x:%x:%x:%x:%x\n" \
+        $(hex2dec $1) \
+        $(hex2dec $2) \
+        $(hex2dec $3) \
+        $(hex2dec $4) \
+        $(hex2dec $5) \
+        $(hex2dec $6) \
+        $(hex2dec $7) \
+        $(hex2dec $8)
+    )
+
+    # prepend : for easier matching
+    ip=:$ip
+
+    # :: must compress the longest chain
+    for pattern in :0:0:0:0:0:0:0:0 \
+            :0:0:0:0:0:0:0 \
+            :0:0:0:0:0:0 \
+            :0:0:0:0:0 \
+            :0:0:0:0 \
+            :0:0; do
+        if /bin/echo $ip | /bin/grep -qs $pattern; then
+            ip=$(/bin/echo $ip | sed "s/$pattern/::/")
+            # if the substitution occured before the end, we have :::
+            ip=$(/bin/echo $ip | sed 's/:::/::/')
+            break # only one substitution
+        fi
+    done
+
+    # remove prepending : if necessary
+    /bin/echo $ip | /bin/grep -qs "^:[^:]" && ip=$(echo $ip | sed 's/://')
+
+    /bin/echo $ip
+}
+### Expand IPv6
+expand_ipv6() {
+    ip=$1
+
+    # prepend 0 if we start with :
+    /bin/echo $ip | /bin/grep -qs "^:" && ip="0${ip}"
+
+    # expand ::
+    if /bin/echo $ip | /bin/grep -qs "::"; then
+        colons=$(/bin/echo $ip | sed 's/[^:]//g')
+        missing=$(/bin/echo ":::::::::" | sed "s/$colons//")
+        expanded=$(/bin/echo $missing | sed 's/:/:0/g')
+        ip=$(/bin/echo $ip | sed "s/::/$expanded/")
+    fi
+
+    blocks=$(/bin/echo $ip | /bin/grep -o "[0-9a-f]\+")
+    set $blocks
+
+    printf "%04x:%04x:%04x:%04x:%04x:%04x:%04x:%04x\n" \
+        $(hex2dec $1) \
+        $(hex2dec $2) \
+        $(hex2dec $3) \
+        $(hex2dec $4) \
+        $(hex2dec $5) \
+        $(hex2dec $6) \
+        $(hex2dec $7) \
+        $(hex2dec $8)
+}
+
+IPv6Raw="$(/usr/bin/vultr-cli instance ipv6 list ${VultrInstanceID} | /usr/bin/grep main_ip | /usr/bin/sed 's/\s.*$//')"
+IPv6Cmp=$(compress_ipv6 ${IPv6Raw})
+IPv6Exp=$(expand_ipv6 ${IPv6Raw})
+
+# Removing any entries from nameservers
+/usr/bin/echo "Removing any directories from nameservers" >> /opt/rink/destroyed/${namespace}.${VerbTLD}.${datestamp}.purged
+/usr/bin/ssh -T -o StrictHostKeyChecking=yes ${NS1Name}.${RinkVerbTLD} "/usr/bin/rm -r /srv/sns/${namespace}-${VerbTLD}" >> /opt/rink/destroyed/${namespace}.${VerbTLD}.${datestamp}.purged 2>> /opt/rink/destroyed/${namespace}.${VerbTLD}.${datestamp}.purged
+/usr/bin/ssh -T -o StrictHostKeyChecking=yes ${NS2Name}.${RinkVerbTLD} "/usr/bin/rm -r /srv/sns/${namespace}-${VerbTLD}" >> /opt/rink/destroyed/${namespace}.${VerbTLD}.${datestamp}.purged 2>> /opt/rink/destroyed/${namespace}.${VerbTLD}.${datestamp}.purged
+/usr/bin/echo "Removing any users from nameservers" >> /opt/rink/destroyed/${namespace}.${VerbTLD}.${datestamp}.purged
+/usr/bin/ssh -T -o StrictHostKeyChecking=yes ${NS1Name}.${RinkVerbTLD} "/usr/bin/userdel ${namespace}-${VerbTLD}" >> /opt/rink/destroyed/${namespace}.${VerbTLD}.${datestamp}.purged 2>> /opt/rink/destroyed/${namespace}.${VerbTLD}.${datestamp}.purged
+/usr/bin/ssh -T -o StrictHostKeyChecking=yes ${NS2Name}.${RinkVerbTLD} "/usr/bin/userdel ${namespace}-${VerbTLD}" >> /opt/rink/destroyed/${namespace}.${VerbTLD}.${datestamp}.purged 2>> /opt/rink/destroyed/${namespace}.${VerbTLD}.${datestamp}.purged
+
+## Remove the local server finkerfprint
+/usr/bin/sed -i "/${IPv4}/d" /root/.ssh/known_hosts
+/usr/bin/sed -i "/${IPv6Cmp}/d" /root/.ssh/known_hosts
+/usr/bin/sed -i "/${IPv6Exp}/d" /root/.ssh/known_hosts
+
+# Finish
+/usr/bin/echo "${namespace}.${VerbTLD} should be completely purged from the system. A purged record was kept."
