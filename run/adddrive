@@ -83,7 +83,7 @@ fi
 driveregion="${VerbRegion}"
 ## Check region availability
 if /usr/bin/vultr-cli regions list | /usr/bin/grep "^${driveregion}" | /usr/bin/grep -q "${typetest}"; then
-  /usr/bin/echo "Creating ${drivesize} GB ${drivetype} drive in ${driveregion} region..."
+  /usr/bin/echo "Creating ${drivesize} GB ${drivetype} drive in the '${driveregion}' region..."
 else
   /usr/bin/echo "Verber region is ${driveregion}, but ${drivetype} is not available there. I quit."
   exit 5
