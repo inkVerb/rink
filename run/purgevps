@@ -89,9 +89,10 @@ fi
 
 # Other standard cleanup
 /usr/bin/echo "Proceeding to verify everything is deleted" >> /opt/rink/destroyed/${namespace}.${VerbTLD}.${datestamp}.purged
+/usr/bin/echo "If successfully deleted, the next line may show a 'pending destruction' error with '403' status" >> /opt/rink/destroyed/${namespace}.${VerbTLD}.${datestamp}.purged
 
 # See if the instance is still there
-if /usr/bin/vultr-cli instance get ${VultrInstanceID}; then
+if /usr/bin/vultr-cli instance get ${VultrInstanceID} >> /opt/rink/destroyed/${namespace}.${VerbTLD}.${datestamp}.purged 2>> /opt/rink/destroyed/${namespace}.${VerbTLD}.${datestamp}.purged; then
   /usr/bin/echo "For some reason, instance has not yet been deleted. Working..." >> /opt/rink/destroyed/${namespace}.${VerbTLD}.${datestamp}.purged
   # Make sure its powered up
   # Wait for powerup
@@ -116,7 +117,7 @@ if /usr/bin/vultr-cli instance get ${VultrInstanceID}; then
   /usr/bin/vultr-cli instance delete ${VultrInstanceID} >> /opt/rink/destroyed/${namespace}.${VerbTLD}.${datestamp}.purged 2>> /opt/rink/destroyed/${namespace}.${VerbTLD}.${datestamp}.purged
 fi
 
-# One way or another, instance is deleted
+# One way or another, instance should be deleted
 
 /usr/bin/echo "Purging IP addresses..." >> /opt/rink/destroyed/${namespace}.${VerbTLD}.${datestamp}.purged
 
