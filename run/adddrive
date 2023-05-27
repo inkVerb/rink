@@ -49,15 +49,17 @@ fi
 
 # Confirm mount name for device
 drivename="${drivetype}"
-i=1
-while /usr/bin/grep -q DriveName=\"${drivename}\" /opt/rink/drive/*."${vuser}".drive; do
-  drivename="${drivetype}${i}"
-  ((i++))
-  if [ "${i}" = "5" ]; then
-    /usr/bin/echo "Cannot have more than four of the same drive type mounted to one verber. I quit."
-    exit 7
-  fi
-done
+if /usr/bin/ls /opt/rink/drive/*."${vuser}".drive; then
+  i=1
+  while /usr/bin/grep -q DriveName=\"${drivename}\" /opt/rink/drive/*."${vuser}".drive; do
+    drivename="${drivetype}${i}"
+    ((i++))
+    if [ "${i}" = "5" ]; then
+      /usr/bin/echo "Cannot have more than four of the same drive type mounted to one verber. I quit."
+      exit 7
+    fi
+  done
+fi
 
 # Arranging
 if [ "${drivetype}" = "ssd" ]; then
