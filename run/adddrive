@@ -49,7 +49,7 @@ fi
 
 # Confirm mount name for device
 drivename="${drivetype}"
-if /usr/bin/ls /opt/rink/conf/drives/*."${vuser}".drive; then
+if /usr/bin/ls /opt/rink/conf/drives/*."${vuser}".drive > /dev/null 2>&1; then
   i=1
   while /usr/bin/grep -q DriveName=\"${drivename}\" /opt/rink/conf/drives/*."${vuser}".drive; do
     drivename="${drivetype}${i}"
