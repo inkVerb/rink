@@ -51,11 +51,11 @@ if [ "${newdrivesize}" -le "${DriveSize}" ]; then
 fi
 
 # Upgrade the drive
-/usr/bin/vultr-cli bs r ${VultrInstanceID} -s="${newdrivesize}" >> /opt/rink/conf/drives/${drivenickname}.${vuser}.grow.raw 2>> /opt/rink/conf/drives/${drivenickname}.${vuser}.growfail.raw
+echo "/usr/bin/vultr-cli bs r ${VultrInstanceID} -s=\"${newdrivesize}\" >> /opt/rink/conf/drives/${drivenickname}.${vuser}.grow.raw 2>> /opt/rink/conf/drives/${drivenickname}.${vuser}.growfail.raw"
 
 # Exit status?
 e="$?"; if [ "$e" != "0" ]; then
-  /usr/bin/echo "drive upgrade failed"
+  /usr/bin/echo "Drive upgrade failed"
   exit "$e"
 fi
 
