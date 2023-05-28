@@ -267,14 +267,14 @@ else
 fi
 
 # See if the instance is still there
-/usr/bin/echo "Information check"
+/usr/bin/echo "Check information"
 if ! /usr/bin/vultr-cli instance get ${VultrInstanceID} > /dev/null 2>&1; then
   /usr/bin/echo "Can't get information."
   unhealthy="true"
 fi
 
 # Check nameservers
-/usr/bin/echo "Nameservers"
+/usr/bin/echo "Check nameservers"
 if ! /usr/bin/ssh -T -o StrictHostKeyChecking=yes root@${VerbIPv6} -p ${VerbPort} -i /root/.ssh/${SSHKey} "/usr/bin/ssh ns1 'exit 0'"; then
   /usr/bin/echo "It can't connect to ${NS1Host}."
   unhealthy="true"
@@ -293,7 +293,7 @@ if ! /usr/bin/ssh ${NS2Name}.${RinkVerbTLD} "/usr/bin/ls /srv/sns/${namespace}-$
 fi
 
 ## Check ssh configs
-/usr/bin/echo "SSH config"
+/usr/bin/echo "Check SSH config"
 if ! /usr/bin/grep -q "${IPv4}" /root/.ssh/known_hosts; then
   /usr/bin/echo "IPv4 not a known host."
   unhealthy="true"
