@@ -61,12 +61,11 @@ fi
 
 # Did it work?
 if [ -f "/opt/rink/conf/drives/${drivenickname}.${vuser}.grow.raw" ]; then
-  if ! /usr/bin/grep -q "^resized block storage" /opt/rink/conf/drives/${drivenickname}.${vuser}.upgrade.raw; then
+  if ! /usr/bin/grep -q "^resized block storage" /opt/rink/conf/drives/${drivenickname}.${vuser}.grow.raw; then
     /usr/bin/echo "Upgrade output file is not correct, start over."
-    /usr/bin/rm -f "${namespace}.${VerbTLD}.upgrade.raw"
     exit 4
   else
-  /usr/bin/sed -i "s/^resized block storage/### resized block storage/" /opt/rink/conf/drives/${drivenickname}.${vuser}.upgrade.raw
+  /usr/bin/sed -i "s/^resized block storage/### resized block storage/" /opt/rink/conf/drives/${drivenickname}.${vuser}.grow.raw
   fi
 else
   /usr/bin/echo "Upgrade output file does not exist, start over."
