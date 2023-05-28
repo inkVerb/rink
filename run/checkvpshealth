@@ -309,8 +309,8 @@ fi
 
 # Check settings on Verber
 /usr/bin/echo "Check if Verber knows its name and IP"
-# /usr/bin/ssh -o StrictHostKeyChecking=no -o ConnectTimeout=3 -T ${namespace}.${VerbTLD} -p ${VerbPort} -i /root/.ssh/${SSHKey} > /dev/null 2>&1 <<EOS
-/usr/bin/ssh -o StrictHostKeyChecking=yes -o ConnectTimeout=3 -T ${namespace}.${VerbTLD} -p ${VerbPort} -i /root/.ssh/${SSHKey} <<EOS
+# /usr/bin/ssh -o StrictHostKeyChecking=yes -o ConnectTimeout=3 -T ${namespace}.${VerbTLD} -p ${VerbPort} -i /root/.ssh/${SSHKey} <<EOS # This shows ssh connection output
+/usr/bin/ssh -o StrictHostKeyChecking=no -o ConnectTimeout=3 -T ${namespace}.${VerbTLD} -p ${VerbPort} -i /root/.ssh/${SSHKey} > /dev/null 2>&1 <<EOS # This hides ssh connection output
 /usr/bin/grep -q '^ServerName="${namespace}"' /opt/verb/conf/servernameip || exit 6
 /usr/bin/grep -q '^ServerHost="${VerbHostID}"' /opt/verb/conf/servernameip || exit 6
 /usr/bin/grep -q '^ServerTLD="${VerbTLD}"' /opt/verb/conf/servernameip || exit 6
