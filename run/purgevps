@@ -87,7 +87,7 @@ if [ -f "/opt/rink/conf/verbers/${namespace}.${VerbTLD}.vrb" ]; then
   # .vrb files is in tact and we can proceed normally
   else
     /usr/bin/echo ".vrb file mathes .raw..."
-    /usr/bin/echo "${datestamp}" > /opt/rink/conf/verbers/${namespace}.${VerbTLD}.ssh.${datestamp}.purged
+    /usr/bin/echo "${datestamp}" > /opt/rink/conf/verbers.destroyed/${namespace}.${VerbTLD}.${datestamp}.purged
     /usr/bin/echo "ID: ${VultrInstanceID}" >> /opt/rink/conf/verbers.destroyed/${namespace}.${VerbTLD}.${datestamp}.purged
     /usr/bin/echo "IPv4: ${IPv4}" >> /opt/rink/conf/verbers.destroyed/${namespace}.${VerbTLD}.${datestamp}.purged
     /usr/bin/echo "IPv6: ${IPv6Raw}" >> /opt/rink/conf/verbers.destroyed/${namespace}.${VerbTLD}.${datestamp}.purged
@@ -102,7 +102,7 @@ if [ -f "/opt/rink/conf/verbers/${namespace}.${VerbTLD}.vrb" ]; then
   fi
 # No .vrb file, proceeding with a sledge hammer
 else
-  /usr/bin/echo "${datestamp}" > /opt/rink/conf/verbers/${namespace}.${VerbTLD}.ssh.${datestamp}.purged
+  /usr/bin/echo "${datestamp}" > /opt/rink/conf/verbers.destroyed/${namespace}.${VerbTLD}.${datestamp}.purged
   /usr/bin/echo "No .vrb file, proceeding with a sledge hammer" >> /opt/rink/conf/verbers.destroyed/${namespace}.${VerbTLD}.${datestamp}.purged
   ## we still don't have ${VultrInstanceID}
   VultrInstanceID="$(/usr/bin/cat /opt/rink/conf/verbers/${namespace}.${VerbTLD}.raw | /usr/bin/grep ^ID | /usr/bin/sed s"/ID\t\t\t//")"
