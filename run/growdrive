@@ -13,7 +13,7 @@
 ## ./growdrive name ink john 100
 
 
-if [ -z "$4" ]; then
+if [ -z "$5" ]; then
   /usr/bin/echo "Needs namespace, TLD, user plan, region, & snapshot arguments, I quit."
   exit 0
 fi
@@ -40,6 +40,8 @@ fi
 if ! /usr/bin/grep -q "VerbUser=\"${vuser}\"" "/opt/rink/conf/verbers/${DriveVerber}.vrb"; then
   /usr/bin/echo "Drive '${drivenickname}' not owned by user '${vuser}'."
   exit 5
+else
+  . /opt/rink/conf/verbers/${DriveVerber}.vrb
 fi
 
 # Check sizing
@@ -53,7 +55,7 @@ fi
 
 # Exit status?
 e="$?"; if [ "$e" != "0" ]; then
-  /usr/bin/echo "VPS upgrade failed"
+  /usr/bin/echo "drive upgrade failed"
   exit "$e"
 fi
 
