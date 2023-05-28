@@ -126,15 +126,20 @@ else
   isIP6 ${VerbIPv6}
   if [ "${isIP4}" = "true" ]; then
     /usr/bin/echo "Checking host with IPv4"
-    checkHost="$(/usr/bin/ssh -T -o StrictHostKeyChecking=yes root@${VerbIPv4} -p ${VerbPort} -i /root/.ssh/${SSHKey} hostname)"
-  elif [ "${isIP6}" = "true" ]; then
-    /usr/bin/echo "Checking host with IPv6"
-    checkHost="$(/usr/bin/ssh -T -o StrictHostKeyChecking=yes root@${VerbIPv6} -p ${VerbPort} -i /root/.ssh/${SSHKey} hostname)"
+    checkHost4="$(/usr/bin/ssh -T -o StrictHostKeyChecking=yes root@${VerbIPv4} -p ${VerbPort} -i /root/.ssh/${SSHKey} hostname)"
   else
+    /usr/bin/echo "Non-IPv4"
+  fi
+  if [ "${isIP6}" = "true" ]; then
+    /usr/bin/echo "Checking host with IPv6"
+    checkHost5="$(/usr/bin/ssh -T -o StrictHostKeyChecking=yes root@${VerbIPv6} -p ${VerbPort} -i /root/.ssh/${SSHKey} hostname)"
+  else
+    /usr/bin/echo "Non-IPv6"
+  if [ "${isIP4}" != "true" ] && [ "${isIP6}" != "true" ]
     /usr/bin/echo "No valid IP to access Verber."
     unhealthy="true"
   fi
-  if [ "${checkHost}" != "${VerbHostID}.${namespace}.verb.${VerbTLD}" ]; then
+  if [ "${checkHost4}" != "${VerbHostID}.${namespace}.verb.${VerbTLD}" ] && [ "${checkHost6}" != "${VerbHostID}.${namespace}.verb.${VerbTLD}" ]; then
     . /opt/rink/inkdnsnameservers
     if [ "${checkHost}" = "${VerbHostID}.${BaseHostNS}" ]; then
       /usr/bin/echo "Nameserver: ${checkHost}"
@@ -303,24 +308,25 @@ fi
 
 # Check settings on Verber
 /usr/bin/echo "Check if Verber knows its name and IP"
+# /usr/bin/ssh -o StrictHostKeyChecking=no -o ConnectTimeout=3 -T ${namespace}.${VerbTLD} > /dev/null 2>&1 <<EOS
 /usr/bin/ssh -o StrictHostKeyChecking=no -o ConnectTimeout=3 -T ${namespace}.${VerbTLD} <<EOS
-/usr/bin/grep -q '^ServerName="${namespace}"' /opt/verb/conf/servernameip || exit 6
-/usr/bin/grep -q '^ServerHost="${VerbHostID}"' /opt/verb/conf/servernameip || exit 6
-/usr/bin/grep -q '^ServerTLD="${VerbTLD}"' /opt/verb/conf/servernameip || exit 6
-/usr/bin/grep -q '^ServerIPv4="${VerbIPv4}"' /opt/verb/conf/servernameip || exit 6
-/usr/bin/grep -q '^ServerIPv6="${VerbIPv6}"' /opt/verb/conf/servernameip || exit 6
-/usr/bin/grep -q '^ServerExpIPv6="${VerbIPv6Exp}"' /opt/verb/conf/servernameip || exit 6
-/usr/bin/grep -q '^ServerARPAIPv4="${VerbARPAIPv4}"' /opt/verb/conf/servernameip || exit 6
-/usr/bin/grep -q '^ServerARPAIPv6="${VerbARPAIPv6}"' /opt/verb/conf/servernameip || exit 6
-/usr/bin/grep -q '^ServerNS1DNS="${NS1Host}.${RinkDomain}"' /opt/verb/conf/servernameip || exit 6
-/usr/bin/grep -q '^ServerNS1IPv4="${NS1IPv4}"' /opt/verb/conf/servernameip || exit 6
-/usr/bin/grep -q '^ServerNS1IPv6="${NS1IPv6}"' /opt/verb/conf/servernameip || exit 6
-/usr/bin/grep -q '^ServerNS2DNS="${NA2Host}.${RinkDomain}"' /opt/verb/conf/servernameip || exit 6
-/usr/bin/grep -q '^ServerNS2IPv4="${NS2IPv4}"' /opt/verb/conf/servernameip || exit 6
-/usr/bin/grep -q '^ServerNS2IPv6="${NS2IPv6}"' /opt/verb/conf/servernameip || exit 6
-/usr/bin/grep -q '^127.0.1.1 ${VerbHostID}.${namespace}.verb.${VerbTLD} ${VerbHostID}' /opt/verb/conf/servernameip || exit 6
-/usr/bin/grep -q '^${VerbIPv4} ${VerbHostID}.${namespace}.verb.${VerbTLD} ${VerbHostID}' /opt/verb/conf/servernameip || exit 6
-/usr/bin/grep -q '^${VerbIPv6} ${VerbHostID}.${namespace}.verb.${VerbTLD} ${VerbHostID}' /etc/hosts || /usr/bin/grep -q '^${VerbIPv6Exp} ${VerbHostID}.${namespace}.verb.${VerbTLD} ${VerbHostID}' /etc/hosts || exit 6
+/usr/bin/grep -q '^ServerName="${namespace}"' /opt/verb/conf/servernameip || /usr/bin/echo NO ServerName="${namespace}; exit 6
+/usr/bin/grep -q '^ServerHost="${VerbHostID}"' /opt/verb/conf/servernameip || /usr/bin/echo NO ServerHost="${VerbHostID}; exit 6
+/usr/bin/grep -q '^ServerTLD="${VerbTLD}"' /opt/verb/conf/servernameip || /usr/bin/echo NO ServerTLD="${VerbTLD}; exit 6
+/usr/bin/grep -q '^ServerIPv4="${VerbIPv4}"' /opt/verb/conf/servernameip || /usr/bin/echo NO ServerIPv4="${VerbIPv4}; exit 6
+/usr/bin/grep -q '^ServerIPv6="${VerbIPv6}"' /opt/verb/conf/servernameip || /usr/bin/echo NO ServerIPv6="${VerbIPv6}; exit 6
+/usr/bin/grep -q '^ServerExpIPv6="${VerbIPv6Exp}"' /opt/verb/conf/servernameip || /usr/bin/echo NO ServerExpIPv6="${VerbIPv6Exp}; exit 6
+/usr/bin/grep -q '^ServerARPAIPv4="${VerbARPAIPv4}"' /opt/verb/conf/servernameip || /usr/bin/echo NO ServerARPAIPv4="${VerbARPAIPv4}; exit 6
+/usr/bin/grep -q '^ServerARPAIPv6="${VerbARPAIPv6}"' /opt/verb/conf/servernameip || /usr/bin/echo NO ServerARPAIPv6="${VerbARPAIPv6}; exit 6
+/usr/bin/grep -q '^ServerNS1DNS="${NS1Host}.${RinkDomain}"' /opt/verb/conf/servernameip || /usr/bin/echo NO ServerNS1DNS="${NS1Host}.${RinkDomain}; exit 6
+/usr/bin/grep -q '^ServerNS1IPv4="${NS1IPv4}"' /opt/verb/conf/servernameip || /usr/bin/echo NO ServerNS1IPv4="${NS1IPv4}; exit 6
+/usr/bin/grep -q '^ServerNS1IPv6="${NS1IPv6}"' /opt/verb/conf/servernameip || /usr/bin/echo NO ServerNS1IPv6="${NS1IPv6}; exit 6
+/usr/bin/grep -q '^ServerNS2DNS="${NA2Host}.${RinkDomain}"' /opt/verb/conf/servernameip || /usr/bin/echo NO ServerNS2DNS="${NA2Host}.${RinkDomain}; exit 6
+/usr/bin/grep -q '^ServerNS2IPv4="${NS2IPv4}"' /opt/verb/conf/servernameip || /usr/bin/echo NO ServerNS2IPv4="${NS2IPv4}; exit 6
+/usr/bin/grep -q '^ServerNS2IPv6="${NS2IPv6}"' /opt/verb/conf/servernameip || /usr/bin/echo NO ServerNS2IPv6="${NS2IPv6}; exit 6
+/usr/bin/grep -q '^127.0.1.1 ${VerbHostID}.${namespace}.verb.${VerbTLD} ${VerbHostID}' /opt/verb/conf/servernameip || /usr/bin/echo NO 127.0.1.1 ${VerbHostID}.${namespace}.verb.${VerbTLD} ${VerbHostID}; exit 6
+/usr/bin/grep -q '^${VerbIPv4} ${VerbHostID}.${namespace}.verb.${VerbTLD} ${VerbHostID}' /opt/verb/conf/servernameip || /usr/bin/echo NO ${VerbIPv4} ${VerbHostID}.${namespace}.verb.${VerbTLD} ${VerbHostID}; exit 6
+/usr/bin/grep -q '^${VerbIPv6} ${VerbHostID}.${namespace}.verb.${VerbTLD} ${VerbHostID}' /etc/hosts || /usr/bin/grep -q '^${VerbIPv6Exp} ${VerbHostID}.${namespace}.verb.${VerbTLD} ${VerbHostID}' /etc/hosts || /usr/bin/echo NO ${VerbIPv6} ${VerbHostID}.${namespace}.verb.${VerbTLD} ${VerbHostID}; exit 6
 exit 0
 EOS
 if [ "$?" != "0" ]; then
