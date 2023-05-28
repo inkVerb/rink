@@ -53,12 +53,6 @@ fi
 # Upgrade the drive
 /usr/bin/vultr-cli bs r ${DriveID} -s="${newdrivesize}" >> /opt/rink/conf/drives/${drivenickname}.${vuser}.grow.raw 2>> /opt/rink/conf/drives/${drivenickname}.${vuser}.growfail.raw
 
-# Exit status?
-e="$?"; if [ "$e" != "0" ]; then
-  /usr/bin/echo "Drive upgrade failed"
-  exit "$e"
-fi
-
 # Did it work?
 if [ -f "/opt/rink/conf/drives/${drivenickname}.${vuser}.grow.raw" ]; then
   if ! /usr/bin/grep -q "^resized block storage" /opt/rink/conf/drives/${drivenickname}.${vuser}.grow.raw; then
