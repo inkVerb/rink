@@ -325,8 +325,8 @@ fi
 /usr/bin/grep -q '^ServerNS2DNS="${NA2Host}.${RinkDomain}"' /opt/verb/conf/servernameip || exit 6
 /usr/bin/grep -q '^ServerNS2IPv4="${NS2IPv4}"' /opt/verb/conf/servernameip || exit 6
 /usr/bin/grep -q '^ServerNS2IPv6="${NS2IPv6}"' /opt/verb/conf/servernameip || exit 6
-/usr/bin/grep -q '^127.0.1.1 ${VerbHostID}.${namespace}.verb.${VerbTLD} ${VerbHostID}' /opt/verb/conf/servernameip || exit 6
-/usr/bin/grep -q '^${VerbIPv4} ${VerbHostID}.${namespace}.verb.${VerbTLD} ${VerbHostID}' /opt/verb/conf/servernameip || exit 6
+/usr/bin/grep -q '^127.0.1.1 ${VerbHostID}.${namespace}.verb.${VerbTLD} ${VerbHostID}' /etc/hosts || exit 6
+/usr/bin/grep -q '^${VerbIPv4} ${VerbHostID}.${namespace}.verb.${VerbTLD} ${VerbHostID}' /etc/hosts || exit 6
 /usr/bin/grep -q '^${VerbIPv6} ${VerbHostID}.${namespace}.verb.${VerbTLD} ${VerbHostID}' /etc/hosts || /usr/bin/grep -q '^${VerbIPv6Exp} ${VerbHostID}.${namespace}.verb.${VerbTLD} ${VerbHostID}' /etc/hosts || exit 6
 exit 0
 EOS
@@ -335,24 +335,25 @@ if [ "$?" != "0" ]; then
   unhealthy="true"
   /usr/bin/echo "Check details with:"
   /usr/bin/cat <<EOS
-ssh -o StrictHostKeyChecking=yes -o ConnectTimeout=3 -T ${namespace}.${VerbTLD} -p ${VerbPort} -i /root/.ssh/${SSHKey}
-grep -q '^ServerName="${namespace}"' /opt/verb/conf/servernameip
-grep -q '^ServerHost="${VerbHostID}"' /opt/verb/conf/servernameip
-grep -q '^ServerTLD="${VerbTLD}"' /opt/verb/conf/servernameip
-grep -q '^ServerIPv4="${VerbIPv4}"' /opt/verb/conf/servernameip
-grep -q '^ServerIPv6="${VerbIPv6}"' /opt/verb/conf/servernameip
-grep -q '^ServerExpIPv6="${VerbIPv6Exp}"' /opt/verb/conf/servernameip
-grep -q '^ServerARPAIPv4="${VerbARPAIPv4}"' /opt/verb/conf/servernameip
-grep -q '^ServerARPAIPv6="${VerbARPAIPv6}"' /opt/verb/conf/servernameip
-grep -q '^ServerNS1DNS="${NS1Host}.${RinkDomain}"' /opt/verb/conf/servernameip
-grep -q '^ServerNS1IPv4="${NS1IPv4}"' /opt/verb/conf/servernameip
-grep -q '^ServerNS1IPv6="${NS1IPv6}"' /opt/verb/conf/servernameip
-grep -q '^ServerNS2DNS="${NA2Host}.${RinkDomain}"' /opt/verb/conf/servernameip
-grep -q '^ServerNS2IPv4="${NS2IPv4}"' /opt/verb/conf/servernameip
-grep -q '^ServerNS2IPv6="${NS2IPv6}"' /opt/verb/conf/servernameip
-grep -q '^127.0.1.1 ${VerbHostID}.${namespace}.verb.${VerbTLD} ${VerbHostID}' /opt/verb/conf/servernameip
-grep -q '^${VerbIPv4} ${VerbHostID}.${namespace}.verb.${VerbTLD} ${VerbHostID}' /opt/verb/conf/servernameip
-grep -q '^${VerbIPv6} ${VerbHostID}.${namespace}.verb.${VerbTLD} ${VerbHostID}' /etc/hosts || /usr/bin/grep -q '^${VerbIPv6Exp} ${VerbHostID}.${namespace}.verb.${VerbTLD} ${VerbHostID}' /etc/hosts
+ssh -o StrictHostKeyChecking=yes -o ConnectTimeout=3 ${namespace}.${VerbTLD} -p ${VerbPort} -i /root/.ssh/${SSHKey}
+grep -q '^ServerName="${namespace}"' /opt/verb/conf/servernameip || echo fail
+grep -q '^ServerHost="${VerbHostID}"' /opt/verb/conf/servernameip || echo fail
+grep -q '^ServerTLD="${VerbTLD}"' /opt/verb/conf/servernameip || echo fail
+grep -q '^ServerIPv4="${VerbIPv4}"' /opt/verb/conf/servernameip || echo fail
+grep -q '^ServerIPv6="${VerbIPv6}"' /opt/verb/conf/servernameip || echo fail
+grep -q '^ServerExpIPv6="${VerbIPv6Exp}"' /opt/verb/conf/servernameip || echo fail
+grep -q '^ServerARPAIPv4="${VerbARPAIPv4}"' /opt/verb/conf/servernameip || echo fail
+grep -q '^ServerARPAIPv6="${VerbARPAIPv6}"' /opt/verb/conf/servernameip || echo fail
+grep -q '^ServerNS1DNS="${NS1Host}.${RinkDomain}"' /opt/verb/conf/servernameip || echo fail
+grep -q '^ServerNS1IPv4="${NS1IPv4}"' /opt/verb/conf/servernameip || echo fail
+grep -q '^ServerNS1IPv6="${NS1IPv6}"' /opt/verb/conf/servernameip || echo fail
+grep -q '^ServerNS2DNS="${NA2Host}.${RinkDomain}"' /opt/verb/conf/servernameip || echo fail
+grep -q '^ServerNS2IPv4="${NS2IPv4}"' /opt/verb/conf/servernameip || echo fail
+grep -q '^ServerNS2IPv6="${NS2IPv6}"' /opt/verb/conf/servernameip || echo fail
+grep -q '^127.0.1.1 ${VerbHostID}.${namespace}.verb.${VerbTLD} ${VerbHostID}' /etc/hosts || echo fail
+grep -q '^${VerbIPv4} ${VerbHostID}.${namespace}.verb.${VerbTLD} ${VerbHostID}' /etc/hosts || echo fail
+grep -q '^${VerbIPv6} ${VerbHostID}.${namespace}.verb.${VerbTLD} ${VerbHostID}' /etc/hosts || /usr/bin/grep -q '^${VerbIPv6Exp} ${VerbHostID}.${namespace}.verb.${VerbTLD} ${VerbHostID}' /etc/hosts || echo fail
+### Done line by line, any error will output "fail"
 EOS
 fi
 
