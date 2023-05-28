@@ -60,7 +60,7 @@ e="$?"; if [ "$e" != "0" ]; then
 fi
 
 # Did it work?
-if [ -f /opt/rink/conf/drives/${drivenickname}.${vuser}.upgrade.raw ]; then
+if [ -f "/opt/rink/conf/drives/${drivenickname}.${vuser}.grow.raw" ]; then
   if ! /usr/bin/grep -q "^resized block storage" /opt/rink/conf/drives/${drivenickname}.${vuser}.upgrade.raw; then
     /usr/bin/echo "Upgrade output file is not correct, start over."
     /usr/bin/rm -f "${namespace}.${VerbTLD}.upgrade.raw"
