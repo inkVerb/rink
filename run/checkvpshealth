@@ -135,9 +135,9 @@ else
   fi
   if [ "${checkHost}" != "${VerbHostID}.${namespace}.verb.${VerbTLD}" ]; then
     . /opt/rink/inkdnsnameservers
-    if [ "${checkHost}" = "${DefaultNS1}" ] && [ "${NameserverNS1IPv4}" = "${VerbIPv4}" ] && ( [ "${NameserverNS1IPv6}" = "${VerbIPv6}" ] || [ "${NameserverNS1IPv6}" = "${VerbIPv6Exp}" ] ); then
+    if [ "${checkHost}" = "${VerbHostID}.${BaseHostNS}" ] ); then
       /usr/bin/echo "Nameserver: ${checkHost}"
-    elif [ "${checkHost}" = "${DefaultNS2}" ] && [ "${NameserverNS2IPv4}" = "${VerbIPv4}" ] && ( [ "${NameserverNS2IPv6}" = "${VerbIPv6}" ] || [ "${NameserverNS2IPv6}" = "${VerbIPv6Exp}" ] ); then
+    elif [ "${checkHost}" = "${VerbHostID}.${BaseHostNS}" ] ); then
       /usr/bin/echo "Nameserver: ${checkHost}"
     else
       /usr/bin/echo "Host does not check out."

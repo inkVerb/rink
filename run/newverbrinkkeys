@@ -56,7 +56,7 @@ fi
 /usr/bin/ssh ${namespace}.${VerbTLD} /usr/bin/cat /opt/verb/conf/servertldstatus286 > /opt/rink/tmp/servertldstatus_${VerbTLD}_${namespace}
 
 ## NS 1, NS 2, servernameip
-. /opt/rink/ns/${NameServersConfig}
+. /opt/rink/ns/${NewNameServersConfig}
 /usr/bin/ssh -T ${namespace}.${VerbTLD} <<EOS
 /usr/bin/touch /root/.ssh/config
 
@@ -65,13 +65,14 @@ fi
 /usr/bin/echo 'Include /root/.ssh/ns1.ssh' >> /root/.ssh/config
 /usr/bin/cat <<EOF > /root/.ssh/ns1.ssh
 Host ns1
-Hostname ${ServerNS1IPv4}
+Hostname ${NS1IPv4}
+Hostname ${NS1IPv6}
 User ${namespace}-${VerbTLD}
-Port ${Port}
+Port ${NSPort}
 IdentityFile /root/.ssh/Rink_${VerbTLD}_${namespace}
 EOF
 /usr/bin/echo "#ns1" >> /root/.ssh/known_hosts
-/usr/bin/ssh-keyscan -H -p ${Port} ${ServerNS1IPv4} >> /root/.ssh/known_hosts
+/usr/bin/ssh-keyscan -H -p ${NSPort} ${ServerNS1IPv4} >> /root/.ssh/known_hosts
 /usr/bin/echo "###ns1" >> /root/.ssh/known_hosts
 
 /usr/bin/sed -i '/ns2.ssh/d' /root/.ssh/config
@@ -79,13 +80,14 @@ EOF
 /usr/bin/echo 'Include /root/.ssh/ns2.ssh' >> /root/.ssh/config
 /usr/bin/cat <<EOF > /root/.ssh/ns2.ssh
 Host ns2
-Hostname ${ServerNS2IPv4}
+Hostname ${NS2IPv4}
+Hostname ${NS2IPv6}
 User ${namespace}-${VerbTLD}
-Port ${Port}
+Port ${NSPort}
 IdentityFile /root/.ssh/Rink_${VerbTLD}_${namespace}
 EOF
 /usr/bin/echo "#ns2" >> /root/.ssh/known_hosts
-/usr/bin/ssh-keyscan -H -p ${Port} ${ServerNS2IPv4} >> /root/.ssh/known_hosts
+/usr/bin/ssh-keyscan -H -p ${NSPort} ${ServerNS2IPv4} >> /root/.ssh/known_hosts
 /usr/bin/echo "###ns2" >> /root/.ssh/known_hosts
 
 /usr/bin/chmod 700 /root/.ssh

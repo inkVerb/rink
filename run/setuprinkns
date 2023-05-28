@@ -34,7 +34,7 @@ if [ ! -f "/opt/rink/waitnsfinish" ]; then
     /opt/verb/inst/setup ${RinkName} ${RinkVerbTLD} email vip ${RinkHost} ${RinkIPv4} ${RinkIPv6} cb@${RinkDomain} 100 1000 ${TimeZone} ${Port} boss "$(/usr/bin/pwgen -s -1 16)" ${UpdateRepo} ${UpdateOrg};fi
   # Create the NS nameservers
   if [ ! -f "/opt/rink/conf/verbers/${NS1Name}.${RinkVerbTLD}.vrb" ]; then
-  /opt/rink/run/newvps ${NS1Name} ${RinkVerbTLD} byrink 1gb ${DfaultNSSnapshotID} ${VultrRegion1}; fi
+  /opt/rink/run/newvps ${NS1Name} ${RinkVerbTLD} byrink 1gb ${DfaultNSSnapshotID} ${VultrRegion1} ${NS1Host}; fi
   e="$?"; [[ "$e" = "0" ]] || exit "$e"
   # Check if finished right
   if ! /usr/bin/grep -q ^VerbIPv4 /opt/rink/conf/verbers/${NS1Name}.${RinkVerbTLD}.vrb; then
@@ -43,7 +43,7 @@ if [ ! -f "/opt/rink/waitnsfinish" ]; then
     /usr/bin/sed -i "/${NS1Name}.${RinkVerbTLD}.ssh/d" /root/.ssh/config
     exit 0; fi
   if [ ! -f "/opt/rink/conf/verbers/${NS2Name}.${RinkVerbTLD}.vrb" ]; then
-  /opt/rink/run/newvps ${NS2Name} ${RinkVerbTLD} byrink 1gb ${DfaultNSSnapshotID} ${VultrRegion2}; fi
+  /opt/rink/run/newvps ${NS2Name} ${RinkVerbTLD} byrink 1gb ${DfaultNSSnapshotID} ${VultrRegion2} ${NS2Host}; fi
   e="$?"; [[ "$e" = "0" ]] || exit "$e"
   # Check if finished right
   if ! /usr/bin/grep -q ^VerbIPv4 /opt/rink/conf/verbers/${NS2Name}.${RinkVerbTLD}.vrb; then
@@ -402,6 +402,7 @@ EOF
 
 # Update NS file
 /usr/bin/cat <<EOF >> "/opt/rink/ns/${NS1Host}${NS2Host}"
+NSPort="${Port}"
 NS1IPv4="${NS1ip4}"
 NS1IPv6="${NS1ip6}"
 NS2IPv4="${NS2ip4}"
@@ -416,7 +417,7 @@ verb/conf/inklists/inkdnsnameservers :
 "
 
 /usr/bin/cat /opt/verb/conf/inklists/inkdnsnameservers
-cp /opt/verb/conf/inklists/inkdnsnameservers /opt/rink/inkdnsnameservers
+/usr/bin/cp /opt/verb/conf/inklists/inkdnsnameservers /opt/rink/inkdnsnameservers
 
 /usr/bin/echo "
 ###
