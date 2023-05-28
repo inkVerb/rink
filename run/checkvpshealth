@@ -373,6 +373,7 @@ if /usr/bin/ls /opt/rink/conf/drives/*."${vuser}".drive > /dev/null 2>&1; then
   if [ "${#driveConfigs[@]}" -gt "0" ]; then
     for drive in ${driveConfigs}; do
       . ${drive}
+      /usr/bin/echo ::${DriveNickName}
       if ! /usr/bin/vultr-cli bs get ${DriveID} > /dev/null 2>&1; then
         /usr/bin/echo "Drive '${DriveNickName}' does not exist."
         unhealthy="true"
