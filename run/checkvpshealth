@@ -388,6 +388,16 @@ EOS
         if [ "$?" != "0" ]; then
           /usr/bin/echo "Drive '${DriveNickName}' not connected correctly."
           unhealthy="true"
+          /usr/bin/cat <<EOS
+Check with:
+if [ ! -e "/dev/${DriveDev}" ]; then /usr/bin/echo "Device for ${DriveNickName} not found."; exit 6; fi
+if [ ! -f "/opt/verb/conf/inkdrive/${DriveType}.${DriveName}" ]; then /usr/bin/echo "Config for ${DriveNickName} not found."; exit 6; fi
+/usr/bin/grep -q "^Device=${DriveDev}" /opt/verb/conf/inkdrive/"${DriveType}"."${DriveName}" || /usr/bin/echo "Drive device for ${DriveNickName} incorrect."; exit 6
+/usr/bin/grep -q "^Mount=${DriveName}" /opt/verb/conf/inkdrive/"${DriveType}"."${DriveName}" || /usr/bin/echo "Drive mount name for ${DriveNickName} incorrect."; exit 6
+/usr/bin/grep -q "^Type=${DriveType}" /opt/verb/conf/inkdrive/"${DriveType}"."${DriveName}" || /usr/bin/echo "Drive type for ${DriveNickName} incorrect."; exit 6
+/usr/bin/grep -q "^/dev/${DriveDev}1" /etc/fstab | grep -q "/mnt/${DriveName}" || /usr/bin/echo "Device for ${DriveNickName} not mounted."; exit 6
+###
+EOS
         fi
       fi
     done
