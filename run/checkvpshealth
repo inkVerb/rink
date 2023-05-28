@@ -135,7 +135,8 @@ else
     checkHost5="$(/usr/bin/ssh -T -o StrictHostKeyChecking=yes root@${VerbIPv6} -p ${VerbPort} -i /root/.ssh/${SSHKey} hostname)"
   else
     /usr/bin/echo "Non-IPv6"
-  if [ "${isIP4}" != "true" ] && [ "${isIP6}" != "true" ]
+  fi
+  if [ "${isIP4}" != "true" ] && [ "${isIP6}" != "true" ]; then
     /usr/bin/echo "No valid IP to access Verber."
     unhealthy="true"
   fi
