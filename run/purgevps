@@ -30,9 +30,9 @@ vuser="$3"
 # Check the existence of the verber
 if [ ! -f "/opt/rink/conf/verbers/${namespace}.${VerbTLD}.raw" ]; then
   /usr/bin/echo "No raw conf file exists. Checking for orphaned drives..."
-  if [ ! -f "/opt/rink/conf/verbers/${namespace}.${VerbTLD}.vrb" ] && [ -n "$(/usr/bin/ls /opt/rink/drive/*."${vuser}".drive)" ]; then
+  if [ ! -f "/opt/rink/conf/verbers/${namespace}.${VerbTLD}.vrb" ] && [ -n "$(/usr/bin/ls /opt/rink/conf/drives/*."${vuser}".drive)" ]; then
     # put each listed drive's config file (with absolute path) in an array so we can loop through and check each
-    driveConfigs=($(/usr/bin/grep -HRl "${namespace}.${VerbTLD}" /opt/rink/drive/*."${vuser}".drive))
+    driveConfigs=($(/usr/bin/grep -HRl "${namespace}.${VerbTLD}" /opt/rink/conf/drives/*."${vuser}".drive))
     # the variable form ${#driveConfigs[@]} shows how many items in the $driveConfigs array
     if [ "${#driveConfigs[@]}" = "1" ]; then
       /usr/bin/echo "Check the connected drive"

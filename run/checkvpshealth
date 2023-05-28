@@ -327,10 +327,10 @@ if [ "$?" != "0" ]; then
 fi
 
 # Check any connected drives
-#SRC: /usr/bin/grep -HRl "pen.ink" /opt/rink/drive/*."paper".drive
-if [ -n "$(/usr/bin/ls /opt/rink/drive/*."${vuser}".drive)" ]; then
+#SRC: /usr/bin/grep -HRl "pen.ink" /opt/rink/conf/drives/*."paper".drive
+if [ -n "$(/usr/bin/ls /opt/rink/conf/drives/*."${vuser}".drive)" ]; then
   # put each listed drive's config file (with absolute path) in an array so we can loop through and check each
-  driveConfigs=($(/usr/bin/grep -HRl "${namespace}.${VerbTLD}" /opt/rink/drive/*."${vuser}".drive))
+  driveConfigs=($(/usr/bin/grep -HRl "${namespace}.${VerbTLD}" /opt/rink/conf/drives/*."${vuser}".drive))
   # the variable form ${#driveConfigs[@]} shows how many items in the $driveConfigs array
   if [ "${#driveConfigs[@]}" = "1" ]; then
     /usr/bin/echo "Check the connected drive"

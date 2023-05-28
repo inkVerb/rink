@@ -25,24 +25,24 @@ if [ -z "${4}" ]; then
   exit 5
 fi
 
-if [ ! -f "/opt/rink/drive/${drivenickname}.${vuser}.drive" ]; then
+if [ ! -f "/opt/rink/conf/drives/${drivenickname}.${vuser}.drive" ]; then
   /usr/bin/echo "Drive does not exist for this user! I quit."
   exit 5
 else
-  . "/opt/rink/drive/${drivenickname}.${vuser}.drive"
+  . "/opt/rink/conf/drives/${drivenickname}.${vuser}.drive"
 fi
 
-if grep -q "DriveDev=\"UNPLUGGED\"" "/opt/rink/drive/${drivenickname}.${vuser}.drive"; then
+if grep -q "DriveDev=\"UNPLUGGED\"" "/opt/rink/conf/drives/${drivenickname}.${vuser}.drive"; then
   /usr/bin/echo "Drive ${drivenickname} is already unplugged! Nothing to do."
   exit 0
 fi
 
-if ! grep -q "DriveNickName=\"${drivenickname}\"" "/opt/rink/drive/${drivenickname}.${vuser}.drive"; then
+if ! grep -q "DriveNickName=\"${drivenickname}\"" "/opt/rink/conf/drives/${drivenickname}.${vuser}.drive"; then
   /usr/bin/echo "Drive ${drivenickname} nickname doesn't match up! Something is very wrong."
   exit 6
 fi
 
-if ! grep -q "DriveVerber=\"${namespace}.${VerbTLD}\"" "/opt/rink/drive/${drivenickname}.${vuser}.drive"; then
+if ! grep -q "DriveVerber=\"${namespace}.${VerbTLD}\"" "/opt/rink/conf/drives/${drivenickname}.${vuser}.drive"; then
   /usr/bin/echo "${namespace}.${VerbTLD} not assigned to drive ${drivenickname}! I quit."
   exit 5
 fi
@@ -76,11 +76,11 @@ fi
 
 # Records
 datestamp="$(/usr/bin/date +%Y-%m-%d_%T)"
-/usr/bin/cp /opt/rink/drive/${DriveNickName}.${vuser}.drive /opt/rink/conf/drives.smashed/${vuser}.${DriveNickName}.${datestamp}.unplugged
+/usr/bin/cp /opt/rink/conf/drives/${DriveNickName}.${vuser}.drive /opt/rink/conf/drives.smashed/${vuser}.${DriveNickName}.${datestamp}.unplugged
 /usr/bin/echo "DriveUnplugged=\"${datestamp}\"" >> /opt/rink/conf/drives.smashed/${vuser}.${DriveNickName}.${datestamp}.unplugged
 
 # Update the config
-/usr/bin/sed -i "s/DriveDev=.*/DriveDev=\"UNPLUGGED\"/" /opt/rink/drive/${DriveNickName}.${vuser}.drive
+/usr/bin/sed -i "s/DriveDev=.*/DriveDev=\"UNPLUGGED\"/" /opt/rink/conf/drives/${DriveNickName}.${vuser}.drive
 
 # Finish
 /usr/bin/echo "Drive ${DriveName} unplugged from ${DriveVerber}"

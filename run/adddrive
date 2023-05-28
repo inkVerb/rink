@@ -34,7 +34,7 @@ if [ ! -f "/opt/rink/conf/verbers/${namespace}.${VerbTLD}.vrb" ]; then
   exit 5
 fi
 
-if [ -f "/opt/rink/drive/${drivenickname}.${vuser}.drive" ]; then
+if [ -f "/opt/rink/conf/drives/${drivenickname}.${vuser}.drive" ]; then
   /usr/bin/echo "A drive by this nickname already exists for this user. Try another drive nickname."
   exit 5
 fi
@@ -49,9 +49,9 @@ fi
 
 # Confirm mount name for device
 drivename="${drivetype}"
-if /usr/bin/ls /opt/rink/drive/*."${vuser}".drive; then
+if /usr/bin/ls /opt/rink/conf/drives/*."${vuser}".drive; then
   i=1
-  while /usr/bin/grep -q DriveName=\"${drivename}\" /opt/rink/drive/*."${vuser}".drive; do
+  while /usr/bin/grep -q DriveName=\"${drivename}\" /opt/rink/conf/drives/*."${vuser}".drive; do
     drivename="${drivetype}${i}"
     ((i++))
     if [ "${i}" = "5" ]; then
@@ -92,22 +92,22 @@ else
 fi
 
 # Create the drive
-/usr/bin/vultr-cli bs c -s=${drivesize} -b=${typecreate} -r=${driveregion} > /opt/rink/drive/${drivenickname}.${vuser}.raw
+/usr/bin/vultr-cli bs c -s=${drivesize} -b=${typecreate} -r=${driveregion} > /opt/rink/conf/drives/${drivenickname}.${vuser}.raw
 e="$?"; [[ "$e" = "0" ]] || exit "$e"
 
 # Process the output
-/usr/bin/tail -n +2 /opt/rink/drive/${drivenickname}.${vuser}.raw > /opt/rink/drive/${drivenickname}.${vuser}.line
-DriveID="$(/usr/bin/cat /opt/rink/drive/${drivenickname}.${vuser}.line | /usr/bin/sed 's#[[:space:]].*##')"
-/usr/bin/rm -f /opt/rink/drive/${drivenickname}.${vuser}.line
+/usr/bin/tail -n +2 /opt/rink/conf/drives/${drivenickname}.${vuser}.raw > /opt/rink/conf/drives/${drivenickname}.${vuser}.line
+DriveID="$(/usr/bin/cat /opt/rink/conf/drives/${drivenickname}.${vuser}.line | /usr/bin/sed 's#[[:space:]].*##')"
+/usr/bin/rm -f /opt/rink/conf/drives/${drivenickname}.${vuser}.line
 /usr/bin/echo "DriveID=\"${DriveID}\"
 DriveNickName=\"${drivenickname}\"
 DriveVerber=\"${namespace}.${VerbTLD}\"
 DriveName=\"${drivename}\"
 DriveSize=\"${drivesize}\"
 DriveType=\"${drivetype}\"
-DriveRegion=\"${driveregion}\"" > /opt/rink/drive/${drivenickname}.${vuser}.drive
+DriveRegion=\"${driveregion}\"" > /opt/rink/conf/drives/${drivenickname}.${vuser}.drive
 
-. /opt/rink/drive/${drivenickname}.${vuser}.drive
+. /opt/rink/conf/drives/${drivenickname}.${vuser}.drive
 
 # Wait for the drive to be ready
 /usr/bin/vultr-cli bs g ${DriveID} | /usr/bin/grep -q 'active'
@@ -151,8 +151,8 @@ else
   exit 7
 fi 
 
-# Record the device name in /opt/rink/drive/${drivenickname}.${vuser}.drive
-/usr/bin/echo "DriveDev=\"${DriveDev}\"" >> /opt/rink/drive/${drivenickname}.${vuser}.drive
+# Record the device name in /opt/rink/conf/drives/${drivenickname}.${vuser}.drive
+/usr/bin/echo "DriveDev=\"${DriveDev}\"" >> /opt/rink/conf/drives/${drivenickname}.${vuser}.drive
 
 # Cleanup
 /usr/bin/rm -f /opt/rink/tmp/${drivenickname}.${vuser}.drive
