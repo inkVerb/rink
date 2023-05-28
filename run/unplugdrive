@@ -63,8 +63,7 @@ if [ -f "/opt/rink/conf/verbers/${namespace}.${VerbTLD}.vrb" ]; then
     /usr/bin/echo "${namespace}.${VerbTLD} not owned by user ${vuser}! I quit."
     exit 5
   else
-    /usr/bin/ssh ${namespace}.${VerbTLD} /opt/verb/serfs/inkdrivekill ${DriveDev} ${DriveName} ${DriveType} ignore
-    e="$?"; [[ "$e" = "0" ]] || exit "$e"
+    /usr/bin/ssh -q ${namespace}.${VerbTLD} /opt/verb/serfs/inkdrivekill ${DriveDev} ${DriveName} ${DriveType} ignore 
     # Disconnect the drive
     /usr/bin/vultr-cli bs detach ${DriveID}
     e="$?"; [[ "$e" = "0" ]] || exit "$e"
