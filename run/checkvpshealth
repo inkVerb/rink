@@ -302,7 +302,7 @@ if ! /usr/bin/grep -q "${IPv6Cmp}" /root/.ssh/known_hosts && ! /usr/bin/grep -q 
   /usr/bin/echo "IPv6 not a known host."
   unhealthy="true"
 fi
-if ! /usr/bin/grep -q "Include" /root/.ssh/config | /usr/bin/grep -q "${namespace}.${VerbTLD}.ssh"; then
+if ! /usr/bin/grep "^Include" /root/.ssh/config | /usr/bin/grep -q "${namespace}.${VerbTLD}.ssh"; then
   /usr/bin/echo "SSH config not listed."
   unhealthy="true"
 fi
