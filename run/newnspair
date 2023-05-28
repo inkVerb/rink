@@ -20,7 +20,7 @@ if [ -f "/opt/rink/.configured" ]; then
 fi
 
 if [ -z "$8" ]; then
-  /usr/bin/echo "Two NS host subdomains needed, such as 'ns3 ns4'."
+  /usr/bin/echo "Eight arguments needed, such as: 'ns3 ns4 three four America/Los_Angeles America/Chicago lax ord'"
   exit 0
 fi
 
