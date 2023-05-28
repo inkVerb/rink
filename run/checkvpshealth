@@ -40,9 +40,9 @@ elif [ ! -f "/opt/rink/conf/verbers/${namespace}.${checkVerbTLD}.vrb" ]; then
   exit 6
 fi
 
-# Verify the instance ID and that the files in deed exist
+# Verify the instance ID and that the files indeed exist
 if [ -f "/opt/rink/conf/verbers/${namespace}.${checkVerbTLD}.vrb" ] && [ -f "/opt/rink/conf/verbers/${namespace}.${checkVerbTLD}.raw" ]; then
-  /usr/bin/echo "Config files found..."
+  /usr/bin/echo "Check config for ${namespace}.${checkVerbTLD}"
   . /opt/rink/conf/verbers/${namespace}.${checkVerbTLD}.vrb
   . /opt/rink/ns/${VerbNameServersConfig}
   . /opt/rink/sshkey
@@ -101,7 +101,7 @@ if [ "$?" != "0" ]; then
 fi
 
 # Conf file and settings
-/usr/bin/echo "Config settings"
+/usr/bin/echo "Check config settings"
 if [ -z "${VultrInstanceID}" ]; then
   /usr/bin/echo "VultrInstanceID missing from conf."
   unhealthy="true"
@@ -125,13 +125,13 @@ else
   isIP4 ${VerbIPv4}
   isIP6 ${VerbIPv6}
   if [ "${isIP4}" = "true" ]; then
-    /usr/bin/echo "Checking host with IPv4"
+    /usr/bin/echo "Check host with IPv4"
     checkHost4="$(/usr/bin/ssh -T -o StrictHostKeyChecking=yes root@${VerbIPv4} -p ${VerbPort} -i /root/.ssh/${SSHKey} hostname)"
   else
     /usr/bin/echo "Non-IPv4"
   fi
   if [ "${isIP6}" = "true" ]; then
-    /usr/bin/echo "Checking host with IPv6"
+    /usr/bin/echo "Check host with IPv6"
     checkHost5="$(/usr/bin/ssh -T -o StrictHostKeyChecking=yes root@${VerbIPv6} -p ${VerbPort} -i /root/.ssh/${SSHKey} hostname)"
   else
     /usr/bin/echo "Non-IPv6"
