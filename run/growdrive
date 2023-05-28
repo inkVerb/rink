@@ -62,8 +62,13 @@ fi
 # Did it work?
 if [ -f "/opt/rink/conf/drives/${drivenickname}.${vuser}.grow.raw" ]; then
   if ! /usr/bin/grep -q "^resized block storage" /opt/rink/conf/drives/${drivenickname}.${vuser}.grow.raw; then
-    /usr/bin/echo "Upgrade output file is not correct, start over."
-    exit 4
+    if /usr/bin/grep "Please wait at least 60s between block storage upgrades" /opt/rink/conf/drives/${drivenickname}.${vuser}.grow.raw | /usr/bin/grep -q "^error resizing block storage"; then
+      /usr/bin/echo "Wait at least 1 minute between drive upgrades."
+      exit 0
+    else
+      /usr/bin/echo "Something went wrong, start over."
+      exit 4
+    fi
   else
   /usr/bin/sed -i "s/^resized block storage/### resized block storage/" /opt/rink/conf/drives/${drivenickname}.${vuser}.grow.raw
   fi
