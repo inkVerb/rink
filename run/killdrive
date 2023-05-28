@@ -54,9 +54,6 @@ fi
 /usr/bin/vultr-cli bs delete ${DriveID}
 e="$?"; [[ "$e" = "0" ]] || exit "$e"
 
-# Unmount the drive from the verber
-/usr/bin/ssh ${namespace}.${VerbTLD} /opt/verb/serfs/inkdrivekill ${DriveDev} ${drivename} ${drivetype} ignore
-
 # Records
 datestamp="$(/usr/bin/date +%Y-%m-%d_%T)"
 /usr/bin/mv /opt/rink/conf/drives/${DriveNickName}.${vuser}.drive /opt/rink/conf/drives.smashed/${vuser}.${DriveNickName}.${datestamp}.drive
