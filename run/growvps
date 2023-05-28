@@ -76,6 +76,8 @@ datestamp="$(/usr/bin/date +%Y-%m-%d_%T)"
 /usr/bin/echo "# ${datestamp} upgraded to ${vultrplan}" >> /opt/rink/conf/verbers/${namespace}.${VerbTLD}.upgrade.raw
 /usr/bin/vultr-cli instance get ${VultrInstanceID} >> /opt/rink/conf/drives/${drivenickname}.${vuser}.grow.raw
 /usr/bin/sed -i "s/VultrPlan=.*/VultrPlan=\"${vultrplan}\"/" /opt/rink/conf/verbers/${namespace}.${VerbTLD}.vrb
+## No fail, so we don't need this empty file
+/usr/bin/rm -f /opt/rink/conf/verbers/${namespace}.${VerbTLD}.upgradefail.raw
 
 # Restart the new Verber
 /usr/bin/ssh ${namespace}.${VerbTLD} /usr/bin/reboot

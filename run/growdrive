@@ -76,6 +76,8 @@ datestamp="$(/usr/bin/date +%Y-%m-%d_%T)"
 /usr/bin/echo "# ${datestamp} upgraded to ${newdrivesize}" >> /opt/rink/conf/drives/${drivenickname}.${vuser}.grow.raw
 /usr/bin/vultr-cli bs get ${DriveID} >> /opt/rink/conf/drives/${drivenickname}.${vuser}.grow.raw
 /usr/bin/sed -i "s/DriveSize=.*/DriveSize=\"${newdrivesize}\"/" /opt/rink/conf/drives/${drivenickname}.${vuser}.drive
+## No fail, so we don't need this empty file
+/usr/bin/rm -f /opt/rink/conf/drives/${drivenickname}.${vuser}.growfail.raw
 
 # Finish
 /usr/bin/echo "Drive '${drivenickname}' for Verber '${namespace}.${VerbTLD}' grown to ${newdrivesize} GB."
