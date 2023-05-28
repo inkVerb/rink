@@ -135,9 +135,9 @@ else
   fi
   if [ "${checkHost}" != "${VerbHostID}.${namespace}.verb.${VerbTLD}" ]; then
     . /opt/rink/inkdnsnameservers
-    if [ "${checkHost}" = "${VerbHostID}.${BaseHostNS}" ] ); then
+    if [ "${checkHost}" = "${VerbHostID}.${BaseHostNS}" ]; then
       /usr/bin/echo "Nameserver: ${checkHost}"
-    elif [ "${checkHost}" = "${VerbHostID}.${BaseHostNS}" ] ); then
+    elif [ "${checkHost}" = "${VerbHostID}.${BaseHostNS}" ]; then
       /usr/bin/echo "Nameserver: ${checkHost}"
     else
       /usr/bin/echo "Host does not check out."
