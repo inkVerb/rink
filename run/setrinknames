@@ -5,10 +5,12 @@
 ## The host for the Rink must be the same as the actual server or this won't work
 
 # How to use:
-## ./setrinknames [ domain.tld ] [ rink_host ] [ rink_host ] [ ns1_host ] [ ns2_host ] [ Rink_IP4 ] [ Rink_IP6 ] [ Rink_namespace ] [ NS1_namespace ] [ NS2_namespace ] [ PHP Timezone ] [ Default Vultr region ] [ update repo - optional default inkverb/verb-update ]
+#DEV this next line might not be correct, compare it to the argument-variable assignemt of args 1-19
+## ./setrinknames [ domain.tld ] [ rink_host ] [ rink_host ] [ ns1_host ] [ ns2_host ] [ Rink_IP4 ] [ Rink_IP6 ] [ Rink_namespace ] [ NS1_namespace ] [ NS2_namespace ] [ PHP Timezone ] [ PHP Timezone NS1 ] [ PHP Timezone NS2 ] [ Default Vultr region ] [ Default Vultr region NS1 ] [ Default Vultr region NS2 ] [ default snapshot ]
 
 # Eg:
-## ./setrinknames inkisaverb.com ink rink ns1 ns2 444.444.444.444 11:0:0:11 rink1 name1 name2 America/Los_Angeles sjc # Rink: rink.inkisaverb.com NS1: ns1.inkisaverb.com NS2: ns2.inkisaverb.com
+## ./setrinknames inkisaverb.com ink rink ns1 ns2 444.444.444.444 11:0:0:11 rink1 name1 name2 America/Los_Angeles America/Los_Angeles America/Chicago sjc yto nrt laemp1 # Rink: rink.inkisaverb.com NS1: ns1.inkisaverb.com NS2: ns2.inkisaverb.com
+## ./setrinknames mynsdomain.tld ink rink ns1 ns2 444.444.444.444 11:0:0:11 rink rink1 rink2 America/Los_Angeles America/Los_Angeles America/Chicago lax sea ord laemp1
 ## Note rink.inkisaverb.com must be the FQDN for the Rink server!
 
 

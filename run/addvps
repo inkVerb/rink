@@ -4,7 +4,7 @@
 # This is the master command to add a new VPS, complete with all requirements
 
 # How to use:
-## ./addvps [verb-namespace] [tld] [user] [vultr-plan (1gb shortcut for lowest, 2gb shortcut for second-lowest: vc2-1c-2gb)] [snapshot-nickname] [vultr-region - optional] [PHP-timezone - optional] [mail path - optional] [hostname - optional] [update repo - optional, default is verb-update] [update GitHub org - optional, default is inkverb]
+## ./addvps [verb-namespace] [tld] [user] [vultr-plan (1gb shortcut for lowest, 2gb shortcut for second-lowest: vc2-1c-2gb)] [snapshot-nickname] [vultr-region - optional] [PHP-timezone - optional] [mail path - optional] [hostname - optional] [update repo - optional, default is verb-update] [update GitHub org - optional, default is inkverb] [nameserverpair - optional; placeholder: "-"] [ -o if listing verb tlds to turn of after]
 
 ## If specifying later arguments, but not earlier options, use dash `-`
 ### This is for vultr-region, PHP-timezone, mail path, and hostname
@@ -26,9 +26,9 @@
 ## ./addvps nick vip billuser vc2-1c-2gb laemp sjc America/Los_Angeles - - verb-update inkverb
 ## ./addvps nick vip billuser vc2-1c-2gb laemp - - mailpath verb-update inkverb
 ## ./addvps nick vip billuser vc2-1c-2gb laemp - - - - verb-update inkverb ink red
-## ./addvps nick vip billuser vc2-1c-2gb laemp sea America/Los_Angeles mailpath namedhost verb-update inkverb kiwi
+## ./addvps nick vip billuser vc2-1c-2gb laemp sea America/Los_Angeles mailpath namedhost verb-update inkverb - -o kiwi
 ## ./addvps nick vip billuser vc2-1c-2gb laemp sea America/Los_Angeles - namedhost verb-update inkverb
-## ./addvps nick vip billuser vc2-1c-2gb laemp sea America/Los_Angeles mailpath - verb-update inkverb ink blue red
+## ./addvps nick vip billuser vc2-1c-2gb laemp sea America/Los_Angeles mailpath - verb-update inkverb ns3ns4 -o ink blue red
 ## ./addvps name ink someuser --import s0mElong-An6Cr7z3-ID
 
 
@@ -51,7 +51,7 @@ if [ "${4}" = "--import" ]; then
 else
   IMPort="false"
   vultrplan="$4"
-  snapnick="$5"
+  snapnick="$5"12
   if [ -n "$6" ] && [ "$6" != "-" ] && /usr/bin/vultr-cli regions list | /usr/bin/grep -q "^$6"; then
     VultrRegion="$6" # Overrides region from rinknames
   else
@@ -80,10 +80,14 @@ else
   else
     UpdateOrg=""
   fi
+  if [ -n "${12}" ] && [ "${12}" != "-" ]; then
+    OverrideVerbNameServersConfig="${12}"
+    # Now you can use this: if [ -n "${OverrideVerbNameServersConfig}" ]; then VerbNameServersConfig="${OverrideVerbNameServersConfig}"; fi
+  fi
    # Turn off certain verb domains?
-  if [ "${12}" = "-o" ]; then
+  if [ "${13}" = "-o" ]; then
     verboff=true
-    shift 12
+    shift 13
   fi
 fi
 
@@ -101,6 +105,7 @@ if [ "$IMPort" != "true" ]; then
   if [ -f "/opt/rink/conf/verbers/${namespace}.${VerbTLD}.raw" ]; then
     if [ -f "/opt/rink/conf/verbers/${namespace}.${VerbTLD}.vrb" ]; then
       . /opt/rink/conf/verbers/${namespace}.${VerbTLD}.vrb
+      if [ -n "${OverrideVerbNameServersConfig}" ]; then VerbNameServersConfig="${OverrideVerbNameServersConfig}"; fi
       . /opt/rink/ns/${VerbNameServersConfig}
     else
       VultrInstanceID="$(/usr/bin/cat /opt/rink/conf/verbers/${namespace}.${VerbTLD}.raw | /usr/bin/grep ^ID | /usr/bin/sed s"/ID\t\t\t//")"
@@ -163,6 +168,7 @@ if [ "$IMPort" != "true" ]; then
 
   # Setup
   . /opt/rink/conf/verbers/${namespace}.${VerbTLD}.vrb
+  if [ -n "${OverrideVerbNameServersConfig}" ]; then VerbNameServersConfig="${OverrideVerbNameServersConfig}"; fi
   . /opt/rink/ns/${VerbNameServersConfig}
   if ! grep -q '^SetupVerber="DONE"' "/opt/rink/conf/verbers/${namespace}.${VerbTLD}.vrb"; then
 
