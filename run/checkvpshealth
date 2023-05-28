@@ -333,28 +333,28 @@ EOS
 if [ "$?" != "0" ]; then
   /usr/bin/echo "Verber doesn't proerly know its own name and IP."
   unhealthy="true"
-#   /usr/bin/echo "Check details with:"
-#   /usr/bin/cat <<EOS
-# ssh -o StrictHostKeyChecking=yes -o ConnectTimeout=3 ${namespace}.${VerbTLD} -p ${VerbPort} -i /root/.ssh/${SSHKey}
-# grep -q '^ServerName="${namespace}"' /opt/verb/conf/servernameip || echo fail
-# grep -q '^ServerHost="${VerbHostID}"' /opt/verb/conf/servernameip || echo fail
-# grep -q '^ServerTLD="${VerbTLD}"' /opt/verb/conf/servernameip || echo fail
-# grep -q '^ServerIPv4="${VerbIPv4}"' /opt/verb/conf/servernameip || echo fail
-# grep -q '^ServerIPv6="${VerbIPv6}"' /opt/verb/conf/servernameip || echo fail
-# grep -q '^ServerExpIPv6="${VerbIPv6Exp}"' /opt/verb/conf/servernameip || echo fail
-# grep -q '^ServerARPAIPv4="${VerbARPAIPv4}"' /opt/verb/conf/servernameip || echo fail
-# grep -q '^ServerARPAIPv6="${VerbARPAIPv6}"' /opt/verb/conf/servernameip || echo fail
-# grep -q '^ServerNS1DNS="${NS1Host}.${RinkDomain}"' /opt/verb/conf/servernameip || echo fail
-# grep -q '^ServerNS1IPv4="${NS1IPv4}"' /opt/verb/conf/servernameip || echo fail
-# grep -q '^ServerNS1IPv6="${NS1IPv6}"' /opt/verb/conf/servernameip || echo fail
-# grep -q '^ServerNS2DNS="${NA2Host}.${RinkDomain}"' /opt/verb/conf/servernameip || echo fail
-# grep -q '^ServerNS2IPv4="${NS2IPv4}"' /opt/verb/conf/servernameip || echo fail
-# grep -q '^ServerNS2IPv6="${NS2IPv6}"' /opt/verb/conf/servernameip || echo fail
-# grep -q '^127.0.1.1 ${VerbHostID}.${namespace}.verb.${VerbTLD} ${VerbHostID}' /etc/hosts || echo fail
-# grep -q '^${VerbIPv4} ${VerbHostID}.${namespace}.verb.${VerbTLD} ${VerbHostID}' /etc/hosts || echo fail
-# grep -q '^${VerbIPv6} ${VerbHostID}.${namespace}.verb.${VerbTLD} ${VerbHostID}' /etc/hosts || /usr/bin/grep -q '^${VerbIPv6Exp} ${VerbHostID}.${namespace}.verb.${VerbTLD} ${VerbHostID}' /etc/hosts || echo fail
-# ### Done line by line, any error will output "fail"
-# EOS
+  /usr/bin/echo "Check details with:"
+  /usr/bin/cat <<EOS
+ssh -o StrictHostKeyChecking=yes -o ConnectTimeout=3 ${namespace}.${VerbTLD} -p ${VerbPort} -i /root/.ssh/${SSHKey}
+grep -q '^ServerName="${namespace}"' /opt/verb/conf/servernameip || echo fail
+grep -q '^ServerHost="${VerbHostID}"' /opt/verb/conf/servernameip || echo fail
+grep -q '^ServerTLD="${VerbTLD}"' /opt/verb/conf/servernameip || echo fail
+grep -q '^ServerIPv4="${VerbIPv4}"' /opt/verb/conf/servernameip || echo fail
+grep -q '^ServerIPv6="${VerbIPv6}"' /opt/verb/conf/servernameip || echo fail
+grep -q '^ServerExpIPv6="${VerbIPv6Exp}"' /opt/verb/conf/servernameip || echo fail
+grep -q '^ServerARPAIPv4="${VerbARPAIPv4}"' /opt/verb/conf/servernameip || echo fail
+grep -q '^ServerARPAIPv6="${VerbARPAIPv6}"' /opt/verb/conf/servernameip || echo fail
+grep -q '^ServerNS1DNS="${NS1Host}.${RinkDomain}"' /opt/verb/conf/servernameip || echo fail
+grep -q '^ServerNS1IPv4="${NS1IPv4}"' /opt/verb/conf/servernameip || echo fail
+grep -q '^ServerNS1IPv6="${NS1IPv6}"' /opt/verb/conf/servernameip || echo fail
+grep -q '^ServerNS2DNS="${NA2Host}.${RinkDomain}"' /opt/verb/conf/servernameip || echo fail
+grep -q '^ServerNS2IPv4="${NS2IPv4}"' /opt/verb/conf/servernameip || echo fail
+grep -q '^ServerNS2IPv6="${NS2IPv6}"' /opt/verb/conf/servernameip || echo fail
+grep -q '^127.0.1.1 ${VerbHostID}.${namespace}.verb.${VerbTLD} ${VerbHostID}' /etc/hosts || echo fail
+grep -q '^${VerbIPv4} ${VerbHostID}.${namespace}.verb.${VerbTLD} ${VerbHostID}' /etc/hosts || echo fail
+grep -q '^${VerbIPv6} ${VerbHostID}.${namespace}.verb.${VerbTLD} ${VerbHostID}' /etc/hosts || /usr/bin/grep -q '^${VerbIPv6Exp} ${VerbHostID}.${namespace}.verb.${VerbTLD} ${VerbHostID}' /etc/hosts || echo fail
+### Done line by line, any error will output "fail"
+EOS
 fi
 
 # Check any connected drives
@@ -362,9 +362,6 @@ fi
 if /usr/bin/ls /opt/rink/conf/drives/*."${vuser}".drive > /dev/null 2>&1; then
   # put each listed drive's config file (with absolute path) in an array so we can loop through and check each
   driveConfigs=($(/usr/bin/grep -HRl "${namespace}.${VerbTLD}" /opt/rink/conf/drives/*."${vuser}".drive))
-  echo "###"
-  echo /usr/bin/grep -HRl "${namespace}.${VerbTLD}" /opt/rink/conf/drives/*."${vuser}".drive
-  echo "###"
   # the variable form ${#driveConfigs[@]} shows how many items in the $driveConfigs array
   if [ "${#driveConfigs[@]}" = "1" ]; then
     /usr/bin/echo "Check the connected drive"
@@ -374,37 +371,37 @@ if /usr/bin/ls /opt/rink/conf/drives/*."${vuser}".drive > /dev/null 2>&1; then
     /usr/bin/echo "No connected drives"
   fi
   if [ "${#driveConfigs[@]}" -gt "0" ]; then
-    for drive in ${driveConfigs}; do
+    for drive in "${driveConfigs[@]}"; do
       . ${drive}
       /usr/bin/echo "Drive::${DriveNickName}"
-#       if ! /usr/bin/vultr-cli bs get ${DriveID} > /dev/null 2>&1; then
-#         /usr/bin/echo "Drive '${DriveNickName}' does not exist."
-#         unhealthy="true"
-#       else
-#         /usr/bin/ssh -o StrictHostKeyChecking=no -o ConnectTimeout=3 -T ${DriveVerber} -p ${VerbPort} -i /root/.ssh/${SSHKey} > /dev/null 2>&1 <<EOS
-# if [ ! -e "/dev/${DriveDev}" ]; then exit 6; fi
-# if [ ! -f "/opt/verb/conf/inkdrive/${DriveType}.${DriveName}" ]; then exit 6; fi
-# /usr/bin/grep -q "^Device=${DriveDev}" /opt/verb/conf/inkdrive/"${DriveType}"."${DriveName}" || exit 6
-# /usr/bin/grep -q "^Mount=${DriveName}" /opt/verb/conf/inkdrive/"${DriveType}"."${DriveName}" || exit 6
-# /usr/bin/grep -q "^Type=${DriveType}" /opt/verb/conf/inkdrive/"${DriveType}"."${DriveName}" || exit 6
-# /usr/bin/grep "^/dev/${DriveDev}1" /etc/fstab | grep -q "/mnt/${DriveName}" || exit 6
-# EOS
-#         if [ "$?" != "0" ]; then
-#           /usr/bin/echo "Drive '${DriveNickName}' not connected correctly."
-#           unhealthy="true"
-# #           /usr/bin/echo "Check details with:"
-# #           /usr/bin/cat <<EOS
-# # ssh -o StrictHostKeyChecking=yes -o ConnectTimeout=3 ${namespace}.${VerbTLD} -p ${VerbPort} -i /root/.ssh/${SSHKey}
-# # if [ ! -e "/dev/${DriveDev}" ]; then echo fail; fi
-# # if [ ! -f "/opt/verb/conf/inkdrive/${DriveType}.${DriveName}" ]; then echo fail; fi
-# # grep -q "^Device=${DriveDev}" /opt/verb/conf/inkdrive/"${DriveType}"."${DriveName}" || echo fail
-# # grep -q "^Mount=${DriveName}" /opt/verb/conf/inkdrive/"${DriveType}"."${DriveName}" || echo fail
-# # grep -q "^Type=${DriveType}" /opt/verb/conf/inkdrive/"${DriveType}"."${DriveName}" || echo fail
-# # grep "^/dev/${DriveDev}1" /etc/fstab | grep -q "/mnt/${DriveName}" || echo fail
-# # ### Done line by line, any error will output "fail"
-# # EOS
-#         fi
-#       fi
+      if ! /usr/bin/vultr-cli bs get ${DriveID} > /dev/null 2>&1; then
+        /usr/bin/echo "Drive '${DriveNickName}' does not exist."
+        unhealthy="true"
+      else
+        /usr/bin/ssh -o StrictHostKeyChecking=no -o ConnectTimeout=3 -T ${DriveVerber} -p ${VerbPort} -i /root/.ssh/${SSHKey} > /dev/null 2>&1 <<EOS
+if [ ! -e "/dev/${DriveDev}" ]; then exit 6; fi
+if [ ! -f "/opt/verb/conf/inkdrive/${DriveType}.${DriveName}" ]; then exit 6; fi
+/usr/bin/grep -q "^Device=${DriveDev}" /opt/verb/conf/inkdrive/"${DriveType}"."${DriveName}" || exit 6
+/usr/bin/grep -q "^Mount=${DriveName}" /opt/verb/conf/inkdrive/"${DriveType}"."${DriveName}" || exit 6
+/usr/bin/grep -q "^Type=${DriveType}" /opt/verb/conf/inkdrive/"${DriveType}"."${DriveName}" || exit 6
+/usr/bin/grep "^/dev/${DriveDev}1" /etc/fstab | grep -q "/mnt/${DriveName}" || exit 6
+EOS
+        if [ "$?" != "0" ]; then
+          /usr/bin/echo "Drive '${DriveNickName}' not connected correctly."
+          unhealthy="true"
+          /usr/bin/echo "Check details with:"
+          /usr/bin/cat <<EOS
+ssh -o StrictHostKeyChecking=yes -o ConnectTimeout=3 ${namespace}.${VerbTLD} -p ${VerbPort} -i /root/.ssh/${SSHKey}
+if [ ! -e "/dev/${DriveDev}" ]; then echo fail; fi
+if [ ! -f "/opt/verb/conf/inkdrive/${DriveType}.${DriveName}" ]; then echo fail; fi
+grep -q "^Device=${DriveDev}" /opt/verb/conf/inkdrive/"${DriveType}"."${DriveName}" || echo fail
+grep -q "^Mount=${DriveName}" /opt/verb/conf/inkdrive/"${DriveType}"."${DriveName}" || echo fail
+grep -q "^Type=${DriveType}" /opt/verb/conf/inkdrive/"${DriveType}"."${DriveName}" || echo fail
+grep "^/dev/${DriveDev}1" /etc/fstab | grep -q "/mnt/${DriveName}" || echo fail
+### Done line by line, any error will output "fail"
+EOS
+        fi
+      fi
     done
   fi
 else
