@@ -374,34 +374,34 @@ if /usr/bin/ls /opt/rink/conf/drives/*."${vuser}".drive > /dev/null 2>&1; then
     for drive in ${driveConfigs}; do
       . ${drive}
       /usr/bin/echo "Drive::${DriveNickName}"
-      if ! /usr/bin/vultr-cli bs get ${DriveID} > /dev/null 2>&1; then
-        /usr/bin/echo "Drive '${DriveNickName}' does not exist."
-        unhealthy="true"
-      else
-        /usr/bin/ssh -o StrictHostKeyChecking=no -o ConnectTimeout=3 -T ${DriveVerber} -p ${VerbPort} -i /root/.ssh/${SSHKey} > /dev/null 2>&1 <<EOS
-if [ ! -e "/dev/${DriveDev}" ]; then exit 6; fi
-if [ ! -f "/opt/verb/conf/inkdrive/${DriveType}.${DriveName}" ]; then exit 6; fi
-/usr/bin/grep -q "^Device=${DriveDev}" /opt/verb/conf/inkdrive/"${DriveType}"."${DriveName}" || exit 6
-/usr/bin/grep -q "^Mount=${DriveName}" /opt/verb/conf/inkdrive/"${DriveType}"."${DriveName}" || exit 6
-/usr/bin/grep -q "^Type=${DriveType}" /opt/verb/conf/inkdrive/"${DriveType}"."${DriveName}" || exit 6
-/usr/bin/grep "^/dev/${DriveDev}1" /etc/fstab | grep -q "/mnt/${DriveName}" || exit 6
-EOS
-        if [ "$?" != "0" ]; then
-          /usr/bin/echo "Drive '${DriveNickName}' not connected correctly."
-          unhealthy="true"
-#           /usr/bin/echo "Check details with:"
-#           /usr/bin/cat <<EOS
-# ssh -o StrictHostKeyChecking=yes -o ConnectTimeout=3 ${namespace}.${VerbTLD} -p ${VerbPort} -i /root/.ssh/${SSHKey}
-# if [ ! -e "/dev/${DriveDev}" ]; then echo fail; fi
-# if [ ! -f "/opt/verb/conf/inkdrive/${DriveType}.${DriveName}" ]; then echo fail; fi
-# grep -q "^Device=${DriveDev}" /opt/verb/conf/inkdrive/"${DriveType}"."${DriveName}" || echo fail
-# grep -q "^Mount=${DriveName}" /opt/verb/conf/inkdrive/"${DriveType}"."${DriveName}" || echo fail
-# grep -q "^Type=${DriveType}" /opt/verb/conf/inkdrive/"${DriveType}"."${DriveName}" || echo fail
-# grep "^/dev/${DriveDev}1" /etc/fstab | grep -q "/mnt/${DriveName}" || echo fail
-# ### Done line by line, any error will output "fail"
+#       if ! /usr/bin/vultr-cli bs get ${DriveID} > /dev/null 2>&1; then
+#         /usr/bin/echo "Drive '${DriveNickName}' does not exist."
+#         unhealthy="true"
+#       else
+#         /usr/bin/ssh -o StrictHostKeyChecking=no -o ConnectTimeout=3 -T ${DriveVerber} -p ${VerbPort} -i /root/.ssh/${SSHKey} > /dev/null 2>&1 <<EOS
+# if [ ! -e "/dev/${DriveDev}" ]; then exit 6; fi
+# if [ ! -f "/opt/verb/conf/inkdrive/${DriveType}.${DriveName}" ]; then exit 6; fi
+# /usr/bin/grep -q "^Device=${DriveDev}" /opt/verb/conf/inkdrive/"${DriveType}"."${DriveName}" || exit 6
+# /usr/bin/grep -q "^Mount=${DriveName}" /opt/verb/conf/inkdrive/"${DriveType}"."${DriveName}" || exit 6
+# /usr/bin/grep -q "^Type=${DriveType}" /opt/verb/conf/inkdrive/"${DriveType}"."${DriveName}" || exit 6
+# /usr/bin/grep "^/dev/${DriveDev}1" /etc/fstab | grep -q "/mnt/${DriveName}" || exit 6
 # EOS
-        fi
-      fi
+#         if [ "$?" != "0" ]; then
+#           /usr/bin/echo "Drive '${DriveNickName}' not connected correctly."
+#           unhealthy="true"
+# #           /usr/bin/echo "Check details with:"
+# #           /usr/bin/cat <<EOS
+# # ssh -o StrictHostKeyChecking=yes -o ConnectTimeout=3 ${namespace}.${VerbTLD} -p ${VerbPort} -i /root/.ssh/${SSHKey}
+# # if [ ! -e "/dev/${DriveDev}" ]; then echo fail; fi
+# # if [ ! -f "/opt/verb/conf/inkdrive/${DriveType}.${DriveName}" ]; then echo fail; fi
+# # grep -q "^Device=${DriveDev}" /opt/verb/conf/inkdrive/"${DriveType}"."${DriveName}" || echo fail
+# # grep -q "^Mount=${DriveName}" /opt/verb/conf/inkdrive/"${DriveType}"."${DriveName}" || echo fail
+# # grep -q "^Type=${DriveType}" /opt/verb/conf/inkdrive/"${DriveType}"."${DriveName}" || echo fail
+# # grep "^/dev/${DriveDev}1" /etc/fstab | grep -q "/mnt/${DriveName}" || echo fail
+# # ### Done line by line, any error will output "fail"
+# # EOS
+#         fi
+#       fi
     done
   fi
 else
