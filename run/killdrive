@@ -59,8 +59,8 @@ e="$?"; [[ "$e" = "0" ]] || exit "$e"
 
 # Records
 datestamp="$(/usr/bin/date +%Y-%m-%d_%T)"
-/usr/bin/mv /opt/rink/drive/${DriveNickName}.${vuser}.drive /opt/rink/smashed/${vuser}.${DriveNickName}.${datestamp}.drive
-/usr/bin/mv /opt/rink/drive/${DriveNickName}.${vuser}.raw /opt/rink/smashed/${vuser}.${DriveNickName}.${datestamp}.raw
+/usr/bin/mv /opt/rink/drive/${DriveNickName}.${vuser}.drive /opt/rink/conf/drives.smashed/${vuser}.${DriveNickName}.${datestamp}.drive
+/usr/bin/mv /opt/rink/drive/${DriveNickName}.${vuser}.raw /opt/rink/conf/drives.smashed/${vuser}.${DriveNickName}.${datestamp}.raw
 
 # Finish
 /usr/bin/echo "Drive ${DriveNickName} permanently deleted."

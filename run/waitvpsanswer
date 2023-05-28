@@ -24,13 +24,13 @@ if [ -n "$3" ] && [ "$3" = "poweronce" ]; then
   poweronce="true"
 fi
 
-if [ ! -f "/opt/rink/conf/${namespace}.${VerbTLD}.vrb" ]; then
+if [ ! -f "/opt/rink/conf/verbers/${namespace}.${VerbTLD}.vrb" ]; then
   /usr/bin/echo "${namespace}.${VerbTLD} does not exist! I quit."
   exit 0
 fi
 
 # Configs
-. "/opt/rink/conf/${namespace}.${VerbTLD}.vrb"
+. "/opt/rink/conf/verbers/${namespace}.${VerbTLD}.vrb"
 . /opt/rink/sshkey
 
 # IP check functions

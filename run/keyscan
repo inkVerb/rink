@@ -20,8 +20,8 @@ fi
 namespace="$1"
 VerbTLD="$2"
 
-if [ -f /opt/rink/conf/${namespace}.${VerbTLD}.vrb ]; then
-  . /opt/rink/conf/${namespace}.${VerbTLD}.vrb
+if [ -f /opt/rink/conf/verbers/${namespace}.${VerbTLD}.vrb ]; then
+  . /opt/rink/conf/verbers/${namespace}.${VerbTLD}.vrb
   . /opt/rink/ns/${VerbNameServersConfig}
   # Re-scanning?
   if [ -n "$3" ] && [ "$3" = "-r" ]; then
@@ -38,7 +38,7 @@ fi
 
 if [ -z "${Keyscan}" ] || [ "${Keyscan}" != "DONE" ] || [ -n "${rescan}" ]; then
 
-  while [ ! -f "/opt/rink/conf/${namespace}.${VerbTLD}.keyscanned" ]; do
+  while [ ! -f "/opt/rink/conf/verbers/${namespace}.${VerbTLD}.keyscanned" ]; do
     # Use our comment system
     /usr/bin/echo "#${namespace}.${VerbTLD}" >> /root/.ssh/known_hosts
     # Three hashes is the writer's "final cookie"
@@ -52,13 +52,13 @@ if [ -z "${Keyscan}" ] || [ "${Keyscan}" != "DONE" ] || [ -n "${rescan}" ]; then
       if [ "$?" != "0" ]; then
         /usr/bin/sleep 1
       else
-        /usr/bin/touch "/opt/rink/conf/${namespace}.${VerbTLD}.keyscanned"
+        /usr/bin/touch "/opt/rink/conf/verbers/${namespace}.${VerbTLD}.keyscanned"
       fi
     fi
   done
-  /usr/bin/rm "/opt/rink/conf/${namespace}.${VerbTLD}.keyscanned"
-  /usr/bin/sed -i '/Keyscan=/d' /opt/rink/conf/${namespace}.${VerbTLD}.vrb
-  /usr/bin/echo 'Keyscan="DONE"' >> /opt/rink/conf/${namespace}.${VerbTLD}.vrb
+  /usr/bin/rm "/opt/rink/conf/verbers/${namespace}.${VerbTLD}.keyscanned"
+  /usr/bin/sed -i '/Keyscan=/d' /opt/rink/conf/verbers/${namespace}.${VerbTLD}.vrb
+  /usr/bin/echo 'Keyscan="DONE"' >> /opt/rink/conf/verbers/${namespace}.${VerbTLD}.vrb
 else
   /usr/bin/echo "SSH keyscan already complete."
 fi

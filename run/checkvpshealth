@@ -27,26 +27,26 @@ checkVerbTLD="$2"
 vuser="$3"
 
 # Check the existence of the verber
-if [ ! -f "/opt/rink/conf/${namespace}.${checkVerbTLD}.raw" ] && [ ! -f "/opt/rink/conf/${namespace}.${checkVerbTLD}.vrb" ]; then
+if [ ! -f "/opt/rink/conf/verbers/${namespace}.${checkVerbTLD}.raw" ] && [ ! -f "/opt/rink/conf/verbers/${namespace}.${checkVerbTLD}.vrb" ]; then
   /usr/bin/echo "No config files exist. Nothing to check."
   exit 8
-elif [ ! -f "/opt/rink/conf/${namespace}.${checkVerbTLD}.raw" ]; then
+elif [ ! -f "/opt/rink/conf/verbers/${namespace}.${checkVerbTLD}.raw" ]; then
   /usr/bin/echo "No .raw file exists."
   /usr/bin/echo "Verber is not healthy!"
   exit 6
-elif [ ! -f "/opt/rink/conf/${namespace}.${checkVerbTLD}.vrb" ]; then
+elif [ ! -f "/opt/rink/conf/verbers/${namespace}.${checkVerbTLD}.vrb" ]; then
   /usr/bin/echo "No .vrb file exists."
   /usr/bin/echo "Verber is not healthy!"
   exit 6
 fi
 
 # Verify the instance ID and that the files in deed exist
-if [ -f "/opt/rink/conf/${namespace}.${checkVerbTLD}.vrb" ] && [ -f "/opt/rink/conf/${namespace}.${checkVerbTLD}.raw" ]; then
+if [ -f "/opt/rink/conf/verbers/${namespace}.${checkVerbTLD}.vrb" ] && [ -f "/opt/rink/conf/verbers/${namespace}.${checkVerbTLD}.raw" ]; then
   /usr/bin/echo "Config files found..."
-  . /opt/rink/conf/${namespace}.${checkVerbTLD}.vrb
+  . /opt/rink/conf/verbers/${namespace}.${checkVerbTLD}.vrb
   . /opt/rink/ns/${VerbNameServersConfig}
   ## we can now use ${VultrInstanceID}
-  RawVultrInstanceID="$(/usr/bin/cat /opt/rink/conf/${namespace}.${VerbTLD}.raw | /usr/bin/grep ^ID | /usr/bin/sed s"/ID\t\t\t//")"
+  RawVultrInstanceID="$(/usr/bin/cat /opt/rink/conf/verbers/${namespace}.${VerbTLD}.raw | /usr/bin/grep ^ID | /usr/bin/sed s"/ID\t\t\t//")"
   if [ "${RawVultrInstanceID}" != "${VultrInstanceID}" ]; then
     /usr/bin/echo ".raw and .vrb conf files conflict."
     /usr/bin/echo "Verber is not healthy!"

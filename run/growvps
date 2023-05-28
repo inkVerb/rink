@@ -28,11 +28,11 @@ vultrplan="$4"
 
 
 # Check to see if this verber already exists by this name
-if [ ! -f /opt/rink/conf/${namespace}.${VerbTLD}.vrb ]; then
+if [ ! -f /opt/rink/conf/verbers/${namespace}.${VerbTLD}.vrb ]; then
   /usr/bin/echo "Verber with name '${VerbTLD}' and TLD '${namespace}' does not exist. Can't grow it."
   exit 5
 else
-  . /opt/rink/conf/${namespace}.${VerbTLD}.vrb
+  . /opt/rink/conf/verbers/${namespace}.${VerbTLD}.vrb
 fi
 
 # Usage plan
@@ -49,7 +49,7 @@ if ! /usr/bin/vultr-cli plan list | /usr/bin/grep -q "^${vultrplan}"; then
 fi
 
 # Upgrade the instance
-/usr/bin/vultr-cli instance plan upgrade ${VultrInstanceID} --plan "${vultrplan}" >> /opt/rink/conf/${namespace}.${VerbTLD}.upgrade.raw 2>> /opt/rink/conf/${namespace}.${VerbTLD}.upgradefail.raw
+/usr/bin/vultr-cli instance plan upgrade ${VultrInstanceID} --plan "${vultrplan}" >> /opt/rink/conf/verbers/${namespace}.${VerbTLD}.upgrade.raw 2>> /opt/rink/conf/verbers/${namespace}.${VerbTLD}.upgradefail.raw
 
 # Exit status?
 e="$?"; if [ "$e" != "0" ]; then
@@ -58,8 +58,8 @@ e="$?"; if [ "$e" != "0" ]; then
 fi
 
 # Did it work?
-if [ -f /opt/rink/conf/${namespace}.${VerbTLD}.upgrade.raw ]; then
-  if ! /usr/bin/grep -q ^ID /opt/rink/conf/${namespace}.${VerbTLD}.upgrade.raw; then
+if [ -f /opt/rink/conf/verbers/${namespace}.${VerbTLD}.upgrade.raw ]; then
+  if ! /usr/bin/grep -q ^ID /opt/rink/conf/verbers/${namespace}.${VerbTLD}.upgrade.raw; then
     /usr/bin/echo "Upgrade output file is not correct, start over."
     /usr/bin/rm -f "${namespace}.${VerbTLD}.upgrade.raw"
     exit 4
@@ -72,7 +72,7 @@ fi
 # Update the config info
 datestamp="$(/usr/bin/date +%Y-%m-%d_%T)"
 /usr/bin/echo "# ${datestamp} upgraded to ${vultrplan}"
-/usr/bin/sed -i "s/VultrPlan=.*/VultrPlan=\"${vultrplan}\"/" /opt/rink/conf/${namespace}.${VerbTLD}.vrb
+/usr/bin/sed -i "s/VultrPlan=.*/VultrPlan=\"${vultrplan}\"/" /opt/rink/conf/verbers/${namespace}.${VerbTLD}.vrb
 
 # Restart the new Verber
 /usr/bin/ssh ${namespace}.${VerbTLD} /usr/bin/reboot

@@ -29,14 +29,14 @@ VultrInstanceID="$3"
 vuser="$4"
 
 # Check to see if this verber already exists by this name
-if [ -f /opt/rink/conf/${namespace}.${VerbTLD}.vrb ]; then
+if [ -f /opt/rink/conf/verbers/${namespace}.${VerbTLD}.vrb ]; then
   echo "Verber with name '${VerbTLD}' and TLD '${namespace}' already exists."
   exit 0
-elif [ "${VerbTLD}" != "${RinkVerbTLD}" ] && [ ! -f "/opt/rink/conf/${namespace}.${RinkVerbTLD}.vrb" ]; then
+elif [ "${VerbTLD}" != "${RinkVerbTLD}" ] && [ ! -f "/opt/rink/conf/verbers/${namespace}.${RinkVerbTLD}.vrb" ]; then
   echo "Verber with '${RinkVerbTLD}' TLD must be created for '${namespace}' before creating non-'${RinkVerbTLD}' TLD verbers."
   exit 0
-elif [ "${VerbTLD}" != "${RinkVerbTLD}" ] && [ -f "/opt/rink/conf/${namespace}.${RinkVerbTLD}.vrb" ]; then
-  . /opt/rink/conf/${namespace}.${RinkVerbTLD}.vrb
+elif [ "${VerbTLD}" != "${RinkVerbTLD}" ] && [ -f "/opt/rink/conf/verbers/${namespace}.${RinkVerbTLD}.vrb" ]; then
+  . /opt/rink/conf/verbers/${namespace}.${RinkVerbTLD}.vrb
   . /opt/rink/ns/${VerbNameServersConfig}
   if [ "${VerbUser}" != "${vuser}" ]; then
     echo "Verb name '${namespace}' is already owned by another user."
@@ -58,7 +58,7 @@ FIRSTIPv6PLACEHOLDER="$(/usr/bin/vultr-cli instance ipv6 list $VultrInstanceID |
 /usr/bin/echo "IPv6: $IPv6"
 
 # Get the VPS instance ID
-/usr/bin/cat <<EOF > /opt/rink/conf/${namespace}.${VerbTLD}.vrb
+/usr/bin/cat <<EOF > /opt/rink/conf/verbers/${namespace}.${VerbTLD}.vrb
 VultrInstanceID="$VultrInstanceID"
 VerbHostID="NONE_MOD_ADD"
 VerbName="$namespace"
@@ -158,7 +158,7 @@ IPv4ARPA=$(/bin/echo ${IPv4} | sed -r 's/^([0-9]{1,3}).([0-9]{1,3}).([0-9]{1,3})
 IPv6ARPA=$(rarpa_ipv6 ${IPv6Exp})
 
 ## Append IP addresses to config
-/usr/bin/cat <<EOF >> /opt/rink/conf/${namespace}.${VerbTLD}.vrb
+/usr/bin/cat <<EOF >> /opt/rink/conf/verbers/${namespace}.${VerbTLD}.vrb
 VerbIPv4="${IPv4}"
 VerbIPv6="${IPv6New}"
 VerbIPv6Exp="${IPv6Exp}"
@@ -168,8 +168,8 @@ EOF
 
 # Create the .ssh/config entry
 . /opt/rink/sshkey
-/usr/bin/echo "Include /opt/rink/conf/${namespace}.${VerbTLD}.ssh" >> /root/.ssh/config
-/usr/bin/cat <<EOF > /opt/rink/conf/${namespace}.${VerbTLD}.ssh
+/usr/bin/echo "Include /opt/rink/conf/verbers/${namespace}.${VerbTLD}.ssh" >> /root/.ssh/config
+/usr/bin/cat <<EOF > /opt/rink/conf/verbers/${namespace}.${VerbTLD}.ssh
 Host ${namespace}.${VerbTLD}
 Hostname ${IPv4}
 User root

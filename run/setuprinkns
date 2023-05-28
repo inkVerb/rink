@@ -33,20 +33,20 @@ if [ ! -f "/opt/rink/waitnsfinish" ]; then
   if [ -f "/opt/verb/inst/setup" ]; then
     /opt/verb/inst/setup ${RinkName} ${RinkVerbTLD} email vip ${RinkHost} ${RinkIPv4} ${RinkIPv6} cb@${RinkDomain} 100 1000 ${TimeZone} ${Port} boss "$(/usr/bin/pwgen -s -1 16)" ${UpdateRepo} ${UpdateOrg};fi
   # Create the NS nameservers
-  if [ ! -f "/opt/rink/conf/${NS1Name}.${RinkVerbTLD}.vrb" ]; then
+  if [ ! -f "/opt/rink/conf/verbers/${NS1Name}.${RinkVerbTLD}.vrb" ]; then
   /opt/rink/run/newvps ${NS1Name} ${RinkVerbTLD} byrink 1gb ${DfaultNSSnapshotID} ${VultrRegion1}; fi
   e="$?"; [[ "$e" = "0" ]] || exit "$e"
   # Check if finished right
-  if ! /usr/bin/grep -q ^VerbIPv4 /opt/rink/conf/${NS1Name}.${RinkVerbTLD}.vrb; then
+  if ! /usr/bin/grep -q ^VerbIPv4 /opt/rink/conf/verbers/${NS1Name}.${RinkVerbTLD}.vrb; then
     /usr/bin/echo "NS1 was not created correctly. Run this again to try again."
     /usr/bin/rm -f "${NS1Name}.${RinkVerbTLD}.*"
     /usr/bin/sed -i "/${NS1Name}.${RinkVerbTLD}.ssh/d" /root/.ssh/config
     exit 0; fi
-  if [ ! -f "/opt/rink/conf/${NS2Name}.${RinkVerbTLD}.vrb" ]; then
+  if [ ! -f "/opt/rink/conf/verbers/${NS2Name}.${RinkVerbTLD}.vrb" ]; then
   /opt/rink/run/newvps ${NS2Name} ${RinkVerbTLD} byrink 1gb ${DfaultNSSnapshotID} ${VultrRegion2}; fi
   e="$?"; [[ "$e" = "0" ]] || exit "$e"
   # Check if finished right
-  if ! /usr/bin/grep -q ^VerbIPv4 /opt/rink/conf/${NS2Name}.${RinkVerbTLD}.vrb; then
+  if ! /usr/bin/grep -q ^VerbIPv4 /opt/rink/conf/verbers/${NS2Name}.${RinkVerbTLD}.vrb; then
     /usr/bin/echo "NS2 was not created correctly. Run this again to try again."
     /usr/bin/rm -f "${NS2Name}.${RinkVerbTLD}.*"
     /usr/bin/sed -i "/${NS2Name}.${RinkVerbTLD}.ssh/d" /root/.ssh/config
@@ -62,7 +62,7 @@ fi
 # NS1
 if [ ! -f "/opt/rink/ns1done" ]; then
 ## Try to add keys until added
-  . /opt/rink/conf/${NS1Name}.${RinkVerbTLD}.vrb
+  . /opt/rink/conf/verbers/${NS1Name}.${RinkVerbTLD}.vrb
   ### Wait for powerup
   /opt/rink/run/waitvpson ${NS1Name} ${RinkVerbTLD}
   #DEV keyscan is a native part of newvps
@@ -92,7 +92,7 @@ fi
 # NS2
 if [ ! -f "/opt/rink/ns2done" ]; then
   ## Try to add keys until added
-  . /opt/rink/conf/${NS2Name}.${RinkVerbTLD}.vrb
+  . /opt/rink/conf/verbers/${NS2Name}.${RinkVerbTLD}.vrb
   ### Wait for powerup
   /opt/rink/run/waitvpson ${NS2Name} ${RinkVerbTLD}
   #DEV keyscan is a native part of newvps
@@ -120,10 +120,10 @@ if [ ! -f "/opt/rink/ns2done" ]; then
 fi
 
 # Update our global NS nameservers
-. /opt/rink/conf/${NS1Name}.${RinkVerbTLD}.vrb
+. /opt/rink/conf/verbers/${NS1Name}.${RinkVerbTLD}.vrb
 NS1ip4="$VerbIPv4"
 NS1ip6="$VerbIPv6"
-. /opt/rink/conf/${NS2Name}.${RinkVerbTLD}.vrb
+. /opt/rink/conf/verbers/${NS2Name}.${RinkVerbTLD}.vrb
 NS2ip4="$VerbIPv4"
 NS2ip6="$VerbIPv6"
 ## Point the NS servers to each other
@@ -196,7 +196,7 @@ VerbARPAIPv6="${ServerARPAIPv6}"
 EOF
 EOS
 ### NS2 on NS1
-. /opt/rink/conf/${NS2Name}.${RinkVerbTLD}.vrb
+. /opt/rink/conf/verbers/${NS2Name}.${RinkVerbTLD}.vrb
 /usr/bin/ssh -T ${NS1Name}.${RinkVerbTLD} <<EOS
 /usr/bin/mkdir -p /srv/sns/killed /srv/sns/${NS2Name}-${RinkVerbTLD}/domains
 /usr/bin/cat <<EOF > /srv/sns/${NS2Name}-${RinkVerbTLD}/conf
@@ -225,7 +225,7 @@ VerbARPAIPv6="${ServerARPAIPv6}"
 EOF
 EOS
 ### NS1 on NS2
-. /opt/rink/conf/${NS1Name}.${RinkVerbTLD}.vrb
+. /opt/rink/conf/verbers/${NS1Name}.${RinkVerbTLD}.vrb
 /usr/bin/ssh -T ${NS2Name}.${RinkVerbTLD} <<EOS
 /usr/bin/mkdir -p /srv/sns/${NS1Name}-${RinkVerbTLD}/domains /srv/sns/${NS1Name}-${RinkVerbTLD}/calls
 /usr/bin/cat <<EOF > /srv/sns/${NS1Name}-${RinkVerbTLD}/conf
@@ -240,7 +240,7 @@ VerbARPAIPv6="${VerbARPAIPv6}"
 EOF
 EOS
 ### NS1 on this local Rink
-. /opt/rink/conf/${NS1Name}.${RinkVerbTLD}.vrb
+. /opt/rink/conf/verbers/${NS1Name}.${RinkVerbTLD}.vrb
 /usr/bin/mkdir -p /srv/sns/${NS1Name}-${RinkVerbTLD}/domains /srv/sns/${NS1Name}-${RinkVerbTLD}/calls
 /usr/bin/cat <<EOF > /srv/sns/${NS1Name}-${RinkVerbTLD}/conf
 VerbHostID="${VerbHostID}"
@@ -253,7 +253,7 @@ VerbARPAIPv4="${VerbARPAIPv4}"
 VerbARPAIPv6="${VerbARPAIPv6}"
 EOF
 ### NS2 on this local Rink
-. /opt/rink/conf/${NS2Name}.${RinkVerbTLD}.vrb
+. /opt/rink/conf/verbers/${NS2Name}.${RinkVerbTLD}.vrb
 /usr/bin/mkdir -p /srv/sns/${NS2Name}-${RinkVerbTLD}/domains /srv/sns/${NS2Name}-${RinkVerbTLD}/calls
 /usr/bin/cat <<EOF > /srv/sns/${NS2Name}-${RinkVerbTLD}/conf
 VerbHostID="${VerbHostID}"

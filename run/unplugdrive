@@ -58,8 +58,8 @@ fi
 # ${DriveDev}
 
 # Unmount the drive on the verber if the verber exists
-if [ -f "/opt/rink/conf/${namespace}.${VerbTLD}.vrb" ]; then
-  if ! grep -q "VerbUser=\"${vuser}\"" "/opt/rink/conf/${namespace}.${VerbTLD}.vrb"; then
+if [ -f "/opt/rink/conf/verbers/${namespace}.${VerbTLD}.vrb" ]; then
+  if ! grep -q "VerbUser=\"${vuser}\"" "/opt/rink/conf/verbers/${namespace}.${VerbTLD}.vrb"; then
     /usr/bin/echo "${namespace}.${VerbTLD} not owned by user ${vuser}! I quit."
     exit 5
   else
@@ -76,8 +76,8 @@ fi
 
 # Records
 datestamp="$(/usr/bin/date +%Y-%m-%d_%T)"
-/usr/bin/cp /opt/rink/drive/${DriveNickName}.${vuser}.drive /opt/rink/smashed/${vuser}.${DriveNickName}.${datestamp}.unplugged
-/usr/bin/echo "DriveUnplugged=\"${datestamp}\"" >> /opt/rink/smashed/${vuser}.${DriveNickName}.${datestamp}.unplugged
+/usr/bin/cp /opt/rink/drive/${DriveNickName}.${vuser}.drive /opt/rink/conf/drives.smashed/${vuser}.${DriveNickName}.${datestamp}.unplugged
+/usr/bin/echo "DriveUnplugged=\"${datestamp}\"" >> /opt/rink/conf/drives.smashed/${vuser}.${DriveNickName}.${datestamp}.unplugged
 
 # Update the config
 /usr/bin/sed -i "s/DriveDev=.*/DriveDev=\"UNPLUGGED\"/" /opt/rink/drive/${DriveNickName}.${vuser}.drive

@@ -25,12 +25,12 @@ namespace="$1"
 VerbTLD="$2"
 vuser="$3"
 
-if [ ! -f "/opt/rink/conf/${namespace}.${VerbTLD}.vrb" ]; then
+if [ ! -f "/opt/rink/conf/verbers/${namespace}.${VerbTLD}.vrb" ]; then
   /usr/bin/echo "${namespace}.${VerbTLD} does not exist! I quit."
   exit 0
 fi
 
-if ! grep -q "VerbUser=\"$vuser\"" "/opt/rink/conf/${namespace}.${VerbTLD}.vrb"; then
+if ! grep -q "VerbUser=\"$vuser\"" "/opt/rink/conf/verbers/${namespace}.${VerbTLD}.vrb"; then
   /usr/bin/echo "${namespace}.${VerbTLD} not owned by user ${vuser}! I quit."
   exit 0
 fi
@@ -39,14 +39,14 @@ fi
 . /opt/rink/portnum
 . /opt/verb/conf/servernameip
 . /opt/rink/sshkey
-. /opt/rink/conf/${namespace}.${VerbTLD}.vrb
+. /opt/rink/conf/verbers/${namespace}.${VerbTLD}.vrb
 . /opt/rink/rinknames
 
 #DEV these keys should already be accepted
 # if [ -z "${FIRSTSSH}" ]; then
 #   /usr/bin/-o StrictHostKeyChecking=accept-new ${namespace}.${VerbTLD} cat /etc/ssh/ssh_host_dsa_key.pub >> ~/.ssh/known_hosts
 #   if [ "$?" = "0" ]; then
-#     /usr/bin/echo "FIRSTSSH=\"true\"" >> /opt/rink/conf/${namespace}.${VerbTLD}.vrb
+#     /usr/bin/echo "FIRSTSSH=\"true\"" >> /opt/rink/conf/verbers/${namespace}.${VerbTLD}.vrb
 #   fi
 # fi
 
@@ -152,4 +152,4 @@ EOS
 /usr/bin/rm -f /opt/rink/tmp/servertldstatus_${VerbTLD}_${namespace}
 
 # Note in the settings
-/usr/bin/echo 'RinkKeys="DONE"' >> /opt/rink/conf/${namespace}.${VerbTLD}.vrb
+/usr/bin/echo 'RinkKeys="DONE"' >> /opt/rink/conf/verbers/${namespace}.${VerbTLD}.vrb

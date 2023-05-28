@@ -18,12 +18,12 @@ fi
 namespace="$1"
 VerbTLD="$2"
 
-if [ ! -f "/opt/rink/conf/${namespace}.${VerbTLD}.vrb" ]; then
+if [ ! -f "/opt/rink/conf/verbers/${namespace}.${VerbTLD}.vrb" ]; then
   /usr/bin/echo "${namespace}.${VerbTLD} does not exist! I quit."
   exit 0
 fi
 
-. /opt/rink/conf/${namespace}.${VerbTLD}.vrb
+. /opt/rink/conf/verbers/${namespace}.${VerbTLD}.vrb
 . /opt/rink/ns/${VerbNameServersConfig}
 
 # Wait for powerup

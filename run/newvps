@@ -59,14 +59,14 @@ elif [ "$9" = "noip4" ]; then
 fi
 
 # Check to see if this verber already exists by this name
-if [ -f /opt/rink/conf/${namespace}.${VerbTLD}.vrb ]; then
+if [ -f /opt/rink/conf/verbers/${namespace}.${VerbTLD}.vrb ]; then
   /usr/bin/echo "Verber with name '${VerbTLD}' and TLD '${namespace}' already exists."
   exit 5
-elif [ "${VerbTLD}" != "${RinkVerbTLD}" ] && [ ! -f "/opt/rink/conf/${namespace}.${RinkVerbTLD}.vrb" ]; then
+elif [ "${VerbTLD}" != "${RinkVerbTLD}" ] && [ ! -f "/opt/rink/conf/verbers/${namespace}.${RinkVerbTLD}.vrb" ]; then
   /usr/bin/echo "Verber with '${RinkVerbTLD}' TLD must be created for '${namespace}' before creating non-'${RinkVerbTLD}' TLD verbers."
   exit 5
-elif [ "${VerbTLD}" != "${RinkVerbTLD}" ] && [ -f "/opt/rink/conf/${namespace}.${RinkVerbTLD}.vrb" ]; then
-  . /opt/rink/conf/${namespace}.${RinkVerbTLD}.vrb
+elif [ "${VerbTLD}" != "${RinkVerbTLD}" ] && [ -f "/opt/rink/conf/verbers/${namespace}.${RinkVerbTLD}.vrb" ]; then
+  . /opt/rink/conf/verbers/${namespace}.${RinkVerbTLD}.vrb
   . /opt/rink/ns/${VerbNameServersConfig}
   if [ "${VerbUser}" != "${vuser}" ]; then
     /usr/bin/echo "Verb name '${namespace}' is already owned by another user."
@@ -76,7 +76,7 @@ fi
 
 ## Make sure it is not in use
 ### grep "-s, --no-messages suppress error messages"
-while /usr/bin/grep -qs ^VerbHostID=\"${hostid}\" /opt/rink/conf/*.vrb > /dev/null; do
+while /usr/bin/grep -qs ^VerbHostID=\"${hostid}\" /opt/rink/conf/verbers/*.vrb > /dev/null; do
   hostid=$(( hostid + 1 ))
 done
 
@@ -103,7 +103,7 @@ fi
 
 # Create the instance
 #DEV at a later date, I will complete this thought, but I don't know what I was going to do initially. If you are the intern who found this line, you win. Inform your supervisor to inform Jesse ASAP!
-/usr/bin/vultr-cli instance create --region "${VultrRegion}" --plan "${vultrplan}" --snapshot "${SnapshotID}" --label "${namespace}.${VerbTLD}" ${ip46statement} > /opt/rink/conf/${namespace}.${VerbTLD}.raw
+/usr/bin/vultr-cli instance create --region "${VultrRegion}" --plan "${vultrplan}" --snapshot "${SnapshotID}" --label "${namespace}.${VerbTLD}" ${ip46statement} > /opt/rink/conf/verbers/${namespace}.${VerbTLD}.raw
 
 # Exit status?
 e="$?"; if [ "$e" != "0" ]; then
@@ -112,8 +112,8 @@ e="$?"; if [ "$e" != "0" ]; then
 fi
 
 # Did it work?
-if [ -f /opt/rink/conf/${namespace}.${VerbTLD}.raw ]; then
-  if ! /usr/bin/grep -q ^ID /opt/rink/conf/${namespace}.${VerbTLD}.raw; then
+if [ -f /opt/rink/conf/verbers/${namespace}.${VerbTLD}.raw ]; then
+  if ! /usr/bin/grep -q ^ID /opt/rink/conf/verbers/${namespace}.${VerbTLD}.raw; then
     /usr/bin/echo "VPS output file is not correct, start over."
     /usr/bin/rm -f "${namespace}.${VerbTLD}.*"
     /usr/bin/sed -i "/${namespace}.${VerbTLD}.ssh/d" /root/.ssh/config
@@ -127,9 +127,9 @@ else
 fi
 
 # Get the VPS instance ID
-VultrInstanceID="$(/usr/bin/cat /opt/rink/conf/${namespace}.${VerbTLD}.raw | /usr/bin/grep ^ID | /usr/bin/sed s"/ID\t\t\t//")"
+VultrInstanceID="$(/usr/bin/cat /opt/rink/conf/verbers/${namespace}.${VerbTLD}.raw | /usr/bin/grep ^ID | /usr/bin/sed s"/ID\t\t\t//")"
 datestamp="$(/usr/bin/date +%Y-%m-%d_%T)"
-/usr/bin/cat <<EOF > /opt/rink/conf/${namespace}.${VerbTLD}.vrb
+/usr/bin/cat <<EOF > /opt/rink/conf/verbers/${namespace}.${VerbTLD}.vrb
 VultrInstanceID="${VultrInstanceID}"
 VultrPlan="${vultrplan}"
 DateCreated="${datestamp}"
@@ -256,8 +256,8 @@ rarpa_ipv6() {
 
 # # Create the .ssh/config entry
 # . /opt/rink/sshkey
-# /usr/bin/echo "Include /opt/rink/conf/${namespace}.${VerbTLD}.ssh" >> /root/.ssh/config
-# /usr/bin/cat <<EOF > /opt/rink/conf/${namespace}.${VerbTLD}.ssh
+# /usr/bin/echo "Include /opt/rink/conf/verbers/${namespace}.${VerbTLD}.ssh" >> /root/.ssh/config
+# /usr/bin/cat <<EOF > /opt/rink/conf/verbers/${namespace}.${VerbTLD}.ssh
 # Host ${namespace}.${VerbTLD}
 # Hostname ${IPv4}
 # User root
@@ -272,7 +272,7 @@ rarpa_ipv6() {
 e="$?"
 if [ "$e" != "0" ]; then
   /usr/bin/echo "VPS cannot be accessed. It is possible that the keys are not installed. Make sure that they key '${SSHKey}' is properly installed on this VPS, then try again."
-  /usr/bin/rm -f /opt/rink/conf/${namespace}.${VerbTLD}.*
+  /usr/bin/rm -f /opt/rink/conf/verbers/${namespace}.${VerbTLD}.*
   exit "$e"
 fi
 # Process IPs to list for keyscan
@@ -290,7 +290,7 @@ IPv6ARPA=$(rarpa_ipv6 ${IPv6Exp})
 /usr/bin/sed -i "/${IPv6Exp}/d" /root/.ssh/known_hosts
 
 ## Append IP addresses to config
-/usr/bin/cat <<EOF >> /opt/rink/conf/${namespace}.${VerbTLD}.vrb
+/usr/bin/cat <<EOF >> /opt/rink/conf/verbers/${namespace}.${VerbTLD}.vrb
 VerbIPv4="${IPv4}"
 VerbIPv6="${IPv6Cmp}"
 VerbIPv6Exp="${IPv6Exp}"
@@ -301,8 +301,8 @@ EOF
 
 ## Rebuild the ssh config to include both IPv4 and IPv6
 . /opt/rink/sshkey
-/usr/bin/echo "Include /opt/rink/conf/${namespace}.${VerbTLD}.ssh" >> /root/.ssh/config
-/usr/bin/cat <<EOF > /opt/rink/conf/${namespace}.${VerbTLD}.ssh
+/usr/bin/echo "Include /opt/rink/conf/verbers/${namespace}.${VerbTLD}.ssh" >> /root/.ssh/config
+/usr/bin/cat <<EOF > /opt/rink/conf/verbers/${namespace}.${VerbTLD}.ssh
 Host ${namespace}.${VerbTLD}
 Hostname ${IPv4}
 Hostname ${IPv6Cmp}
