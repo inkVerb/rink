@@ -59,10 +59,12 @@ fi
 
 # Did it work?
 if [ -f /opt/rink/conf/verbers/${namespace}.${VerbTLD}.upgrade.raw ]; then
-  if ! /usr/bin/grep -q ^ID /opt/rink/conf/verbers/${namespace}.${VerbTLD}.upgrade.raw; then
+  if ! /usr/bin/grep -q "^Upgraded plan" /opt/rink/conf/verbers/${namespace}.${VerbTLD}.upgrade.raw; then
     /usr/bin/echo "Upgrade output file is not correct, start over."
     /usr/bin/rm -f "${namespace}.${VerbTLD}.upgrade.raw"
     exit 4
+  else
+    /usr/bin/sed -i "s/^Upgraded plan/### Upgraded plan/" /opt/rink/conf/verbers/${namespace}.${VerbTLD}.upgrade.raw
   fi
 else
   /usr/bin/echo "Upgrade output file does not exist, start over."
@@ -72,6 +74,7 @@ fi
 # Update the config info
 datestamp="$(/usr/bin/date +%Y-%m-%d_%T)"
 /usr/bin/echo "# ${datestamp} upgraded to ${vultrplan}" >> /opt/rink/conf/verbers/${namespace}.${VerbTLD}.upgrade.raw
+/usr/bin/vultr-cli instance get ${VultrInstanceID} >> /opt/rink/conf/drives/${drivenickname}.${vuser}.grow.raw
 /usr/bin/sed -i "s/VultrPlan=.*/VultrPlan=\"${vultrplan}\"/" /opt/rink/conf/verbers/${namespace}.${VerbTLD}.vrb
 
 # Restart the new Verber

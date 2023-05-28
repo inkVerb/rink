@@ -64,7 +64,7 @@ if [ -f "/opt/rink/conf/drives/${drivenickname}.${vuser}.grow.raw" ]; then
       exit 4
     fi
   else
-  /usr/bin/sed -i "s/^resized block storage/### resized block storage/" /opt/rink/conf/drives/${drivenickname}.${vuser}.grow.raw
+    /usr/bin/sed -i "s/^resized block storage/### resized block storage/" /opt/rink/conf/drives/${drivenickname}.${vuser}.grow.raw
   fi
 else
   /usr/bin/echo "Upgrade output file does not exist, start over."
@@ -74,7 +74,7 @@ fi
 # Update the config info
 datestamp="$(/usr/bin/date +%Y-%m-%d_%T)"
 /usr/bin/echo "# ${datestamp} upgraded to ${newdrivesize}" >> /opt/rink/conf/drives/${drivenickname}.${vuser}.grow.raw
-/usr/bin/vultr-cli bs get ${VultrInstanceID} >> /opt/rink/conf/drives/${drivenickname}.${vuser}.grow.raw
+/usr/bin/vultr-cli bs get ${DriveID} >> /opt/rink/conf/drives/${drivenickname}.${vuser}.grow.raw
 /usr/bin/sed -i "s/DriveSize=.*/DriveSize=\"${newdrivesize}\"/" /opt/rink/conf/drives/${drivenickname}.${vuser}.drive
 
 # Finish
