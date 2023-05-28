@@ -377,7 +377,7 @@ if /usr/bin/ls /opt/rink/conf/drives/*."${vuser}".drive > /dev/null 2>&1; then
         /usr/bin/echo "Drive '${DriveNickName}' does not exist."
         unhealthy="true"
       else
-        /usr/bin/ssh -o StrictHostKeyChecking=no -o ConnectTimeout=3 -T ${DriveVerber} <<EOS
+        /usr/bin/ssh -o StrictHostKeyChecking=no -o ConnectTimeout=3 -T ${DriveVerber} -p ${VerbPort} -i /root/.ssh/${SSHKey} > /dev/null 2>&1 <<EOS
 if [ ! -e "/dev/${DriveDev}" ]; then /usr/bin/echo "Device for ${DriveNickName} not found."; exit 6; fi
 if [ ! -f "/opt/verb/conf/inkdrive/${DriveType}.${DriveName}" ]; then /usr/bin/echo "Config for ${DriveNickName} not found."; exit 6; fi
 /usr/bin/grep -q "^Device=${DriveDev}" /opt/verb/conf/inkdrive/"${DriveType}"."${DriveName}" || /usr/bin/echo "Drive device for ${DriveNickName} incorrect."; exit 6
