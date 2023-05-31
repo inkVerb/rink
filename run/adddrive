@@ -132,20 +132,20 @@ done
 
 # Find the device name in /dev/vdb etc
 /usr/bin/ssh ${namespace}.${VerbTLD} "/usr/bin/ls /dev/vd*" > /opt/rink/tmp/${drivenickname}.${vuser}.drive
-if /usr/bin/grep -q vdh /opt/rink/tmp/${drivenickname}.${vuser}.drive; then
-  DriveDev="vdh"
-elif /usr/bin/grep -q vdg /opt/rink/tmp/${drivenickname}.${vuser}.drive; then
-  DriveDev="vdg"
-elif /usr/bin/grep -q vdf /opt/rink/tmp/${drivenickname}.${vuser}.drive; then
-  DriveDev="vdf"
-elif /usr/bin/grep -q vde /opt/rink/tmp/${drivenickname}.${vuser}.drive; then
-  DriveDev="vde"
-elif /usr/bin/grep -q vdd /opt/rink/tmp/${drivenickname}.${vuser}.drive; then
-  DriveDev="vdd"
-elif /usr/bin/grep -q vdc /opt/rink/tmp/${drivenickname}.${vuser}.drive; then
-  DriveDev="vdc"
-elif /usr/bin/grep -q vdb /opt/rink/tmp/${drivenickname}.${vuser}.drive; then
+if /usr/bin/grep -q vdb /opt/rink/tmp/${drivenickname}.${vuser}.drive && ! /usr/bin/grep -q vdb1 /opt/rink/tmp/${drivenickname}.${vuser}.drive; then
   DriveDev="vdb"
+elif /usr/bin/grep -q vdc /opt/rink/tmp/${drivenickname}.${vuser}.drive && ! /usr/bin/grep -q vdc1 /opt/rink/tmp/${drivenickname}.${vuser}.drive; then
+  DriveDev="vdc"
+elif /usr/bin/grep -q vdd /opt/rink/tmp/${drivenickname}.${vuser}.drive && ! /usr/bin/grep -q vdd1 /opt/rink/tmp/${drivenickname}.${vuser}.drive; then
+  DriveDev="vddf"
+elif /usr/bin/grep -q vde /opt/rink/tmp/${drivenickname}.${vuser}.drive && ! /usr/bin/grep -q vde1 /opt/rink/tmp/${drivenickname}.${vuser}.drive; then
+  DriveDev="vde"
+elif /usr/bin/grep -q vdf /opt/rink/tmp/${drivenickname}.${vuser}.drive && ! /usr/bin/grep -q vdf1 /opt/rink/tmp/${drivenickname}.${vuser}.drive; then
+  DriveDev="vdf"
+elif /usr/bin/grep -q vdg /opt/rink/tmp/${drivenickname}.${vuser}.drive && ! /usr/bin/grep -q vdg1 /opt/rink/tmp/${drivenickname}.${vuser}.drive; then
+  DriveDev="vdg"
+elif /usr/bin/grep -q vdh /opt/rink/tmp/${drivenickname}.${vuser}.drive && ! /usr/bin/grep -q vdh1 /opt/rink/tmp/${drivenickname}.${vuser}.drive; then
+  DriveDev="vdh"
 else
   /usr/bin/echo "Cannot have more than eight drives mounted to one verber. I quit."
   exit 7
