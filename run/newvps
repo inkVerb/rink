@@ -328,7 +328,7 @@ sshresetstatus="$?"
 count=0
 while [ "$sshresetstatus" != "0" ]; do
   #/usr/bin/echo "newvps ssh-keygen loop reboot error: $sshresetstatus #DEBUG This echos a 255 while the server is still being prepared, use this for debugging only
-  usr/bin/echo "Waiting, then trying again..."
+  /usr/bin/echo "Waiting, then trying again..."
   sleep 3
   /usr/bin/ssh -o StrictHostKeyChecking=no -o ConnectTimeout=3 -q -T ${namespace}.${VerbTLD} <<EOS
 /usr/bin/rm -f /etc/ssh/ssh_host_*
@@ -348,6 +348,20 @@ done
 sleep 10 # The server needs to start its reboot
 /opt/rink/run/waitvpson ${namespace} ${VerbTLD}
 /opt/rink/run/waitvpsanswer ${namespace} ${VerbTLD}
+
+# Ensure that make-verber is done and setup is ready
+/usr/bin/ssh -o StrictHostKeyChecking=no -o ConnectTimeout=3 -q -T ${namespace}.${VerbTLD} <<EOS
+if [ ! -f "/opt/verb/inst/make-verber-laemp" ] && [ -f "/opt/verb/inst/setup" ]; then
+  /usr/bin/echo "Linux web stack is ready..."
+  exit 0
+else
+  /usr/bin/echo "No Linux web stack! Can't continue."
+  exit 8
+fi
+EOS
+e="$?"; [[ "$e" = "0" ]] || exit "$e"
+
+# Keyscan
 /opt/rink/run/keyscan ${namespace} ${VerbTLD}
 e="$?"; [[ "$e" = "0" ]] || exit "$e"
 
