@@ -51,7 +51,7 @@ if [ "${4}" = "--import" ]; then
 else
   IMPort="false"
   vultrplan="$4"
-  snapnick="$5"12
+  snapnick="$5"
   if [ -n "$6" ] && [ "$6" != "-" ] && /usr/bin/vultr-cli regions list | /usr/bin/grep -q "^$6"; then
     VultrRegion="$6" # Overrides region from rinknames
   else
