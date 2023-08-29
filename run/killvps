@@ -61,9 +61,10 @@ e="$?"; [[ "$e" = "0" ]] || exit "$e"
 /usr/bin/ssh ${NS1Name}.${RinkVerbTLD} /opt/verb/serfs/inkdnsrefreshbind
 /usr/bin/ssh ${NS2Name}.${RinkVerbTLD} /opt/verb/serfs/inkdnsrefreshbind
 
-# Remove from known_hosts
-[[ -n "${VerbIPv4}" ]] && [[ -n "${VerbPort}" ]] && /usr/bin/sed -i "/\[${VerbIPv4}\]:${VerbPort}/d" /root/.ssh/known_hosts
-[[ -n "${VerbIPv4}" ]] && /usr/bin/sed -i "/${VerbIPv4}/d" /root/.ssh/known_hosts
+#DEV this is already done by killverberrecords properly using the ##name.tld tags
+# # Remove from known_hosts
+# [[ -n "${VerbIPv4}" ]] && [[ -n "${VerbPort}" ]] && /usr/bin/sed -i "/\[${VerbIPv4}\]:${VerbPort}/d" /root/.ssh/known_hosts
+# [[ -n "${VerbIPv4}" ]] && /usr/bin/sed -i "/${VerbIPv4}/d" /root/.ssh/known_hosts
 
 # Destroy it
 /usr/bin/vultr-cli instance delete ${VultrInstanceID}
