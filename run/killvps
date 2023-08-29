@@ -40,10 +40,6 @@ if [ "$?" != "0" ]; then
   exit 0
 fi
 
-# Remove from known_hosts
-[[ -n "${VerbIPv4}" ]] && [[ -n "${VerbPort}" ]] && /usr/bin/sed -i "/\[${VerbIPv4}\]:${VerbPort}/d" /root/.ssh/known_hosts
-[[ -n "${VerbIPv4}" ]] && /usr/bin/sed -i "/${VerbIPv4}/d" /root/.ssh/known_hosts
-
 # De-list the NS records
 #DEV obsolete, see killdns notes
 #/opt/rink/run/killdns ${namespace} ${VerbTLD} ${vuser}
@@ -64,6 +60,10 @@ e="$?"; [[ "$e" = "0" ]] || exit "$e"
 # Refresh nameservers
 /usr/bin/ssh ${NS1Name}.${RinkVerbTLD} /opt/verb/serfs/inkdnsrefreshbind
 /usr/bin/ssh ${NS2Name}.${RinkVerbTLD} /opt/verb/serfs/inkdnsrefreshbind
+
+# Remove from known_hosts
+[[ -n "${VerbIPv4}" ]] && [[ -n "${VerbPort}" ]] && /usr/bin/sed -i "/\[${VerbIPv4}\]:${VerbPort}/d" /root/.ssh/known_hosts
+[[ -n "${VerbIPv4}" ]] && /usr/bin/sed -i "/${VerbIPv4}/d" /root/.ssh/known_hosts
 
 # Destroy it
 /usr/bin/vultr-cli instance delete ${VultrInstanceID}

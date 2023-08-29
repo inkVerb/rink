@@ -44,14 +44,14 @@ timestamp=$(date +'%Y-%m-%d_%H:%M:%S')
 # Remove each domain from Bind, then kill all domains
 /usr/bin/ssh -T -o StrictHostKeyChecking=yes ${NS1Name}.${RinkVerbTLD} <<EOS
 /usr/bin/mkdir -p /srv/sns/${namespace}-${VerbTLD}/domains/killed/parked /srv/sns/${namespace}-${VerbTLD}/domains/killed/served /srv/sns/killed/${timestamp}
-cd /srv/sns/pen-ink/domains/served
+cd /srv/sns/${namespace}-${VerbTLD}/domains/served
 for dom in *; do
 if [ "\${dom}" = '*' ]; then continue; fi
 /usr/bin/rm -f /var/named/db.\${dom}
 /usr/bin/mv /srv/sns/${namespace}-${VerbTLD}/domains/served/\${dom} /srv/sns/${namespace}-${VerbTLD}/domains/killed/served/
 /usr/bin/echo "rink-killed at ${timestamp}" >> /srv/sns/${namespace}-${VerbTLD}/domains/killed/served/\${dom}
 done
-cd /srv/sns/pen-ink/domains/parked
+cd /srv/sns/${namespace}-${VerbTLD}/domains/parked
 for dom in *; do
 if [ "\${dom}" = '*' ]; then continue; fi
 /usr/bin/rm -f /var/named/db.\${dom}
@@ -64,14 +64,14 @@ EOS
 e="$?"; [[ "$e" = "0" ]] || exit "$e"
 /usr/bin/ssh -T -o StrictHostKeyChecking=yes ${NS2Name}.${RinkVerbTLD} <<EOS
 /usr/bin/mkdir -p /srv/sns/${namespace}-${VerbTLD}/domains/killed/parked /srv/sns/${namespace}-${VerbTLD}/domains/killed/served /srv/sns/killed/${timestamp}
-cd /srv/sns/pen-ink/domains/served
+cd /srv/sns/${namespace}-${VerbTLD}/domains/served
 for dom in *; do
 if [ "\${dom}" = '*' ]; then continue; fi
 /usr/bin/rm -f /var/named/db.\${dom}
 /usr/bin/mv /srv/sns/${namespace}-${VerbTLD}/domains/served/\${dom} /srv/sns/${namespace}-${VerbTLD}/domains/killed/served/
 /usr/bin/echo "rink-killed at ${timestamp}" >> /srv/sns/${namespace}-${VerbTLD}/domains/killed/served/\${dom}
 done
-cd /srv/sns/pen-ink/domains/parked
+cd /srv/sns/${namespace}-${VerbTLD}/domains/parked
 for dom in *; do
 if [ "\${dom}" = '*' ]; then continue; fi
 /usr/bin/rm -f /var/named/db.\${dom}
