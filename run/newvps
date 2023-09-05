@@ -151,10 +151,19 @@ firstIPv6PLACEHOLDER="$(/usr/bin/vultr-cli instance ipv6 list ${VultrInstanceID}
 /usr/bin/sleep 5
 
 ## Check the IPv4 (Default until set: 0.0.0.0)
+faillimit=0
 IPv4="$(/usr/bin/vultr-cli instance ipv4 list ${VultrInstanceID} | /usr/bin/grep main_ip | /usr/bin/sed 's/\s.*$//')"
 while [ "${IPv4}" = "0.0.0.0" ] || [ "${IPv4}" = "$firstIPv4PLACEHOLDER" ]; do
   IPv4="$(/usr/bin/vultr-cli instance ipv4 list ${VultrInstanceID} | /usr/bin/grep main_ip | /usr/bin/sed 's/\s.*$//')"
   /usr/bin/sleep 1
+  ### Fail proof
+  if [ "$faillimit" -gt "405" ]; then
+    /opt/rink/run/purgevps ${namespace} ${VerbTLD} ${vuser}
+    e="$?"; [[ "$e" = "0" ]] || exit "$e"
+    /usr/bin/echo "Awe, snap! Could not create ${namespace}.${VerbTLD} properly, likely due to brief backend down time. Try again now or within a few minutes."
+    exit 4
+  fi
+  ((faillimit++))
 done
 
 ## Check the IPv6 (Default until set is empty; a temp IPv6 is set when the final IPv4 is set, found with ${firstIPv6PLACEHOLDER} and ${secondIPv6PLACEHOLDER})
@@ -301,6 +310,9 @@ EOF
 
 ## Rebuild the ssh config to include both IPv4 and IPv6
 . /opt/rink/sshkey
+### Delete any pre-existing entry (shouldn't be needed, but to avoid redundancy)
+/usr/bin/sed -i "/${namespace}.${VerbTLD}.ssh/d" /root/.ssh/config
+### Add and create the new entry
 /usr/bin/echo "Include /opt/rink/conf/verbers/${namespace}.${VerbTLD}.ssh" >> /root/.ssh/config
 /usr/bin/cat <<EOF > /opt/rink/conf/verbers/${namespace}.${VerbTLD}.ssh
 Host ${namespace}.${VerbTLD}
@@ -326,6 +338,7 @@ EOF
 EOS
 sshresetstatus="$?"
 count=0
+faillimit=0
 while [ "$sshresetstatus" != "0" ]; do
   #/usr/bin/echo "newvps ssh-keygen loop reboot error: $sshresetstatus #DEBUG This echos a 255 while the server is still being prepared, use this for debugging only
   /usr/bin/echo "Waiting, then trying again..."
@@ -342,6 +355,14 @@ EOS
     count=0
   fi
   ((count++))
+  ### Fail proof
+  if [ "$faillimit" -gt "405" ]; then
+    /opt/rink/run/purgevps ${namespace} ${VerbTLD} ${vuser}
+    e="$?"; [[ "$e" = "0" ]] || exit "$e"
+    /usr/bin/echo "Awe, snap! Could not create ${namespace}.${VerbTLD} properly, likely due to brief backend down time. Try again now or within a few minutes."
+    exit 4
+  fi
+  ((faillimit++))
 done
 
 # Add the hashed key

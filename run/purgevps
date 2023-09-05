@@ -65,6 +65,12 @@ else
   /usr/bin/echo "Only .raw config file found..."
 fi
 
+# Verify that user matches user before proceeding
+if ! /usr/bin/grep -q "VerbUser=\"$vuser\"" "/opt/rink/conf/verbers/${namespace}.${VerbTLD}.vrb"; then
+  /usr/bin/echo "${namespace}.${VerbTLD} not owned by user ${vuser}! I quit."
+  exit 0
+fi
+
 # Get some basic information
 datestamp="$(/usr/bin/date +%Y-%m-%d_%T)"
 TempVultrInstanceID="$(/usr/bin/cat /opt/rink/conf/verbers/${namespace}.${VerbTLD}.raw | /usr/bin/grep ^ID | /usr/bin/sed s"/ID\t\t\t//")"
@@ -248,3 +254,4 @@ IPv6Exp=$(expand_ipv6 ${IPv6Raw})
 
 # Finish
 /usr/bin/echo "${namespace}.${VerbTLD} should be completely purged from the system. A purged record was kept."
+exit 0
