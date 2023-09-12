@@ -378,14 +378,8 @@ fi
 /usr/bin/ssh ${namespace}.${VerbTLD} "/opt/verb/serfs/inkdnsrefreshbind"
 
 # Rink user setup
-## Make this Verber look like it is pre-setup
-/usr/bin/ssh ${namespace}.${VerbTLD} "/usr/bin/cp -f /opt/verb/conf/servertldstatus /opt/verb/conf/servertldstatus286"
-/usr/bin/ssh ${namespace}.${VerbTLD} "/usr/bin/cp -f /opt/verb/conf/servernameip /opt/verb/conf/servernameip286"
 ## Create the actual rink keys and users
 /opt/rink/run/newverbrinkkeys ${namespace} ${VerbTLD} ${vuser}
-## Restore this Verber for post-setop (using a safe workflow)
-/usr/bin/ssh ${namespace}.${VerbTLD} "/usr/bin/rm -f /opt/verb/conf/servernameip && /usr/bin/mv /opt/verb/conf/servernameip286 /opt/verb/conf/servernameip"
-/usr/bin/ssh ${namespace}.${VerbTLD} "/usr/bin/rm -f /opt/verb/conf/servertldstatus && /usr/bin/mv /opt/verb/conf/servertldstatus286 /opt/verb/conf/servertldstatus"
 
 # Setup note
 /usr/bin/echo 'SetupVerber="DONE"' >> /opt/rink/conf/verbers/${namespace}.${VerbTLD}.vrb

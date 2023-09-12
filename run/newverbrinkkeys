@@ -53,7 +53,7 @@ fi
 # Setup on the controlled verber
 /usr/bin/ssh ${namespace}.${VerbTLD} "/usr/bin/ssh-keygen -t rsa -N '' -f /root/.ssh/Rink_${VerbTLD}_${namespace} -C Rink_${VerbTLD}_${namespace}"
 /usr/bin/ssh ${namespace}.${VerbTLD} /usr/bin/cat /root/.ssh/Rink_${VerbTLD}_${namespace}.pub > /opt/rink/tmp/Rink_${VerbTLD}_${namespace}.pub
-/usr/bin/ssh ${namespace}.${VerbTLD} /usr/bin/cat /opt/verb/conf/servertldstatus286 > /opt/rink/tmp/servertldstatus_${VerbTLD}_${namespace}
+/usr/bin/ssh ${namespace}.${VerbTLD} /usr/bin/cat /opt/verb/conf/servertldstatus > /opt/rink/tmp/servertldstatus_${VerbTLD}_${namespace}
 
 ## NS 1, NS 2, servernameip
 . /opt/rink/ns/${NewNameServersConfig}
@@ -97,8 +97,8 @@ EOF
 /usr/bin/chmod 600 /root/.ssh/ns1.ssh
 /usr/bin/chmod 600 /root/.ssh/ns2.ssh
 
-/usr/bin/sed -i '/RinkConfigured=.*/d' /opt/verb/conf/servernameip286
-/usr/bin/echo 'RinkConfigured="true"' >> /opt/verb/conf/servernameip286
+/usr/bin/sed -i '/RinkConfigured=.*/d' /opt/verb/conf/servernameip
+/usr/bin/echo 'RinkConfigured="true"' >> /opt/verb/conf/servernameip
 EOS
 
 # Setup on the NS nameservers
