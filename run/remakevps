@@ -1,0 +1,344 @@
+#!/bin/bash
+#inkVerbRunner! verb.ink
+
+# This makes a new VPS to replace an existing VPS made with the same name, importing all the old vapps, database, and verb configuration
+## Prerequisite: the old VPS must have a drive attached, which is used for the migration/rebuilding process
+## The old VPS must have been made with addvps and must retain many settings, but it can be a larger VPS size
+## A snapshot of the old VPS will be made before any changes go into effect
+## Once the new VPS is in place, the old VPS will be destroyed
+## The old snapshot will be billable to the customer until destroyed
+## LAEMP/LAMP/LEMP cannot be changed because it would involve a fundamental difference
+
+# How to use:
+## ./remakevps [verb-namespace] [tld] [user] [vultr-plan (1gb shortcut for lowest, 2gb shortcut for second-lowest: vc2-1c-2gb)]
+
+
+# Eg:
+## ./remakevps name ink someuser 1gb
+
+
+if [ -z "$5" ]; then
+  /usr/bin/echo "Needs namespace, TLD, user, plan, region, & snapshot arguments, I quit."
+  exit 0
+fi
+
+# Get our Rink-NS name settings
+. /opt/rink/rinknames
+
+namespace="$1"
+VerbTLD="$2"
+vuser="$3"
+vultrplan="$4"
+
+# Prepare
+. /opt/rink/conf/verbers/${namespace}.${VerbTLD}.vrb
+
+## Confirm $VerbUser = $vuser
+if ! grep -q "VerbUser=\"$vuser\"" "/opt/rink/conf/verbers/${namespace}.${VerbTLD}.vrb"; then
+  /usr/bin/echo "${namespace}.${VerbTLD} not owned by user ${vuser}! I quit."
+  exit 0
+fi
+## Update the verber (for current inklists, framework, version, etc, so the conf/ folder is current)
+/usr/bin/ssh ${namespace}.${VerbTLD} /opt/verb/serfs/updateverber
+## Confirm an SSD drive is attached
+/usr/bin/ssh -T ${namespace}.${VerbTLD} <<EOF
+# Make sure a drive is attached
+if [ ! -f "/opt/verb/conf/inkdrive/inkdriveinfo" ]; then
+  /usr/bin/echo "No drives attached, cannot remake!"
+  exit 8
+fi
+. /opt/verb/conf/inkdrive/inkdriveinfo
+if [ -n "${SSDdefault}" ]; then
+  if [ ! -f "/opt/verb/conf/inkdrive/ssd.${SSDdefault}" ]; then
+    /usr/bin/echo "SSD not properly attached, cannot remake!"
+    exit 6
+  fi
+  . /opt/verb/conf/inkdrive/ssd.${SSDdefault}
+  ssdMount="${Mount}"
+  if [ ! -e "/dev/${Device}" ]; then
+    /usr/bin/echo "Default SSD device not found!"
+    exit 6
+  fi
+  if [ ! -e "/mnt/${ssdMount}" ]; then
+    /usr/bin/echo "Default SSD is not mounted where it should be."
+    exit 6
+  fi
+elif [ -n "${HDDdefault}" ]; then
+  if [ ! -f "/opt/verb/conf/inkdrive/hdd.${HDDdefault}" ]; then
+    /usr/bin/echo "HDD not properly attached, cannot remake!"
+    exit 6
+  fi
+  . /opt/verb/conf/inkdrive/hdd.${HDDdefault}
+  hddMount="${Mount}"
+  if [ ! -e "/dev/${Device}" ]; then
+    /usr/bin/echo "Default HDD device not found!"
+    exit 6
+  fi
+  if [ ! -e "/mnt/${hddMount}" ]; then
+    /usr/bin/echo "Default HDD is not mounted where it should be."
+    exit 6
+  fi
+else
+  /usr/bin/echo "Drive config found, but still no drives attached, cannot remake!"
+  exit 8
+fi
+# Make sure www and vmail are mounted
+if [ -n "${ssdMount}" ] && [ -z "${hddMount}" ]; then
+  if [ "$(/usr/bin/readlink -f /srv/www)" != "/mnt/${ssdMount}/www/www" ]; then
+    /opt/verb/serfs/inkdrivesvc www
+    e="$?"; [[ "$e" = "0" ]] || exit "$e"
+  fi
+  if [ "$(/usr/bin/readlink -f /srv/vmail)" != "/mnt/${ssdMount}/vmail/vmail" ]; then
+    /opt/verb/serfs/inkdrivesvc vmail
+    e="$?"; [[ "$e" = "0" ]] || exit "$e"
+  fi
+elif [ -n "${hddMount}" ] && [ -z "${ssdMount}" ]; then
+  if [ "$(/usr/bin/readlink -f /srv/www)" != "/mnt/${hddMount}/www/www" ]; then
+    /opt/verb/serfs/inkdrivesvc www
+    e="$?"; [[ "$e" = "0" ]] || exit "$e"
+  fi
+  if [ "$(/usr/bin/readlink -f /srv/vmail)" != "/mnt/${hddMount}/vmail/vmail" ]; then
+    /opt/verb/serfs/inkdrivesvc vmail
+    e="$?"; [[ "$e" = "0" ]] || exit "$e"
+  fi
+elif [ -n "${hddMount}" ] && [ -n "${ssdMount}" ]; then
+  if [ "$(/usr/bin/readlink -f /srv/www)" != "/mnt/${ssdMount}/www/www" ] && [ "$(/usr/bin/readlink -f /srv/www)" != "/mnt/${hddMount}/www/www" ]; then
+    /opt/verb/serfs/inkdrivesvc www
+    e="$?"; [[ "$e" = "0" ]] || exit "$e"
+  fi
+  if [ "$(/usr/bin/readlink -f /srv/vmail)" != "/mnt/${ssdMount}/vmail/vmail" ] && [ "$(/usr/bin/readlink -f /srv/vmail)" != "/mnt/${hddMount}/vmail/vmail" ]; then
+    /opt/verb/serfs/inkdrivesvc vmail
+    e="$?"; [[ "$e" = "0" ]] || exit "$e"
+  fi
+fi
+# Confirm health of any InkDriveWP
+if [ -n "${InkDriveWP}" ]; then
+  cd /srv/www/vapps/ || exit 6
+  for wpvapp in wp.*; do
+    if [ "${wpvapp}" = 'wp.*' ]; then continue; fi
+    if [ $(/usr/bin/readlink -f /srv/www/vapps/${wpvapp}/wp-content) != "/mnt/${InkDriveWP}/${wpvapp}/wp-content" ]; then
+      /usr/bin/echo "The WordPress wp-content folder for ${wpvapp} should be mounted to the ${InkDriveWP} drive, but it can't be found. Remaking would be detrimental!"
+    fi
+  done
+fi
+# Confirm health of any InkDriveNC
+if [ -n "${InkDriveNC}" ] && [ $(/usr/bin/readlink -f /srv/www/vapps/nextcloud/data) != "/mnt/${InkDriveNC}/nextcloud/data" ]; then
+  /usr/bin/echo "Nextcloud's data folder should be mounted to the ${InkDriveNC} drive, but it can't be found. Remaking would be detrimental!"
+fi
+# Copy inkCert & Letsencrypt certs
+
+## TODO
+
+# Copy any MySQL folder
+if [ -d "/var/lib/mysql" ]; then
+  /opt/verb/servs/inkdrivesvc mysql
+  e="$?"; [[ "$e" = "0" ]] || exit "$e"
+fi
+# Copy any PostgreSQL folder
+if [ -d "/var/lib/postgres" ]; then
+  /opt/verb/servs/inkdrivesvc postgres
+  e="$?"; [[ "$e" = "0" ]] || exit "$e"
+fi
+exit 0  
+EOF
+if [ "$?" != "0" ]; then
+  /usr/bin/echo "Not ready to remake. First get SSD attched and mounted, then try again."
+  exit 8
+fi
+
+
+## Copy the verb folder to the drive (using /opt/verb/conf/serversetup for setup again)
+
+## Copy all vital files to drive:
+### inkCert /etc/
+### Databases /var/ (check if postgres is installed, needs research)
+### cron.d tasks /etc/
+
+## Disconnect the old drives from the VPS
+/opt/rink/run/listalldrives ${namespace} ${VerbTLD} ${vuser}
+e="$?"; [[ "$e" = "0" ]] || exit "$e"
+. /opt/rink/conf/drives/drives.${namespace}.${VerbTLD}.${vuser}.list
+/usr/bin/vultr-cli block-storage detatch ${vdbDriveID}
+if [ -n "${vdcDriveID}" ]; then
+  /usr/bin/vultr-cli block-storage detatch ${vdcDriveID}
+  e="$?"; [[ "$e" = "0" ]] || exit "$e"
+fi
+if [ -n "${vddDriveID}" ]; then
+  /usr/bin/vultr-cli block-storage detatch ${vddDriveID}
+  e="$?"; [[ "$e" = "0" ]] || exit "$e"
+fi
+if [ -n "${vdeDriveID}" ]; then
+  /usr/bin/vultr-cli block-storage detatch ${vdeDriveID}
+  e="$?"; [[ "$e" = "0" ]] || exit "$e"
+fi
+if [ -n "${vdfDriveID}" ]; then
+  /usr/bin/vultr-cli block-storage detatch ${vdfDriveID}
+  e="$?"; [[ "$e" = "0" ]] || exit "$e"
+fi
+if [ -n "${vdgDriveID}" ]; then
+  /usr/bin/vultr-cli block-storage detatch ${vdgDriveID}
+  e="$?"; [[ "$e" = "0" ]] || exit "$e"
+fi
+if [ -n "${vdhDriveID}" ]; then
+  /usr/bin/vultr-cli block-storage detatch ${vdhDriveID}
+  e="$?"; [[ "$e" = "0" ]] || exit "$e"
+fi
+
+## Snapshot of old VPS
+### Stop server
+  ssh ${namespace}.${VerbTLD} poweroff 
+### Create snapshot
+  ${VultrInstanceID}
+### Output to new .raw snapshot config
+
+## Move rink configs to temporary names
+
+# Create new VPS with same old name
+
+  ## Create the VPS
+  if [ ! -f "/opt/rink/conf/verbers/${namespace}.${VerbTLD}.raw" ]; then
+    /opt/rink/run/newvps "$namespace" "$VerbTLD" "$vuser" "$vultrplan" "$snapnick" "$VultrRegion" "$TimeZone" "$hostname"
+    e="$?"; [[ "$e" = "0" ]] || exit "$e"
+  fi
+
+  ## Check if finished right
+  if [ -f "/opt/rink/conf/verbers/${namespace}.${VerbTLD}.raw" ]; then
+    if [ -f "/opt/rink/conf/verbers/${namespace}.${VerbTLD}.vrb" ]; then
+      . /opt/rink/conf/verbers/${namespace}.${VerbTLD}.vrb
+      if [ -n "${OverrideVerbNameServersConfig}" ]; then VerbNameServersConfig="${OverrideVerbNameServersConfig}"; fi
+      . /opt/rink/ns/${VerbNameServersConfig}
+    else
+      VultrInstanceID="$(/usr/bin/cat /opt/rink/conf/verbers/${namespace}.${VerbTLD}.raw | /usr/bin/grep ^ID | /usr/bin/sed s"/ID\t\t\t//")"
+    fi
+    if ! /usr/bin/grep -q ^VerbIPv4 /opt/rink/conf/verbers/${namespace}.${VerbTLD}.vrb || ! /usr/bin/grep -q "${VerbIPv4}" /opt/rink/conf/verbers/${namespace}.${VerbTLD}.ssh; then
+      /usr/bin/echo "Verber was not created correctly. Run this again to try again."
+      /usr/bin/echo "Waiting to delete instance..."
+      /opt/rink/run/waitvpson ${namespace} ${VerbTLD}
+      /usr/bin/vultr-cli instance delete ${VultrInstanceID}
+      datestamp="$(/usr/bin/date +%Y-%m-%d_%T)"
+      /usr/bin/mv /opt/rink/conf/verbers/${namespace}.${VerbTLD}.vrb /opt/rink/conf/verbers.destroyed/${vuser}.${namespace}.${VerbTLD}.${datestamp}.vrb
+      /usr/bin/mv /opt/rink/conf/verbers/${namespace}.${VerbTLD}.raw /opt/rink/conf/verbers.destroyed/${vuser}.${namespace}.${VerbTLD}.${datestamp}.raw
+      /usr/bin/rm -f /opt/rink/conf/verbers/${namespace}.${VerbTLD}.ssh
+      /usr/bin/sed -i "/${namespace}.${VerbTLD}.ssh/d" /root/.ssh/config
+      exit 0
+    fi
+  else
+    /usr/bin/echo "Verber did not produce raw output correctly. Run this again to try again."
+    exit 0
+  fi
+
+  ## Wait for powerup (waiting for restart from newvps) and for a bonafide response
+  /opt/rink/run/waitvpson ${namespace} ${VerbTLD}
+  /opt/rink/run/waitvpsanswer ${namespace} ${VerbTLD}
+
+
+
+
+
+
+# Pull runners from killvps to remove all old accounts on NS Rinks
+
+# Prepare to run setup again
+## Mount the old drive to the new VPS
+### Re-attatch all drives based on the drive.USER.list config to a verber in order of vdb vdc vdd etc
+
+### Replug all drives
+/usr/bin/ssh ${namespace}.${VerbTLD} /opt/verb/serfs/inkdrivereplug
+
+## Copy config folders from old verb folder into new
+### conf/ (this should be sufficient, do an audit on setup and make sure the verb framework agrees with copying conf/ this way)
+### NOTE verb/inst/ is still in place and ready to run setup
+## Move SQL, inkCert, and cron.d into /var/ and /etc/
+
+## Rebuild setup variables (for below) from $setupSettings with new IPs from /opt/verb/conf/serversetup
+
+## NOTE now setup should simply replace old IP addresses and setup the rest of the verber as normal
+
+
+
+
+  # Create new SSH keys on the new verber and install their pub keys on the NS servers
+  ## This must go before verb/inst/setup or the server will deny access in post-setup ssh calls
+  if ! grep -q '^RinkKeys="DONE"' "/opt/rink/conf/verbers/${namespace}.${VerbTLD}.vrb"; then
+    /opt/rink/run/newverbrinkkeys ${namespace} ${VerbTLD} ${vuser}
+    e="$?"; [[ "$e" = "0" ]] || exit "$e"
+  fi
+
+
+    # Turn off certain verb domains?
+    if [ -n "$verboff" ] && [ "$verboff" = "true" ]; then
+      for $vdom in $@; do
+        /usr/bin/ssh ${namespace}.${VerbTLD} /opt/verb/inst/preverboff $vdom
+      done
+    fi
+
+  # Setup
+  . /opt/rink/conf/verbers/${namespace}.${VerbTLD}.vrb
+  if [ -n "${OverrideVerbNameServersConfig}" ]; then VerbNameServersConfig="${OverrideVerbNameServersConfig}"; fi
+  . /opt/rink/ns/${VerbNameServersConfig}
+  if ! grep -q '^SetupVerber="DONE"' "/opt/rink/conf/verbers/${namespace}.${VerbTLD}.vrb"; then
+
+    ## Site URIlist
+    . /opt/verb/conf/siteurilist # Only for $hostURI of this rink
+    
+    ## Domain mod? (ALPHA)
+    if [ -f "/opt/verb/inst/domain.mod.conf" ]; then #DEV the domain mod has not yet been tested for Rink management
+      . /opt/verb/inst/domain.mod.conf
+      /usr/bin/ssh ${namespace}.${VerbTLD} /opt/verb/serfs/make-dommod ${VerbHostID} ${DModBase}
+    fi
+
+    ## Permanently set to current nameservers
+    /usr/bin/cat /opt/rink/inkdnsnameservers | /usr/bin/ssh ${namespace}.${VerbTLD} "/usr/bin/cat > /opt/verb/conf/inklists/inkdnsnameservers"
+    /usr/bin/ssh ${namespace}.${VerbTLD} /usr/bin/echo 'CustomNS="true"' >> /opt/verb/conf/inklists/inkdnsnameservers
+
+    ## Run setup
+    /usr/bin/ssh ${namespace}.${VerbTLD} /opt/verb/serfs/setup ${namespace} ink email vip ${VerbHostID} ${VerbIPv4} ${VerbIPv6} cb@${RinkDomain} 100 1000 ${TimeZone} ${Port} boss "$(/usr/bin/pwgen -s -1 16)" ${UpdateRepo} ${UpdateOrg}
+    e="$?"; [[ "$e" = "0" ]] || exit "$e"
+    if [ "$?" = "0" ]; then
+      /usr/bin/echo 'SetupVerber="DONE"' >> /opt/rink/conf/verbers/${namespace}.${VerbTLD}.vrb
+    fi
+  fi
+
+  # Wait for sshd to reload (from the end of setup)
+  /usr/bin/sleep 3
+  /opt/rink/run/waitvpsanswer ${namespace} ${VerbTLD}
+
+
+
+  # Update to latest NS servers
+  if ! grep -q 'RinkKeys="DONE"' "/opt/rink/conf/verbers/${namespace}.${VerbTLD}.vrb"; then
+    /usr/bin/ssh ${namespace}.${VerbTLD} /opt/verb/serfs/rinkupdatekeys
+    e="$?"; [[ "$e" = "0" ]] || exit "$e"
+  fi
+  if ! grep -q 'RinkVerbsNSListed="DONE"' "/opt/rink/conf/verbers/${namespace}.${VerbTLD}.vrb"; then
+    /usr/bin/ssh ${namespace}.${VerbTLD} /opt/verb/serfs/rinkupdateallverbs
+    e="$?"; [[ "$e" = "0" ]] || exit "$e"
+    if [ "$?" = "0" ]; then
+      /usr/bin/echo 'RinkVerbsNSListed="DONE"' >> /opt/rink/conf/verbers/${namespace}.${VerbTLD}.vrb
+    fi
+  fi
+
+  # Verber info
+  /usr/bin/echo "# servernameip" > /opt/rink/conf/verbers/${namespace}.${VerbTLD}.srv
+  /usr/bin/ssh ${namespace}.${VerbTLD} "/usr/bin/cat /opt/verb/conf/servernameip" >> /opt/rink/conf/verbers/${namespace}.${VerbTLD}.srv
+  /usr/bin/echo "# siteurlist" >> /opt/rink/conf/verbers/${namespace}.${VerbTLD}.srv
+  /usr/bin/ssh ${namespace}.${VerbTLD} "/usr/bin/cat /opt/verb/conf/siteurilist" >> /opt/rink/conf/verbers/${namespace}.${VerbTLD}.srv
+
+  # PTR records with the hosting service
+  . /opt/rink/conf/verbers/${namespace}.${VerbTLD}.vrb
+  . /opt/rink/conf/verbers/${namespace}.${VerbTLD}.srv
+  /usr/bin/vultr-cli instance reverse-dns set-ipv4 "${VultrInstanceID}" -e "${hostURI}" -i "${ServerIPv4}"
+  /usr/bin/vultr-cli instance reverse-dns set-ipv6 "${VultrInstanceID}" -e "${hostURI}" -i "${ServerExpIPv6}"
+
+  # Restart the new Verber
+  /usr/bin/ssh ${namespace}.${VerbTLD} /usr/bin/reboot
+
+  # Refresh Bind on NS servers
+  /usr/bin/echo "Refreshing nameservers..."
+  /opt/rink/run/waitvpson ${namespace} ${VerbTLD}
+  /opt/rink/run/waitvpsanswer ${namespace} ${VerbTLD}
+  /usr/bin/ssh ${NS1Name}.${RinkVerbTLD} /opt/verb/serfs/inkdnsrefreshbind
+  /usr/bin/ssh ${NS2Name}.${RinkVerbTLD} /opt/verb/serfs/inkdnsrefreshbind
+
+
+# Finish

@@ -1,0 +1,64 @@
+#!/bin/bash
+#inkVerbRunner! verb.ink
+
+# This is the master command to list all drives attached to a VPS, listing their IDs in a .list file
+
+# How to use:
+## ./listalldrives [verb-namespace] [tld] [user]
+
+# Eg:
+## ./listalldrives name ink someuser
+
+# Get our Rink-NS name settings
+. /opt/rink/rinknames
+
+namespace="$1"
+VerbTLD="$2"
+vuser="$3"
+
+
+# Credential checks
+if [ -z "${6}" ]; then
+  /usr/bin/echo "Enter all credentials; read instructions."
+  exit 5
+fi
+
+if [ ! -f "/opt/rink/conf/verbers/${namespace}.${VerbTLD}.vrb" ]; then
+  /usr/bin/echo "${namespace}.${VerbTLD} does not exist! I quit."
+  exit 5
+fi
+
+# Check verber config
+if ! grep -q "VerbUser=\"${vuser}\"" "/opt/rink/conf/verbers/${namespace}.${VerbTLD}.vrb"; then
+  /usr/bin/echo "${namespace}.${VerbTLD} not owned by user ${vuser}! I quit."
+  exit 5
+else
+  . /opt/rink/conf/verbers/${namespace}.${VerbTLD}.vrb
+fi
+
+cd /opt/rink/conf/drives || exit 6
+
+for driveConf in *.${vuser}.drive; do
+  if [ "${driveConf}" = "*.${vuser}.drive" ]; then continue; fi
+  . /opt/rink/conf/drives/${driveConf}
+  if [ "DriveVerber" = "${namespace}.${VerbTLD}" ]; then
+    /usr/bin/echo "${DriveDev}DriveID=\"${DriveID}\"" >> /opt/rink/tmp/drives.${namespace}.${VerbTLD}.${vuser}.list
+    /usr/bin/echo "${DriveDev}DriveNickName=\"${DriveNickName}\"" >> /opt/rink/tmp/drives.${namespace}.${VerbTLD}.${vuser}.list
+  fi
+done
+
+# Order the resulting config
+/usr/bin/sort /opt/rink/tmp/drives.${namespace}.${VerbTLD}.${vuser}.list > /opt/rink/conf/drives/drives.${namespace}.${VerbTLD}.${vuser}.list
+if [ ! -f "/opt/rink/conf/drives/drives.${namespace}.${VerbTLD}.${vuser}.list" ]; then
+  /usr/bin/echo "File not created; something is wrong."
+  exit 6
+fi
+
+# Cleanup
+/usr/bin/rm -f /opt/rink/tmp/drives.${namespace}.${VerbTLD}.${vuser}.list
+
+# Finished
+/usr/bin/echo "Drive list for ${namespace}.${VerbTLD} complete."
+
+# Mount the drive on the verber
+/usr/bin/ssh ${namespace}.${VerbTLD} /opt/verb/serfs/inkdriveadd ${DriveDev} ${drivename} ${drivetype}
