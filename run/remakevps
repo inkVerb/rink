@@ -241,6 +241,34 @@ fi
 # Prepare to run setup again
 ## Mount the old drive to the new VPS
 ### Re-attatch all drives based on the drive.USER.list config to a verber in order of vdb vdc vdd etc
+. /opt/rink/conf/drives/drives.${namespace}.${VerbTLD}.${vuser}.list # redundant
+ /opt/rink/run/replugdrive
+
+  /opt/rink/run/replugdrive ${namespace} ${VerbTLD} ${vuser} ${vdbDriveNickName}
+if [ -n "${vdcDriveID}" ]; then
+   /opt/rink/run/replugdrive ${namespace} ${VerbTLD} ${vuser} ${vdcDriveNickName}
+  e="$?"; [[ "$e" = "0" ]] || exit "$e"
+fi
+if [ -n "${vddDriveID}" ]; then
+   /opt/rink/run/replugdrive ${namespace} ${VerbTLD} ${vuser} ${vddDriveNickName}
+  e="$?"; [[ "$e" = "0" ]] || exit "$e"
+fi
+if [ -n "${vdeDriveID}" ]; then
+   /opt/rink/run/replugdrive ${namespace} ${VerbTLD} ${vuser} ${vdeDriveNickName}
+  e="$?"; [[ "$e" = "0" ]] || exit "$e"
+fi
+if [ -n "${vdfDriveID}" ]; then
+   /opt/rink/run/replugdrive ${namespace} ${VerbTLD} ${vuser} ${vdfDriveNickName}
+  e="$?"; [[ "$e" = "0" ]] || exit "$e"
+fi
+if [ -n "${vdgDriveID}" ]; then
+   /opt/rink/run/replugdrive ${namespace} ${VerbTLD} ${vuser} ${vdgDriveNickName}
+  e="$?"; [[ "$e" = "0" ]] || exit "$e"
+fi
+if [ -n "${vdhDriveID}" ]; then
+   /opt/rink/run/replugdrive ${namespace} ${VerbTLD} ${vuser} ${vdhDriveNickName}
+  e="$?"; [[ "$e" = "0" ]] || exit "$e"
+fi
 
 ### Replug all drives
 /usr/bin/ssh ${namespace}.${VerbTLD} /opt/verb/serfs/inkdrivereplug
