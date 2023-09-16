@@ -29,6 +29,7 @@ namespace="$1"
 VerbTLD="$2"
 vuser="$3"
 vultrplan="$4"
+snapnick="$5"
 
 # Prepare
 . /opt/rink/conf/verbers/${namespace}.${VerbTLD}.vrb
@@ -40,7 +41,7 @@ if ! grep -q "VerbUser=\"$vuser\"" "/opt/rink/conf/verbers/${namespace}.${VerbTL
 fi
 ## Update the verber (for current inklists, framework, version, etc, so the conf/ folder is current)
 /usr/bin/ssh ${namespace}.${VerbTLD} /opt/verb/serfs/updateverber
-## Confirm an SSD drive is attached
+## Confirm a drive is attached
 /usr/bin/ssh -T ${namespace}.${VerbTLD} <<EOF
 # Make sure a drive is attached
 if [ ! -f "/opt/verb/conf/inkdrive/inkdriveinfo" ]; then
@@ -48,6 +49,7 @@ if [ ! -f "/opt/verb/conf/inkdrive/inkdriveinfo" ]; then
   exit 8
 fi
 . /opt/verb/conf/inkdrive/inkdriveinfo
+## Verify SSH
 if [ -n "${SSDdefault}" ]; then
   if [ ! -f "/opt/verb/conf/inkdrive/ssd.${SSDdefault}" ]; then
     /usr/bin/echo "SSD not properly attached, cannot remake!"
@@ -63,7 +65,10 @@ if [ -n "${SSDdefault}" ]; then
     /usr/bin/echo "Default SSD is not mounted where it should be."
     exit 6
   fi
-elif [ -n "${HDDdefault}" ]; then
+  DriveDefault="${SSDdefault}" # HDD has priority over SSD, but we use this later for general copies
+fi
+## Verify HDD
+if [ -n "${HDDdefault}" ]; then
   if [ ! -f "/opt/verb/conf/inkdrive/hdd.${HDDdefault}" ]; then
     /usr/bin/echo "HDD not properly attached, cannot remake!"
     exit 6
@@ -78,11 +83,15 @@ elif [ -n "${HDDdefault}" ]; then
     /usr/bin/echo "Default HDD is not mounted where it should be."
     exit 6
   fi
-else
+  DriveDefault="${HDDdefault}" # HDD has priority over SSD, but we use this later for general copies
+fi
+## Neither?
+if [ -z "${SSDdefault}" ] && [ -z "${HDDdefault}" ]; then
   /usr/bin/echo "Drive config found, but still no drives attached, cannot remake!"
   exit 8
 fi
-# Make sure www and vmail are mounted
+
+# Ensure www and vmail are mounted
 if [ -n "${ssdMount}" ] && [ -z "${hddMount}" ]; then
   if [ "$(/usr/bin/readlink -f /srv/www)" != "/mnt/${ssdMount}/www/www" ]; then
     /opt/verb/serfs/inkdrivesvc www
@@ -111,34 +120,49 @@ elif [ -n "${hddMount}" ] && [ -n "${ssdMount}" ]; then
     e="$?"; [[ "$e" = "0" ]] || exit "$e"
   fi
 fi
-# Confirm health of any InkDriveWP
+
+# Confirm health of any InkDriveWP sites
 if [ -n "${InkDriveWP}" ]; then
   cd /srv/www/vapps/ || exit 6
   for wpvapp in wp.*; do
     if [ "${wpvapp}" = 'wp.*' ]; then continue; fi
     if [ $(/usr/bin/readlink -f /srv/www/vapps/${wpvapp}/wp-content) != "/mnt/${InkDriveWP}/${wpvapp}/wp-content" ]; then
       /usr/bin/echo "The WordPress wp-content folder for ${wpvapp} should be mounted to the ${InkDriveWP} drive, but it can't be found. Remaking would be detrimental!"
+      exit 6
     fi
   done
 fi
 # Confirm health of any InkDriveNC
 if [ -n "${InkDriveNC}" ] && [ $(/usr/bin/readlink -f /srv/www/vapps/nextcloud/data) != "/mnt/${InkDriveNC}/nextcloud/data" ]; then
   /usr/bin/echo "Nextcloud's data folder should be mounted to the ${InkDriveNC} drive, but it can't be found. Remaking would be detrimental!"
+  exit 6
 fi
-# Copy inkCert & Letsencrypt certs
 
-## TODO
+# Cron
+/usr/bin/cp -r /etc/cron.d /mnt/${DriveDefault}/
+e="$?"; [[ "$e" = "0" ]] || exit "$e"
 
-# Copy any MySQL folder
+# Verb folder
+/usr/bin/tar c /opt/verb | xz > /opt/verb.txz
+/usr/bin/tar c /opt/verb/conf/inkdrive | xz > /opt/inkdrive.txz
+/usr/bin/cp /opt/verb.txz /mnt/${DriveDefault}/
+e="$?"; [[ "$e" = "0" ]] || exit "$e"
+
+# inkCert & Letsencrypt
+/opt/verb/servs/inkdriveinkcert on
+
+# SQL
+## Copy any MySQL folder
 if [ -d "/var/lib/mysql" ]; then
   /opt/verb/servs/inkdrivesvc mysql
   e="$?"; [[ "$e" = "0" ]] || exit "$e"
 fi
-# Copy any PostgreSQL folder
+## Copy any PostgreSQL folder
 if [ -d "/var/lib/postgres" ]; then
   /opt/verb/servs/inkdrivesvc postgres
   e="$?"; [[ "$e" = "0" ]] || exit "$e"
 fi
+
 exit 0  
 EOF
 if [ "$?" != "0" ]; then
@@ -147,57 +171,74 @@ if [ "$?" != "0" ]; then
 fi
 
 
-## Copy the verb folder to the drive (using /opt/verb/conf/serversetup for setup again)
 
-## Copy all vital files to drive:
-### inkCert /etc/
-### Databases /var/ (check if postgres is installed, needs research)
-### cron.d tasks /etc/
+##DEV
+## Make a Rink backup of verb/conf/inkdrive so we can restore and run serfs/inkdrivereplugall later
+/usr/bin/mkdir -p /opt/rink/conf/verbers/remake.${namespace}.${VerbTLD}.${vuser}
+/usr/bin/scp ${namespace}.${VerbTLD}:/opt/verb/conf/serversetup /opt/rink/conf/verbers/remake.${namespace}.${VerbTLD}.${vuser}/
+/usr/bin/scp ${namespace}.${VerbTLD}:/opt/inkdrive.txz /opt/rink/conf/verbers/remake.${namespace}.${VerbTLD}.${vuser}/
+/usr/bin/mv /opt/rink/conf/verbers/${namespace}.${VerbTLD}.* /opt/rink/conf/verbers/remake.${namespace}.${VerbTLD}.${vuser}/
+cd /opt/rink/conf/verbers/remake.${namespace}.${VerbTLD}.${vuser}/ || exit 6
+/usr/bin/tar xf inkdrive.txz
+e="$?"; [[ "$e" = "0" ]] || exit "$e"
+/usr/bin/rm /opt/rink/conf/verbers/remake.${namespace}.${VerbTLD}.${vuser}/inkdrive.txz
+. /opt/rink/conf/verbers/remake.${namespace}.${VerbTLD}.${vuser}/${namespace}.${VerbTLD}.vrb
+. /opt/rink/conf/verbers/remake.${namespace}.${VerbTLD}.${vuser}/serversetup
+VerbRegion=${VerbRegion} # from .vrb file
+TimeZone=${phptimecity286}
+hostname=${host286}
+
 
 ## Disconnect the old drives from the VPS
 /opt/rink/run/listalldrives ${namespace} ${VerbTLD} ${vuser}
 e="$?"; [[ "$e" = "0" ]] || exit "$e"
-. /opt/rink/conf/drives/drives.${namespace}.${VerbTLD}.${vuser}.list
-/usr/bin/vultr-cli block-storage detatch ${vdbDriveID}
+/usr/bin/mv /opt/rink/conf/drives/drives.${namespace}.${VerbTLD}.${vuser}.list /opt/rink/conf/verbers/remake.${namespace}.${VerbTLD}.${vuser}/
+. /opt/rink/conf/verbers/remake.${namespace}.${VerbTLD}.${vuser}/drives.${namespace}.${VerbTLD}.${vuser}.list
+/usr/bin/vultr-cli bs detatch ${vdbDriveID}
+e="$?"; [[ "$e" = "0" ]] || exit "$e"
 if [ -n "${vdcDriveID}" ]; then
-  /usr/bin/vultr-cli block-storage detatch ${vdcDriveID}
+  /usr/bin/vultr-cli bs detatch ${vdcDriveID}
   e="$?"; [[ "$e" = "0" ]] || exit "$e"
 fi
 if [ -n "${vddDriveID}" ]; then
-  /usr/bin/vultr-cli block-storage detatch ${vddDriveID}
+  /usr/bin/vultr-cli bs detatch ${vddDriveID}
   e="$?"; [[ "$e" = "0" ]] || exit "$e"
 fi
 if [ -n "${vdeDriveID}" ]; then
-  /usr/bin/vultr-cli block-storage detatch ${vdeDriveID}
+  /usr/bin/vultr-cli bs detatch ${vdeDriveID}
   e="$?"; [[ "$e" = "0" ]] || exit "$e"
 fi
 if [ -n "${vdfDriveID}" ]; then
-  /usr/bin/vultr-cli block-storage detatch ${vdfDriveID}
+  /usr/bin/vultr-cli bs detatch ${vdfDriveID}
   e="$?"; [[ "$e" = "0" ]] || exit "$e"
 fi
 if [ -n "${vdgDriveID}" ]; then
-  /usr/bin/vultr-cli block-storage detatch ${vdgDriveID}
+  /usr/bin/vultr-cli bs detatch ${vdgDriveID}
   e="$?"; [[ "$e" = "0" ]] || exit "$e"
 fi
 if [ -n "${vdhDriveID}" ]; then
-  /usr/bin/vultr-cli block-storage detatch ${vdhDriveID}
+  /usr/bin/vultr-cli bs detatch ${vdhDriveID}
   e="$?"; [[ "$e" = "0" ]] || exit "$e"
 fi
 
 ## Snapshot of old VPS
 ### Stop server
-  ssh ${namespace}.${VerbTLD} poweroff 
+/usr/bin/ssh ${namespace}.${VerbTLD} poweroff 
 ### Create snapshot
   ${VultrInstanceID}
-### Output to new .raw snapshot config
+### Output to new .raw snapshot config, notable in our progress tracker
 
-## Move rink configs to temporary names
+
+
+## From our rebuild-progress files, we must assign these variables for newvps: $VerbRegion $TimeZone $hostname
+
+
 
 # Create new VPS with same old name
 
   ## Create the VPS
   if [ ! -f "/opt/rink/conf/verbers/${namespace}.${VerbTLD}.raw" ]; then
-    /opt/rink/run/newvps "$namespace" "$VerbTLD" "$vuser" "$vultrplan" "$snapnick" "$VultrRegion" "$TimeZone" "$hostname"
+    /opt/rink/run/newvps "$namespace" "$VerbTLD" "$vuser" "$vultrplan" "$snapnick" "$VerbRegion" "$TimeZone" "$hostname"
     e="$?"; [[ "$e" = "0" ]] || exit "$e"
   fi
 
@@ -238,40 +279,42 @@ fi
 
 # Pull runners from killvps to remove all old accounts on NS Rinks
 
+
 # Prepare to run setup again
 ## Mount the old drive to the new VPS
 ### Re-attatch all drives based on the drive.USER.list config to a verber in order of vdb vdc vdd etc
-. /opt/rink/conf/drives/drives.${namespace}.${VerbTLD}.${vuser}.list # redundant
- /opt/rink/run/replugdrive
-
-  /opt/rink/run/replugdrive ${namespace} ${VerbTLD} ${vuser} ${vdbDriveNickName}
+. /opt/rink/conf/verbers/remake.${namespace}.${VerbTLD}.${vuser}/drives.${namespace}.${VerbTLD}.${vuser}.list # redundant
+/usr/bin/vultr-cli bs a ${vdbDriveID}
+e="$?"; [[ "$e" = "0" ]] || exit "$e"
 if [ -n "${vdcDriveID}" ]; then
-   /opt/rink/run/replugdrive ${namespace} ${VerbTLD} ${vuser} ${vdcDriveNickName}
+  /usr/bin/vultr-cli bs a ${vdcDriveID}
   e="$?"; [[ "$e" = "0" ]] || exit "$e"
 fi
 if [ -n "${vddDriveID}" ]; then
-   /opt/rink/run/replugdrive ${namespace} ${VerbTLD} ${vuser} ${vddDriveNickName}
+  /usr/bin/vultr-cli bs a ${vddDriveID}
   e="$?"; [[ "$e" = "0" ]] || exit "$e"
 fi
 if [ -n "${vdeDriveID}" ]; then
-   /opt/rink/run/replugdrive ${namespace} ${VerbTLD} ${vuser} ${vdeDriveNickName}
+  /usr/bin/vultr-cli bs a ${vdeDriveID}
   e="$?"; [[ "$e" = "0" ]] || exit "$e"
 fi
 if [ -n "${vdfDriveID}" ]; then
-   /opt/rink/run/replugdrive ${namespace} ${VerbTLD} ${vuser} ${vdfDriveNickName}
+  /usr/bin/vultr-cli bs a ${vdfDriveID}
   e="$?"; [[ "$e" = "0" ]] || exit "$e"
 fi
 if [ -n "${vdgDriveID}" ]; then
-   /opt/rink/run/replugdrive ${namespace} ${VerbTLD} ${vuser} ${vdgDriveNickName}
+  /usr/bin/vultr-cli bs a ${vdgDriveID}
   e="$?"; [[ "$e" = "0" ]] || exit "$e"
 fi
 if [ -n "${vdhDriveID}" ]; then
-   /opt/rink/run/replugdrive ${namespace} ${VerbTLD} ${vuser} ${vdhDriveNickName}
+  /usr/bin/vultr-cli bs a ${vdhDriveID}
   e="$?"; [[ "$e" = "0" ]] || exit "$e"
 fi
 
+###DEV get verb/conf/inkdrive into place on the new verber so the next command can work:
 ### Replug all drives
-/usr/bin/ssh ${namespace}.${VerbTLD} /opt/verb/serfs/inkdrivereplug
+/usr/bin/ssh ${namespace}.${VerbTLD} /opt/verb/serfs/inkdrivereplugall
+
 
 ## Copy config folders from old verb folder into new
 ### conf/ (this should be sufficient, do an audit on setup and make sure the verb framework agrees with copying conf/ this way)
@@ -279,6 +322,8 @@ fi
 ## Move SQL, inkCert, and cron.d into /var/ and /etc/
 
 ## Rebuild setup variables (for below) from $setupSettings with new IPs from /opt/verb/conf/serversetup
+
+
 
 ## NOTE now setup should simply replace old IP addresses and setup the rest of the verber as normal
 
