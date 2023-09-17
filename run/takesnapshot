@@ -1,0 +1,103 @@
+#!/bin/bash
+#inkVerbRunner! verb.ink
+
+# This powers off a VPS and takes a snapshot based on name, tld, and user
+## This is used by remakevps, but also can be used by itself
+## There are nickname and no-restart options
+
+
+# How to use:
+## ./takesnapshot [verb-namespace] [tld] [user] [nickname - optional] ['nostart' - optional: don't restart after snapshot complete (when used by remakevps)]
+
+# Eg:
+## ./takesnapshot name ink john # nickname will be timestamp
+## ./takesnapshot name ink john mynickname
+## ./takesnapshot name ink john mynickname nostart
+
+
+# Check arguments
+if [ -z "$3" ]; then
+  /usr/bin/echo "Needs namespace, TLD & user arguments, plus optional nickname, I quit."
+  exit 0
+fi
+
+# Have the datestamp for later use
+datestamp="$(/usr/bin/date +%Y-%m-%d_%T)"
+
+# Defaults
+. /opt/rink/rinknames
+
+namespace="$1"
+VerbTLD="$2"
+vuser="$3"
+if [ -z "$4" ]; then
+  nickname="${datestamp}"
+else
+  nickname="$4"
+fi
+if [ -n "$5" ] && [ "$5" = "nostart" ]; then
+  nostart="true"
+else
+  nostart="false"
+fi
+
+# Prepare
+. /opt/rink/conf/verbers/${namespace}.${VerbTLD}.vrb
+
+# Confirm $VerbUser = $vuser
+if ! /usr/bin/grep -q "VerbUser=\"${vuser}\"" "/opt/rink/conf/verbers/${namespace}.${VerbTLD}.vrb"; then
+  /usr/bin/echo "${namespace}.${VerbTLD} not owned by user ${vuser}! I quit."
+  exit 0
+fi
+
+# Check that the VPS exists, then poweroff
+if /usr/bin/vultr-cli instance get ${VultrInstanceID}; then
+  /usr/bin/ssh ${namespace}.${VerbTLD} poweroff
+  # If SSH doesn't respond, force stop
+  if [ "$?" != "0" ]; then
+    /usr/bin/vultr-cli instance stop ${VultrInstanceID}
+  fi
+else
+  /usr/bin/echo "VPS listed, but doesn't exist; something is wrong."
+  exit 6
+fi
+
+/usr/bin/vultr-cli sn create -i ${VultrInstanceID} -d "${namespace}.${VerbTLD}.${nickname}" > /opt/rink/conf/snapshots/${vuser}.${namespace}.${VerbTLD}.${nickname}.raw
+# Did it work?
+if [ -f "/opt/rink/conf/snapshots/${vuser}.${namespace}.${VerbTLD}.${nickname}.raw" ]; then
+  if ! /usr/bin/grep -q ^ID /opt/rink/conf/snapshots/${vuser}.${namespace}.${VerbTLD}.${nickname}.raw; then
+    /usr/bin/echo "Snapshot output file is not correct, start over."
+    exit 4
+  fi
+else
+  /usr/bin/echo "VPS output file does not exist, start over."
+  exit 4
+fi
+snapshotID="$(/usr/bin/cat /opt/rink/conf/snapshots/${vuser}.${namespace}.${VerbTLD}.${nickname}.raw | /usr/bin/sed '/^ID/d' | /usr/bin/sed 's/\s.*//')"
+/usr/bin/echo "SnapshotID=\"${snapshotID}\"
+SNnickname=\"${nickname}\"
+SNverbName=\"${namespace}\"
+SNverbTLD=\"${VerbTLD}\"
+SNvverbUser=\"${vuser}\"
+SNcreateDate=\"${datestamp}\"" > /opt/rink/conf/snapshots/${vuser}.${namespace}.${VerbTLD}.${nickname}.snp
+
+# Anounce
+/usr/bin/echo "Snapshot '${nickname}' for ${namespace}.${VerbTLD} initiated. Waiting a few minutes unitl its ready..."
+
+# Wait
+/usr/bin/sleep 40
+
+# Loop status check
+/usr/bin/vultr-cli sn get "${snapshotID}" | /usr/bin/grep "${snapshotID}" | /usr/bin/grep -q "[[:space:]]complete[[:space:]]"
+while [ "$?" != "0" ]; do
+  /usr/bin/sleep 10
+  /usr/bin/vultr-cli sn get "${snapshotID}" | /usr/bin/grep "${snapshotID}" | /usr/bin/grep -q "[[:space:]]complete[[:space:]]"
+done
+
+# Power back on
+if [ "${nostart}" != "true" ]; then
+  /usr/bin/vultr-cli instance start ${VultrInstanceID}
+fi
+
+# Finish
+/usr/bin/echo "Snapshot '${nickname}' for ${namespace}.${VerbTLD} done."

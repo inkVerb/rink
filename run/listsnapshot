@@ -1,0 +1,43 @@
+#!/bin/bash
+#inkVerbRunner! verb.ink
+
+# This lists all snapshots belonging to a specific user or also by VPS
+
+# How to use:
+## ./listsnapshot [user] [namespace] [tld]
+
+# Eg:
+## ./listsnapshot john
+## ./listsnapshot mike myname ink
+
+
+
+if [ -z "$1" ]; then
+  /usr/bin/echo "Needs user argument, optional name and TLD arguments, I quit."
+  exit 0
+fi
+
+vuser="$1"
+
+cd /opt/rink/conf/snapshots || exit 6
+
+if [ -n "${3}" ]; then
+  namespace="$2"
+  VerbTLD="$3"
+  for snapshotfile in ${vuser}.${namespace}.${VerbTLD}.*.snp; do
+    if [ "${snapshotfile}" = "${vuser}.${namespace}.${VerbTLD}.*.snp" ]; then continue; fi
+    snapnick="$(/usr/bin/echo ${snapshotfile} | /usr/bin/sed 's/.snp//' | /usr/bin/sed "s/${vuser}.${namespace}.${VerbTLD}.//")"
+    . /opt/rink/conf/snapshots/${snapshotfile}
+    if [ "${SNnickname}" != "${snapnick}" ]; then /usr/bin/echo "Wrong name in ${snapnick} file!"; fi
+    /usr/bin/echo "${SNnickname} @ ${SNcreateDate}"
+  done
+else
+  for snapshotfile in ${vuser}.*.*.snp; do
+    if [ "${snapshotfile}" = "${vuser}.*.*.snp" ]; then continue; fi
+    . /opt/rink/conf/snapshots/${snapshotfile}
+    snapfileref="$(/usr/bin/echo ${snapshotfile} | /usr/bin/sed 's/.snp//' | /usr/bin/sed "s/${vuser}.//")"
+    if [ "${vuser}.${SNnickname}.${SNverbName}.${SNverbTLD}.snp" != "${snapshotfile}" ]; then /usr/bin/echo "Wrong info in ${snapfileref} file!"; fi
+    /usr/bin/echo "${SNverbName} :: ${SNverbName}.${SNverbTLD} @ ${SNcreateDate}"
+  done
+fi
+

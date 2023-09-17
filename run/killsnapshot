@@ -1,0 +1,38 @@
+#!/bin/bash
+#inkVerbRunner! verb.ink
+
+# This destroys a snapshot by user, name, tld, and snapshot nickname
+
+# How to use:
+## ./killsnapshot [user] [namespace] [tld]
+
+# Eg:
+## ./killsnapshot john
+## ./killsnapshot mike myname ink
+
+
+
+if [ -z "$4" ]; then
+  /usr/bin/echo "Needs namespace, TLD, user, & snapshot arguments, I quit."
+  exit 0
+fi
+
+namespace="$1"
+VerbTLD="$2"
+vuser="$3"
+snapnick="$4"
+
+# Confirm file
+if [ ! -f "/opt/rink/conf/snapshots/${vuser}.${namespace}.${VerbTLD}.${snapnick}.snp" ]; then
+  /usr/bin/echo "Can't find snapshot ${snapnick} for ${namespace}.${VerbTLD} owned by ${vuser}!"
+  exit 4
+fi
+
+. /opt/rink/conf/snapshots/${vuser}.${namespace}.${VerbTLD}.${snapnick}.snp
+
+/usr/bin/vultr-cli sn delete ${SnapshotID}
+
+if [ "$?" != "0" ]; then
+  exit 6
+fi
+

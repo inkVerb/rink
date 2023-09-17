@@ -25,12 +25,12 @@ if [ ! -f "/opt/rink/conf/verbers/${namespace}.${VerbTLD}.vrb" ]; then
   exit 5
 fi
 
-if ! grep -q "VerbUser=\"$vuser\"" "/opt/rink/conf/verbers/${namespace}.${VerbTLD}.vrb"; then
+if ! /usr/bin/grep -q "VerbUser=\"$vuser\"" "/opt/rink/conf/verbers/${namespace}.${VerbTLD}.vrb"; then
   /usr/bin/echo "${namespace}.${VerbTLD} not owned by user ${vuser}! I quit."
   exit 5
 fi
 
-if ! grep -q '^RinkKeys="DONE"' "/opt/rink/conf/verbers/${namespace}.${VerbTLD}.vrb"; then
+if ! /usr/bin/grep -q '^RinkKeys="DONE"' "/opt/rink/conf/verbers/${namespace}.${VerbTLD}.vrb"; then
   /usr/bin/echo "No NS accounts, moving on..."
   exit 0
 fi

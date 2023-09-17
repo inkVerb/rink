@@ -1,0 +1,38 @@
+#!/bin/bash
+#inkVerbRunner! verb.ink
+
+# This lists all drives belonging to a specific user or also by VPS
+
+# How to use:
+## ./listdrive [user] [namespace] [tld]
+
+# Eg:
+## ./listdrive john
+## ./listdrive mike myname ink
+
+
+
+if [ -z "$1" ]; then
+  /usr/bin/echo "Needs user argument, I quit."
+  exit 0
+fi
+
+vuser="$1"
+
+cd /opt/rink/conf/drives || exit 6
+
+if [ -n "${3}" ]; then
+  namespace="$2"
+  VerbTLD="$3"
+  for drivefile in $(/usr/bin/grep -l "DriveVerber=\"${namespace}.${VerbTLD}\"" *.${vuser}.drive); do
+    . /opt/rink/conf/drives/${drivefile}
+    /usr/bin/echo "${DriveNickName} :: ${DriveType} @ ${DriveRegion}"
+  done
+else
+  for drivefile in *.${vuser}.drive; do
+    if [ "${drivefile}" = "*.${vuser}.*" ]; then continue; fi
+    . /opt/rink/conf/drives/${drivefile}
+    /usr/bin/echo "${DriveNickName} :: ${DriveVerber} - ${DriveType} @ ${DriveRegion}"
+  done
+fi
+

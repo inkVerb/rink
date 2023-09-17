@@ -33,7 +33,7 @@
 
 
 if [ -z "$5" ]; then
-  /usr/bin/echo "Needs namespace, TLD, user, plan, region, & snapshot arguments, I quit."
+  /usr/bin/echo "Needs namespace, TLD, user, plan, & snapshot arguments, I quit."
   exit 0
 fi
 
@@ -97,7 +97,7 @@ fi
 if [ "$IMPort" != "true" ]; then
   # Create the VPS
   if [ ! -f "/opt/rink/conf/verbers/${namespace}.${VerbTLD}.raw" ]; then
-    /opt/rink/run/newvps "$namespace" "$VerbTLD" "$vuser" "$vultrplan" "$snapnick" "$VultrRegion" "$TimeZone" "$hostname"
+    /opt/rink/run/newvps "${namespace}" "${VerbTLD}" "${vuser}" "${vultrplan}" "${snapnick}" "${VultrRegion}" "${TimeZone}" "${hostname}"
     e="$?"; [[ "$e" = "0" ]] || exit "$e"
   fi
 
@@ -139,7 +139,7 @@ fi
 
 # Add the SSH key to known_hosts
 #DEV keyscan is a native part of newvps
-# if ! grep -q '^Keyscan="DONE"' "/opt/rink/conf/verbers/${namespace}.${VerbTLD}.vrb"; then
+# if ! /usr/bin/grep -q '^Keyscan="DONE"' "/opt/rink/conf/verbers/${namespace}.${VerbTLD}.vrb"; then
 #   /opt/rink/run/keyscan ${namespace} ${VerbTLD}
 #   wait
 # fi
@@ -152,7 +152,7 @@ fi
 
 # Create new SSH keys on the new verber and install their pub keys on the NS servers
 ## This must go before verb/inst/setup or the server will deny access in post-setup ssh calls
-if ! grep -q '^RinkKeys="DONE"' "/opt/rink/conf/verbers/${namespace}.${VerbTLD}.vrb"; then
+if ! /usr/bin/grep -q '^RinkKeys="DONE"' "/opt/rink/conf/verbers/${namespace}.${VerbTLD}.vrb"; then
   /opt/rink/run/newverbrinkkeys ${namespace} ${VerbTLD} ${vuser}
   e="$?"; [[ "$e" = "0" ]] || exit "$e"
 fi
@@ -170,7 +170,7 @@ if [ "$IMPort" != "true" ]; then
   . /opt/rink/conf/verbers/${namespace}.${VerbTLD}.vrb
   if [ -n "${OverrideVerbNameServersConfig}" ]; then VerbNameServersConfig="${OverrideVerbNameServersConfig}"; fi
   . /opt/rink/ns/${VerbNameServersConfig}
-  if ! grep -q '^SetupVerber="DONE"' "/opt/rink/conf/verbers/${namespace}.${VerbTLD}.vrb"; then
+  if ! /usr/bin/grep -q '^SetupVerber="DONE"' "/opt/rink/conf/verbers/${namespace}.${VerbTLD}.vrb"; then
 
     ## Site URIlist
     . /opt/verb/conf/siteurilist # Only for $hostURI of this rink
@@ -199,11 +199,11 @@ if [ "$IMPort" != "true" ]; then
 fi
 
 # Update to latest NS servers
-if ! grep -q 'RinkKeys="DONE"' "/opt/rink/conf/verbers/${namespace}.${VerbTLD}.vrb"; then
+if ! /usr/bin/grep -q 'RinkKeys="DONE"' "/opt/rink/conf/verbers/${namespace}.${VerbTLD}.vrb"; then
   /usr/bin/ssh ${namespace}.${VerbTLD} /opt/verb/serfs/rinkupdatekeys
   e="$?"; [[ "$e" = "0" ]] || exit "$e"
 fi
-if ! grep -q 'RinkVerbsNSListed="DONE"' "/opt/rink/conf/verbers/${namespace}.${VerbTLD}.vrb"; then
+if ! /usr/bin/grep -q 'RinkVerbsNSListed="DONE"' "/opt/rink/conf/verbers/${namespace}.${VerbTLD}.vrb"; then
   /usr/bin/ssh ${namespace}.${VerbTLD} /opt/verb/serfs/rinkupdateallverbs
   e="$?"; [[ "$e" = "0" ]] || exit "$e"
   if [ "$?" = "0" ]; then

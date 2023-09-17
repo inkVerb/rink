@@ -58,7 +58,7 @@ fi
 #   HostID="1"
 # fi
 # ## Make sure it is not in use
-# ### grep "-s, --no-messages suppress error messages"
+# ### /usr/bin/grep "-s, --no-messages suppress error messages"
 # while /usr/bin/grep -qs ^VerbHostID=\"$HostID\" /opt/rink/conf/verbers/*.vrb > /dev/null; do
 #   HostID=$(( HostID + 1 ))
 # done

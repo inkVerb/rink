@@ -32,17 +32,17 @@ else
   . "/opt/rink/conf/drives/${drivenickname}.${vuser}.drive"
 fi
 
-if grep -q "DriveDev=\"UNPLUGGED\"" "/opt/rink/conf/drives/${drivenickname}.${vuser}.drive"; then
+if /usr/bin/grep -q "DriveDev=\"UNPLUGGED\"" "/opt/rink/conf/drives/${drivenickname}.${vuser}.drive"; then
   /usr/bin/echo "Drive ${drivenickname} is already unplugged! Nothing to do."
   exit 0
 fi
 
-if ! grep -q "DriveNickName=\"${drivenickname}\"" "/opt/rink/conf/drives/${drivenickname}.${vuser}.drive"; then
+if ! /usr/bin/grep -q "DriveNickName=\"${drivenickname}\"" "/opt/rink/conf/drives/${drivenickname}.${vuser}.drive"; then
   /usr/bin/echo "Drive ${drivenickname} nickname doesn't match up! Something is very wrong."
   exit 6
 fi
 
-if ! grep -q "DriveVerber=\"${namespace}.${VerbTLD}\"" "/opt/rink/conf/drives/${drivenickname}.${vuser}.drive"; then
+if ! /usr/bin/grep -q "DriveVerber=\"${namespace}.${VerbTLD}\"" "/opt/rink/conf/drives/${drivenickname}.${vuser}.drive"; then
   /usr/bin/echo "${namespace}.${VerbTLD} not assigned to drive ${drivenickname}! I quit."
   exit 5
 fi

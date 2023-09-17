@@ -40,7 +40,7 @@ if [ -f "/opt/rink/conf/drives/${drivenickname}.${vuser}.drive" ]; then
 fi
 
 # Check verber config
-if ! grep -q "VerbUser=\"${vuser}\"" "/opt/rink/conf/verbers/${namespace}.${VerbTLD}.vrb"; then
+if ! /usr/bin/grep -q "VerbUser=\"${vuser}\"" "/opt/rink/conf/verbers/${namespace}.${VerbTLD}.vrb"; then
   /usr/bin/echo "${namespace}.${VerbTLD} not owned by user ${vuser}! I quit."
   exit 5
 else

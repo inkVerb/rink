@@ -1,0 +1,26 @@
+#!/bin/bash
+#inkVerbRunner! verb.ink
+
+# This lists all VPS instances belonging to a specific user
+
+# How to use:
+## ./listvps [user]
+
+# Eg:
+## ./listvps john
+
+
+
+if [ -z "$1" ]; then
+  /usr/bin/echo "Needs user argument, I quit."
+  exit 0
+fi
+
+vuser="$1"
+
+cd /opt/rink/conf/verbers || exit 6
+
+for vrbfile in $(/usr/bin/grep -l "VerbUser=\"${vuser}\"" *.vrb); do
+  verber="$(/usr/bin/echo ${vrbfile} | /usr/bin/sed 's/.vrb//')"
+  /usr/bin/echo ${verber}
+done

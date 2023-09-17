@@ -75,7 +75,7 @@ elif [ "${VerbTLD}" != "${RinkVerbTLD}" ] && [ -f "/opt/rink/conf/verbers/${name
 fi
 
 ## Make sure it is not in use
-### grep "-s, --no-messages suppress error messages"
+### /usr/bin/grep "-s, --no-messages suppress error messages"
 while /usr/bin/grep -qs ^VerbHostID=\"${hostid}\" /opt/rink/conf/verbers/*.vrb > /dev/null; do
   hostid=$(( hostid + 1 ))
 done
@@ -112,7 +112,7 @@ e="$?"; if [ "$e" != "0" ]; then
 fi
 
 # Did it work?
-if [ -f /opt/rink/conf/verbers/${namespace}.${VerbTLD}.raw ]; then
+if [ -f "/opt/rink/conf/verbers/${namespace}.${VerbTLD}.raw" ]; then
   if ! /usr/bin/grep -q ^ID /opt/rink/conf/verbers/${namespace}.${VerbTLD}.raw; then
     /usr/bin/echo "VPS output file is not correct, start over."
     /usr/bin/rm -f "${namespace}.${VerbTLD}.*"
