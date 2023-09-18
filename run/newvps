@@ -305,7 +305,6 @@ VerbIPv6="${IPv6Cmp}"
 VerbIPv6Exp="${IPv6Exp}"
 VerbARPAIPv4="${IPv4ARPA}"
 VerbARPAIPv6="${IPv6ARPA}"
-VerbNameServersConfig="${NameServersConfig}"
 EOF
 
 ## Rebuild the ssh config to include both IPv4 and IPv6

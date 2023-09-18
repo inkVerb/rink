@@ -48,7 +48,7 @@ e="$?"; [[ "$e" = "0" ]] || exit "$e"
 # Update the verber
 /usr/bin/ssh -o StrictHostKeyChecking=no -o ConnectTimeout=3 -q -T ${namespace}.${VerbTLD} <<EOS
 /opt/verb/serfs/inkdnssetns1 ${NS1Host}.${RinkDomain} ${NS1IPv4} ${NS1IPv6} || exit 4
-/opt/verb/serfs/inkdnssetns2 ${NA2Host}.${RinkDomain} ${NS2IPv4} ${NS2IPv6} || exit 4
+/opt/verb/serfs/inkdnssetns2 ${NS2Host}.${RinkDomain} ${NS2IPv4} ${NS2IPv6} || exit 4
 EOS
 e="$?"; [[ "$e" = "0" ]] || exit "$e"
 

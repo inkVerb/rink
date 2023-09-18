@@ -275,20 +275,20 @@ fi
 
 # Check nameservers
 /usr/bin/echo "Check nameservers"
-if ! /usr/bin/ssh -T -o StrictHostKeyChecking=yes root@${VerbIPv6} -p ${VerbPort} -i /root/.ssh/${SSHKey} "/usr/bin/ssh ns1 'exit 0'"; then
-  /usr/bin/echo "It can't connect to ${NS1Host}."
+if ! /usr/bin/ssh -T -o StrictHostKeyChecking=yes root@${VerbIPv6} -p ${VerbPort} -i /root/.ssh/${SSHKey} "/usr/bin/ssh ${NS1Host} 'exit 0'"; then
+  /usr/bin/echo "It can't connect to NS 1 '${NS1Host}'."
   unhealthy="true"
 fi
-if ! /usr/bin/ssh -T -o StrictHostKeyChecking=yes root@${VerbIPv6} -p ${VerbPort} -i /root/.ssh/${SSHKey} "/usr/bin/ssh ns2 'exit 0'"; then
-  /usr/bin/echo "It can't connect to ${NS2Host}."
+if ! /usr/bin/ssh -T -o StrictHostKeyChecking=yes root@${VerbIPv6} -p ${VerbPort} -i /root/.ssh/${SSHKey} "/usr/bin/ssh ${NS2Host} 'exit 0'"; then
+  /usr/bin/echo "It can't connect to NS 2 '${NS2Host}'."
   unhealthy="true"
 fi
 if ! /usr/bin/ssh ${NS1Name}.${RinkVerbTLD} "/usr/bin/ls /srv/sns/${namespace}-${VerbTLD} > /dev/null 2>&1"; then
-  /usr/bin/echo "Not listed on ${NS1Host}."
+  /usr/bin/echo "Not listed on NS 1 '${NS1Host}'."
   unhealthy="true"
 fi
 if ! /usr/bin/ssh ${NS2Name}.${RinkVerbTLD} "/usr/bin/ls /srv/sns/${namespace}-${VerbTLD} > /dev/null 2>&1"; then
-  /usr/bin/echo "Not listed on ${NS2Host}."
+  /usr/bin/echo "Not listed on NS 2 '${NS2Host}'."
   unhealthy="true"
 fi
 
@@ -322,7 +322,7 @@ fi
 /usr/bin/grep -q '^ServerNS1DNS="${NS1Host}.${RinkDomain}"' /opt/verb/conf/servernameip || exit 6
 /usr/bin/grep -q '^ServerNS1IPv4="${NS1IPv4}"' /opt/verb/conf/servernameip || exit 6
 /usr/bin/grep -q '^ServerNS1IPv6="${NS1IPv6}"' /opt/verb/conf/servernameip || exit 6
-/usr/bin/grep -q '^ServerNS2DNS="${NA2Host}.${RinkDomain}"' /opt/verb/conf/servernameip || exit 6
+/usr/bin/grep -q '^ServerNS2DNS="${NS2Host}.${RinkDomain}"' /opt/verb/conf/servernameip || exit 6
 /usr/bin/grep -q '^ServerNS2IPv4="${NS2IPv4}"' /opt/verb/conf/servernameip || exit 6
 /usr/bin/grep -q '^ServerNS2IPv6="${NS2IPv6}"' /opt/verb/conf/servernameip || exit 6
 /usr/bin/grep -q '^127.0.1.1 ${VerbHostID}.${namespace}.verb.${VerbTLD} ${VerbHostID}' /etc/hosts || exit 6
@@ -347,7 +347,7 @@ grep -q '^ServerARPAIPv6="${VerbARPAIPv6}"' /opt/verb/conf/servernameip || echo 
 grep -q '^ServerNS1DNS="${NS1Host}.${RinkDomain}"' /opt/verb/conf/servernameip || echo fail
 grep -q '^ServerNS1IPv4="${NS1IPv4}"' /opt/verb/conf/servernameip || echo fail
 grep -q '^ServerNS1IPv6="${NS1IPv6}"' /opt/verb/conf/servernameip || echo fail
-grep -q '^ServerNS2DNS="${NA2Host}.${RinkDomain}"' /opt/verb/conf/servernameip || echo fail
+grep -q '^ServerNS2DNS="${NS2Host}.${RinkDomain}"' /opt/verb/conf/servernameip || echo fail
 grep -q '^ServerNS2IPv4="${NS2IPv4}"' /opt/verb/conf/servernameip || echo fail
 grep -q '^ServerNS2IPv6="${NS2IPv6}"' /opt/verb/conf/servernameip || echo fail
 grep -q '^127.0.1.1 ${VerbHostID}.${namespace}.verb.${VerbTLD} ${VerbHostID}' /etc/hosts || echo fail
