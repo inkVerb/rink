@@ -92,7 +92,7 @@ if [ -f "/opt/rink/conf/verbers/${namespace}.${VerbTLD}.vrb" ]; then
     exit 6 # We don't want anything else happening until a human can have a look
   # .vrb files is in tact and we can proceed normally
   else
-    /usr/bin/echo ".vrb file mathes .raw..."
+    /usr/bin/echo ".vrb file matches .raw..."
     /usr/bin/echo "${datestamp}" > /opt/rink/conf/verbers.destroyed/${namespace}.${VerbTLD}.${datestamp}.purged
     /usr/bin/echo "ID: ${VultrInstanceID}" >> /opt/rink/conf/verbers.destroyed/${namespace}.${VerbTLD}.${datestamp}.purged
     /usr/bin/echo "IPv4: ${IPv4}" >> /opt/rink/conf/verbers.destroyed/${namespace}.${VerbTLD}.${datestamp}.purged
