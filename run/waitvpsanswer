@@ -63,8 +63,8 @@ if [ "${isIP4}" = "true" ]; then
   sshCall="root@${IPv4} -p ${VerbPort} -i /root/.ssh/${SSHKey}"
   echo "1: /usr/bin/ssh -o StrictHostKeyChecking=yes -o ConnectTimeout=4 ${sshCall} "exit 0" 1> /opt/rink/tmp/waiton.${namespace}.${VerbTLD} 2> /opt/rink/tmp/waiton.${namespace}.${VerbTLD}"
   /usr/bin/ssh -o StrictHostKeyChecking=yes -o ConnectTimeout=4 ${sshCall} "exit 0" 1> /opt/rink/tmp/waiton.${namespace}.${VerbTLD} 2> /opt/rink/tmp/waiton.${namespace}.${VerbTLD}
-  cat /opt/rink/tmp/waiton.${namespace}.${VerbTLD}
   sshexit="$?"
+  cat /opt/rink/tmp/waiton.${namespace}.${VerbTLD}
   /usr/bin/grep -q 'key' /opt/rink/tmp/waiton.${namespace}.${VerbTLD}
   greptest="$?"
   count=0
@@ -73,8 +73,8 @@ if [ "${isIP4}" = "true" ]; then
     sleep 2
     echo "2: /usr/bin/ssh -o StrictHostKeyChecking=yes -o ConnectTimeout=3 ${sshCall} "exit 0" 1> /opt/rink/tmp/waiton.${namespace}.${VerbTLD} 2> /opt/rink/tmp/waiton.${namespace}.${VerbTLD}"
     /usr/bin/ssh -o StrictHostKeyChecking=yes -o ConnectTimeout=3 ${sshCall} "exit 0" 1> /opt/rink/tmp/waiton.${namespace}.${VerbTLD} 2> /opt/rink/tmp/waiton.${namespace}.${VerbTLD}
-    cat /opt/rink/tmp/waiton.${namespace}.${VerbTLD}
     sshexit="$?"
+    cat /opt/rink/tmp/waiton.${namespace}.${VerbTLD}
     /usr/bin/grep -q 'key' /opt/rink/tmp/waiton.${namespace}.${VerbTLD}
     greptest="$?"
     ### If a fast test, fail after a short time
@@ -108,8 +108,8 @@ if [ "${isIP6}" = "true" ]; then
   sshCall="root@${IPv6} -p ${VerbPort} -i /root/.ssh/${SSHKey}"
   echo "3: /usr/bin/ssh -o StrictHostKeyChecking=yes -o ConnectTimeout=4 ${sshCall} "exit 0" 1> /opt/rink/tmp/waiton.${namespace}.${VerbTLD} 2> /opt/rink/tmp/waiton.${namespace}.${VerbTLD}"
   /usr/bin/ssh -o StrictHostKeyChecking=yes -o ConnectTimeout=4 ${sshCall} "exit 0" 1> /opt/rink/tmp/waiton.${namespace}.${VerbTLD} 2> /opt/rink/tmp/waiton.${namespace}.${VerbTLD}
-  cat /opt/rink/tmp/waiton.${namespace}.${VerbTLD}
   sshexit="$?"
+  cat /opt/rink/tmp/waiton.${namespace}.${VerbTLD}
   /usr/bin/grep -q 'key' /opt/rink/tmp/waiton.${namespace}.${VerbTLD}
   greptest="$?"
   count=0
@@ -118,8 +118,8 @@ if [ "${isIP6}" = "true" ]; then
     sleep 2
     echo "4: /usr/bin/ssh -o StrictHostKeyChecking=yes -o ConnectTimeout=3 ${sshCall} "exit 0" 1> /opt/rink/tmp/waiton.${namespace}.${VerbTLD} 2> /opt/rink/tmp/waiton.${namespace}.${VerbTLD}"
     /usr/bin/ssh -o StrictHostKeyChecking=yes -o ConnectTimeout=3 ${sshCall} "exit 0" 1> /opt/rink/tmp/waiton.${namespace}.${VerbTLD} 2> /opt/rink/tmp/waiton.${namespace}.${VerbTLD}
-    cat /opt/rink/tmp/waiton.${namespace}.${VerbTLD}
     sshexit="$?"
+    cat /opt/rink/tmp/waiton.${namespace}.${VerbTLD}
     /usr/bin/grep -q 'key' /opt/rink/tmp/waiton.${namespace}.${VerbTLD}
     greptest="$?"
     ### Keep checking the IPv6 (because it keeps changing in spinup)
