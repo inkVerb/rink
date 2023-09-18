@@ -331,7 +331,7 @@ EOF
 
 # Refresh the SSHD keys on the server (they are still original from the snapshot and will seem like a duplicate in /root/.ssh/known_hosts)
 ## Do this in a loop
-/usr/bin/ssh -o StrictHostKeyChecking=no -o ConnectTimeout=3 -q -T ${namespace}.${VerbTLD} <<EOS
+/usr/bin/ssh -o StrictHostKeyChecking=no -o ConnectTimeout=5 -q -T ${namespace}.${VerbTLD} <<EOS
 /usr/bin/rm /etc/ssh/ssh_host_*
 e="\$?"; [[ "\$e" = "0" ]] || exit 4
 /usr/bin/ssh-keygen -A
@@ -345,7 +345,7 @@ while [ "$sshresetstatus" != "0" ] && [ "$sshresetstatus" != "255" ]; do
   #/usr/bin/echo "newvps ssh-keygen loop reboot error: $sshresetstatus #DEBUG This echos a 255 while the server is still being prepared, use this for debugging only
   /usr/bin/echo "Waiting, then trying again..."
   sleep 3
-  /usr/bin/ssh -o StrictHostKeyChecking=no -o ConnectTimeout=3 -q -T ${namespace}.${VerbTLD} <<EOS
+  /usr/bin/ssh -o StrictHostKeyChecking=no -o ConnectTimeout=5 -q -T ${namespace}.${VerbTLD} <<EOS
 /usr/bin/rm -f /etc/ssh/ssh_host_*
 e="\$?"; [[ "\$e" = "0" ]] || exit 4
 /usr/bin/ssh-keygen -A
@@ -375,7 +375,7 @@ sleep 10 # The server needs to start its reboot
 /opt/rink/run/waitvpsanswer ${namespace} ${VerbTLD}
 
 # Ensure that make-verber is done and setup is ready
-/usr/bin/ssh -o StrictHostKeyChecking=no -o ConnectTimeout=3 -q -T ${namespace}.${VerbTLD} <<EOS
+/usr/bin/ssh -o StrictHostKeyChecking=no -o ConnectTimeout=5 -q -T ${namespace}.${VerbTLD} <<EOS
 if [ ! -f "/opt/verb/inst/make-verber-laemp" ] && [ -f "/opt/verb/inst/setup" ]; then
   /usr/bin/echo "Linux web stack is ready..."
   exit 0

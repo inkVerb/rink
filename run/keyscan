@@ -48,7 +48,7 @@ if [ -z "${Keyscan}" ] || [ "${Keyscan}" != "DONE" ] || [ -n "${rescan}" ]; then
     if [ "$?" != "0" ]; then
       /usr/bin/sleep 1
     else
-      /usr/bin/ssh -o StrictHostKeyChecking=yes -o ConnectTimeout=3 -q ${namespace}.${VerbTLD} "exit 0"
+      /usr/bin/ssh -o StrictHostKeyChecking=yes -o ConnectTimeout=5 -q ${namespace}.${VerbTLD} "exit 0"
       if [ "$?" != "0" ]; then
         /usr/bin/sleep 1
       else

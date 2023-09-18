@@ -187,6 +187,9 @@ if [ "$IMPort" != "true" ]; then
 
     ## Run setup
     /usr/bin/ssh ${namespace}.${VerbTLD} /opt/verb/serfs/setup ${namespace} ink email vip ${VerbHostID} ${VerbIPv4} ${VerbIPv6} cb@${RinkDomain} 100 1000 ${TimeZone} ${Port} boss "$(/usr/bin/pwgen -s -1 16)" ${UpdateRepo} ${UpdateOrg}
+    
+    /opt/verb/serfs/setup chair ink email vip chair 144.202.123.98 2001:19f0:6001:16f8:5400:04ff:fe94:29f7 cb@inkisaverb.com 100 1000 America/Los_Angeles 1543 boss "$(/usr/bin/pwgen -s -1 16)" verb-update inkverb
+    
     e="$?"; [[ "$e" = "0" ]] || exit "$e"
     if [ "$?" = "0" ]; then
       /usr/bin/echo 'SetupVerber="DONE"' >> /opt/rink/conf/verbers/${namespace}.${VerbTLD}.vrb
