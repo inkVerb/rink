@@ -245,6 +245,7 @@ IPv6Exp=$(expand_ipv6 ${IPv6Raw})
 /usr/bin/sed -i "/${IPv4}/d" /root/.ssh/known_hosts
 /usr/bin/sed -i "/${IPv6Cmp}/d" /root/.ssh/known_hosts
 /usr/bin/sed -i "/${IPv6Exp}/d" /root/.ssh/known_hosts
+/usr/bin/sed -i "/^#${namespace}.${VerbTLD}/,/###${namespace}.${VerbTLD}/d" /root/.ssh/known_hosts
 /usr/bin/sed -i "/Include \/opt\/rink\/conf\/${namespace}.${VerbTLD}.ssh/d" /root/.ssh/config
 
 # Removing any entries from nameservers

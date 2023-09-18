@@ -29,6 +29,8 @@ if [ -f /opt/rink/conf/verbers/${namespace}.${VerbTLD}.vrb ]; then
     # Remove any old identity keys based on our comment system (not necessary, but removes junk)
     /usr/bin/sed -i "/${VerbIPv4}/d" /root/.ssh/known_hosts
     /usr/bin/sed -i "/${VerbIPv6}/d" /root/.ssh/known_hosts
+    /usr/bin/sed -i "/${IPv6Cmp}/d" /root/.ssh/known_hosts
+    /usr/bin/sed -i "/${IPv6Exp}/d" /root/.ssh/known_hosts
     /usr/bin/sed -i "/^#${namespace}.${VerbTLD}/,/###${namespace}.${VerbTLD}/d" /root/.ssh/known_hosts
   fi
 else
