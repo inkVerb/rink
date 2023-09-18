@@ -333,19 +333,23 @@ EOF
 ## Do this in a loop
 /usr/bin/ssh -o StrictHostKeyChecking=no -o ConnectTimeout=3 -q -T ${namespace}.${VerbTLD} <<EOS
 /usr/bin/rm /etc/ssh/ssh_host_*
+e="$?"; [[ "$e" = "0" ]] || exit 4
 /usr/bin/ssh-keygen -A
+e="$?"; [[ "$e" = "0" ]] || exit 4
 /usr/bin/reboot
 EOS
 sshresetstatus="$?"
 count=0
 faillimit=0
-while [ "$sshresetstatus" != "0" ]; do
+while [ "$sshresetstatus" != "0" ] && [ "$sshresetstatus" != "255" ]; do
   #/usr/bin/echo "newvps ssh-keygen loop reboot error: $sshresetstatus #DEBUG This echos a 255 while the server is still being prepared, use this for debugging only
   /usr/bin/echo "Waiting, then trying again..."
   sleep 3
   /usr/bin/ssh -o StrictHostKeyChecking=no -o ConnectTimeout=3 -q -T ${namespace}.${VerbTLD} <<EOS
 /usr/bin/rm -f /etc/ssh/ssh_host_*
+e="$?"; [[ "$e" = "0" ]] || exit 4
 /usr/bin/ssh-keygen -A
+e="$?"; [[ "$e" = "0" ]] || exit 4
 /usr/bin/reboot
 EOS
   sshresetstatus="$?"
