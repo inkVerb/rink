@@ -61,26 +61,18 @@ IPv4="$(/usr/bin/vultr-cli instance ipv4 list ${VultrInstanceID} | /usr/bin/grep
 isIP4 ${IPv4}
 if [ "${isIP4}" = "true" ]; then
   sshCall="root@${IPv4} -p ${VerbPort} -i /root/.ssh/${SSHKey}"
-  echo "1: /usr/bin/ssh -o StrictHostKeyChecking=yes -o ConnectTimeout=4 ${sshCall} "exit 0" 1> /opt/rink/tmp/waiton.${namespace}.${VerbTLD} 2> /opt/rink/tmp/waiton.${namespace}.${VerbTLD}"
-  /usr/bin/ssh -o StrictHostKeyChecking=yes -o ConnectTimeout=4 ${sshCall} "exit 0" 1> /opt/rink/tmp/waiton.${namespace}.${VerbTLD} 2> /opt/rink/tmp/waiton.${namespace}.${VerbTLD}
+  /usr/bin/ssh -o StrictHostKeyChecking=yes -o ConnectTimeout=5 ${sshCall} "exit 0" 1> /opt/rink/tmp/waiton.${namespace}.${VerbTLD} 2> /opt/rink/tmp/waiton.${namespace}.${VerbTLD}
   sshexit="$?"
-  echo $sshexit
-  cat /opt/rink/tmp/waiton.${namespace}.${VerbTLD}
   /usr/bin/grep -q 'key' /opt/rink/tmp/waiton.${namespace}.${VerbTLD}
   greptest="$?"
-  echo $greptest
   count=0
   # Loop
   while [ "${greptest}" != "0" ] && [ "${sshexit}" != "0" ]; do
     sleep 2
-    echo "2: /usr/bin/ssh -o StrictHostKeyChecking=yes -o ConnectTimeout=3 ${sshCall} "exit 0" 1> /opt/rink/tmp/waiton.${namespace}.${VerbTLD} 2> /opt/rink/tmp/waiton.${namespace}.${VerbTLD}"
-    /usr/bin/ssh -o StrictHostKeyChecking=yes -o ConnectTimeout=3 ${sshCall} "exit 0" 1> /opt/rink/tmp/waiton.${namespace}.${VerbTLD} 2> /opt/rink/tmp/waiton.${namespace}.${VerbTLD}
+    /usr/bin/ssh -o StrictHostKeyChecking=yes -o ConnectTimeout=5 ${sshCall} "exit 0" 1> /opt/rink/tmp/waiton.${namespace}.${VerbTLD} 2> /opt/rink/tmp/waiton.${namespace}.${VerbTLD}
     sshexit="$?"
-    echo $sshexit
-    cat /opt/rink/tmp/waiton.${namespace}.${VerbTLD}
     /usr/bin/grep -q 'key' /opt/rink/tmp/waiton.${namespace}.${VerbTLD}
     greptest="$?"
-    echo $greptest
     ### If a fast test, fail after a short time
     if [ -n "${poweronce}" ] && [ "${poweronce}" = "true" ]; then
         if [ "$count" -gt "7" ]; then
@@ -110,26 +102,18 @@ isIP6 ${IPv6}
 if [ "${isIP6}" = "true" ]; then
   ## Prep loop
   sshCall="root@${IPv6} -p ${VerbPort} -i /root/.ssh/${SSHKey}"
-  echo "3: /usr/bin/ssh -o StrictHostKeyChecking=yes -o ConnectTimeout=4 ${sshCall} "exit 0" 1> /opt/rink/tmp/waiton.${namespace}.${VerbTLD} 2> /opt/rink/tmp/waiton.${namespace}.${VerbTLD}"
-  /usr/bin/ssh -o StrictHostKeyChecking=yes -o ConnectTimeout=4 ${sshCall} "exit 0" 1> /opt/rink/tmp/waiton.${namespace}.${VerbTLD} 2> /opt/rink/tmp/waiton.${namespace}.${VerbTLD}
+  /usr/bin/ssh -o StrictHostKeyChecking=yes -o ConnectTimeout=5 ${sshCall} "exit 0" 1> /opt/rink/tmp/waiton.${namespace}.${VerbTLD} 2> /opt/rink/tmp/waiton.${namespace}.${VerbTLD}
   sshexit="$?"
-  echo $sshexit
-  cat /opt/rink/tmp/waiton.${namespace}.${VerbTLD}
   /usr/bin/grep -q 'key' /opt/rink/tmp/waiton.${namespace}.${VerbTLD}
   greptest="$?"
-  echo $greptest
   count=0
   # Loop
   while [ "${greptest}" != "0" ] && [ "${sshexit}" != "0" ]; do
     sleep 2
-    echo "4: /usr/bin/ssh -o StrictHostKeyChecking=yes -o ConnectTimeout=3 ${sshCall} "exit 0" 1> /opt/rink/tmp/waiton.${namespace}.${VerbTLD} 2> /opt/rink/tmp/waiton.${namespace}.${VerbTLD}"
-    /usr/bin/ssh -o StrictHostKeyChecking=yes -o ConnectTimeout=3 ${sshCall} "exit 0" 1> /opt/rink/tmp/waiton.${namespace}.${VerbTLD} 2> /opt/rink/tmp/waiton.${namespace}.${VerbTLD}
+    /usr/bin/ssh -o StrictHostKeyChecking=yes -o ConnectTimeout=5 ${sshCall} "exit 0" 1> /opt/rink/tmp/waiton.${namespace}.${VerbTLD} 2> /opt/rink/tmp/waiton.${namespace}.${VerbTLD}
     sshexit="$?"
-    echo $sshexit
-    cat /opt/rink/tmp/waiton.${namespace}.${VerbTLD}
     /usr/bin/grep -q 'key' /opt/rink/tmp/waiton.${namespace}.${VerbTLD}
     greptest="$?"
-    echo $greptest
     ### Keep checking the IPv6 (because it keeps changing in spinup)
     IPv6="$(/usr/bin/vultr-cli instance ipv6 list ${VultrInstanceID} | /usr/bin/grep main_ip | /usr/bin/sed 's/\s.*$//')"
     sshCall="root@${IPv6} -p ${VerbPort} -i /root/.ssh/${SSHKey}"
@@ -151,12 +135,16 @@ if [ "${isIP6}" = "true" ]; then
     fi
     ((count++))
   done
-  ## Cleanup
-  /usr/bin/rm -f /opt/rink/tmp/waiton.${namespace}.${VerbTLD}
 fi
 
 # Poweronce test?
 if [ -n "${poweronce}" ] && [ "${poweronce}" = "true" ] && [ "${fail}" = "true" ]; then
+  ## Leave waiton file in tact
+  datestamp="$(/usr/bin/date +%Y-%m-%d_%T)"
+  /usr/bin/mv /opt/rink/tmp/waiton.${namespace}.${VerbTLD} /opt/rink/tmp/waiton.${namespace}.${VerbTLD}.${datestamp}
   /usr/bin/echo "Verber is NR."
   exit 6
+else
+  ## Cleanup
+  /usr/bin/rm -f /opt/rink/tmp/waiton.${namespace}.${VerbTLD}
 fi
