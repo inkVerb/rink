@@ -191,6 +191,9 @@ if [ "$IMPort" != "true" ]; then
     if [ "$?" = "0" ]; then
       /usr/bin/echo 'SetupVerber="DONE"' >> /opt/rink/conf/verbers/${namespace}.${VerbTLD}.vrb
     fi
+
+    # Keyscan again
+    /opt/rink/run/keyscan ${namespace} ${VerbTLD}
   fi
 
   # Wait for sshd to reload (from the end of setup)
