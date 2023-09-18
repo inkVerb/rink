@@ -62,6 +62,7 @@ elif [ -f "/opt/rink/conf/verbers/${namespace}.${VerbTLD}.vrb" ]; then
     /usr/bin/echo "Verber checks out healthy. Cannot purge!"
     exit 4
   fi
+  . /opt/rink/conf/verbers/${namespace}.${VerbTLD}.vrb
   . /opt/rink/ns/${VerbNameServersConfig}
 else
   /usr/bin/echo "Only .raw config file found..."

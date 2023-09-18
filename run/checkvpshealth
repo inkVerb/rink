@@ -276,19 +276,19 @@ fi
 # Check nameservers
 /usr/bin/echo "Check nameservers"
 if ! /usr/bin/ssh -T -o StrictHostKeyChecking=yes root@${VerbIPv6} -p ${VerbPort} -i /root/.ssh/${SSHKey} "/usr/bin/ssh ${NS1Host} 'exit 0'"; then
-  /usr/bin/echo "It can't connect to NS 1 '${NS1Host}'."
+  /usr/bin/echo "Verber can't connect to NS 1 '${NS1Host}'."
   unhealthy="true"
 fi
 if ! /usr/bin/ssh -T -o StrictHostKeyChecking=yes root@${VerbIPv6} -p ${VerbPort} -i /root/.ssh/${SSHKey} "/usr/bin/ssh ${NS2Host} 'exit 0'"; then
-  /usr/bin/echo "It can't connect to NS 2 '${NS2Host}'."
+  /usr/bin/echo "Verber can't connect to NS 2 '${NS2Host}'."
   unhealthy="true"
 fi
 if ! /usr/bin/ssh ${NS1Name}.${RinkVerbTLD} "/usr/bin/ls /srv/sns/${namespace}-${VerbTLD} > /dev/null 2>&1"; then
-  /usr/bin/echo "Not listed on NS 1 '${NS1Host}'."
+  /usr/bin/echo "Verber not listed on NS 1 '${NS1Host}'."
   unhealthy="true"
 fi
 if ! /usr/bin/ssh ${NS2Name}.${RinkVerbTLD} "/usr/bin/ls /srv/sns/${namespace}-${VerbTLD} > /dev/null 2>&1"; then
-  /usr/bin/echo "Not listed on NS 2 '${NS2Host}'."
+  /usr/bin/echo "Verber not listed on NS 2 '${NS2Host}'."
   unhealthy="true"
 fi
 
