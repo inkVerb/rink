@@ -100,29 +100,29 @@ fi
 if [ -n "${ssdMount}" ] && [ -z "${hddMount}" ]; then
   if [ "$(/usr/bin/readlink -f /srv/www)" != "/mnt/${ssdMount}/www/www" ]; then
     /opt/verb/serfs/inkdrivesvc www
-    e="$?"; [[ "$e" = "0" ]] || exit "$e"
+    e="\$?"; [[ "\$e" = "0" ]] || exit 4
   fi
   if [ "$(/usr/bin/readlink -f /srv/vmail)" != "/mnt/${ssdMount}/vmail/vmail" ]; then
     /opt/verb/serfs/inkdrivesvc vmail
-    e="$?"; [[ "$e" = "0" ]] || exit "$e"
+    e="\$?"; [[ "\$e" = "0" ]] || exit 4
   fi
 elif [ -n "${hddMount}" ] && [ -z "${ssdMount}" ]; then
   if [ "$(/usr/bin/readlink -f /srv/www)" != "/mnt/${hddMount}/www/www" ]; then
     /opt/verb/serfs/inkdrivesvc www
-    e="$?"; [[ "$e" = "0" ]] || exit "$e"
+    e="\$?"; [[ "\$e" = "0" ]] || exit 4
   fi
   if [ "$(/usr/bin/readlink -f /srv/vmail)" != "/mnt/${hddMount}/vmail/vmail" ]; then
     /opt/verb/serfs/inkdrivesvc vmail
-    e="$?"; [[ "$e" = "0" ]] || exit "$e"
+    e="\$?"; [[ "\$e" = "0" ]] || exit 4
   fi
 elif [ -n "${hddMount}" ] && [ -n "${ssdMount}" ]; then
   if [ "$(/usr/bin/readlink -f /srv/www)" != "/mnt/${ssdMount}/www/www" ] && [ "$(/usr/bin/readlink -f /srv/www)" != "/mnt/${hddMount}/www/www" ]; then
     /opt/verb/serfs/inkdrivesvc www
-    e="$?"; [[ "$e" = "0" ]] || exit "$e"
+    e="\$?"; [[ "\$e" = "0" ]] || exit 4
   fi
   if [ "$(/usr/bin/readlink -f /srv/vmail)" != "/mnt/${ssdMount}/vmail/vmail" ] && [ "$(/usr/bin/readlink -f /srv/vmail)" != "/mnt/${hddMount}/vmail/vmail" ]; then
     /opt/verb/serfs/inkdrivesvc vmail
-    e="$?"; [[ "$e" = "0" ]] || exit "$e"
+    e="\$?"; [[ "\$e" = "0" ]] || exit 4
   fi
 fi
 
@@ -145,28 +145,28 @@ fi
 
 # Cron
 /usr/bin/cp -r /etc/cron.d /mnt/${DriveDefault}/
-e="$?"; [[ "$e" = "0" ]] || exit "$e"
+e="\$?"; [[ "\$e" = "0" ]] || exit 4
 
 # inkCert & Letsencrypt
 /opt/verb/servs/inkdriveinkcert on
-e="$?"; [[ "$e" = "0" ]] || exit "$e"
+e="\$?"; [[ "\$e" = "0" ]] || exit 4
 
 # SQL
 ## Copy any MySQL folder
 if [ -d "/var/lib/mysql" ]; then
   /opt/verb/servs/inkdrivesvc mysql
-  e="$?"; [[ "$e" = "0" ]] || exit "$e"
+  e="\$?"; [[ "\$e" = "0" ]] || exit 4
 fi
 ## Copy any PostgreSQL folder
 if [ -d "/var/lib/postgres" ]; then
   /opt/verb/servs/inkdrivesvc postgres
-  e="$?"; [[ "$e" = "0" ]] || exit "$e"
+  e="\$?"; [[ "\$e" = "0" ]] || exit 4
 fi
 
 # Verb folder last so we can check
 cd /opt/verb && /usr/bin/tar c conf | xz > /mnt/${DriveDefault}/verbconf.txz
 cd /opt/verb/conf && /usr/bin/tar c inkdrive | xz > /opt/inkdrive.txz
-e="$?"; [[ "$e" = "0" ]] || exit "$e"
+e="\$?"; [[ "\$e" = "0" ]] || exit 4
 
 exit 0  
 EOF
@@ -369,30 +369,30 @@ e="$?"; [[ "$e" = "0" ]] || exit "$e"
 /usr/bin/ssh -T ${namespace}.${VerbTLD} <<EOF
 # Cron
 /usr/bin/cp -r /mnt/${DriveDefault}/cron.d/* /etc/cron.d/
-e="$?"; [[ "$e" = "0" ]] || exit "$e"
+e="\$?"; [[ "\$e" = "0" ]] || exit 4
 /usr/bin/chmod 0644 /etc/cron.d/*
 
 # Verb folder
 /usr/bin/cp /mnt/${DriveDefault}/verbconf.txz /opt/
 /usr/bin/mv /opt/verb/conf /opt/verb/conf.remade
 cd /opt && /usr/bin/tar xf verbconf.txz
-e="$?"; [[ "$e" = "0" ]] || exit "$e"
+e="\$?"; [[ "\$e" = "0" ]] || exit 4
 /usr/bin/mv /opt/verbconf.txz /opt/verb/conf.remade/
 
 # inkCert & Letsencrypt
 /opt/verb/servs/inkdriveinkcert off
-e="$?"; [[ "$e" = "0" ]] || exit "$e"
+e="\$?"; [[ "\$e" = "0" ]] || exit 4
 
 # SQL
 ## Copy any MySQL folder
 if [ -d "/var/lib/mysql" ]; then
   /opt/verb/servs/inkdrivesvcoff mysql
-  e="$?"; [[ "$e" = "0" ]] || exit "$e"
+  e="\$?"; [[ "\$e" = "0" ]] || exit 4
 fi
 ## Copy any PostgreSQL folder
 if [ -d "/var/lib/postgres" ]; then
   /opt/verb/servs/inkdrivesvcoff postgres
-  e="$?"; [[ "$e" = "0" ]] || exit "$e"
+  e="\$?"; [[ "\$e" = "0" ]] || exit 4
 fi
 EOF
 

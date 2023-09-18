@@ -333,9 +333,9 @@ EOF
 ## Do this in a loop
 /usr/bin/ssh -o StrictHostKeyChecking=no -o ConnectTimeout=3 -q -T ${namespace}.${VerbTLD} <<EOS
 /usr/bin/rm /etc/ssh/ssh_host_*
-e="$?"; [[ "$e" = "0" ]] || exit 4
+e="\$?"; [[ "\$e" = "0" ]] || exit 4
 /usr/bin/ssh-keygen -A
-e="$?"; [[ "$e" = "0" ]] || exit 4
+e="\$?"; [[ "\$e" = "0" ]] || exit 4
 /usr/bin/reboot
 EOS
 sshresetstatus="$?"
@@ -347,13 +347,13 @@ while [ "$sshresetstatus" != "0" ] && [ "$sshresetstatus" != "255" ]; do
   sleep 3
   /usr/bin/ssh -o StrictHostKeyChecking=no -o ConnectTimeout=3 -q -T ${namespace}.${VerbTLD} <<EOS
 /usr/bin/rm -f /etc/ssh/ssh_host_*
-e="$?"; [[ "$e" = "0" ]] || exit 4
+e="\$?"; [[ "\$e" = "0" ]] || exit 4
 /usr/bin/ssh-keygen -A
-e="$?"; [[ "$e" = "0" ]] || exit 4
+e="\$?"; [[ "\$e" = "0" ]] || exit 4
 /usr/bin/reboot
 EOS
   sshresetstatus="$?"
-   # If we have been trying 10 minutes, restart
+  ### If we have been trying 10 minutes, restart
   if [ "$count" -gt "200" ]; then
     /opt/rink/run/powercycle ${namespace} ${VerbTLD}
     count=0
