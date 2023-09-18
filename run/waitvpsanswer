@@ -63,11 +63,6 @@ if [ "${isIP4}" = "true" ]; then
   sshCall="root@${IPv4} -p ${VerbPort} -i /root/.ssh/${SSHKey}"
   /usr/bin/ssh -o StrictHostKeyChecking=yes -o ConnectTimeout=4 ${sshCall} "exit 0" 1> /opt/rink/tmp/waiton.${namespace}.${VerbTLD} 2> /opt/rink/tmp/waiton.${namespace}.${VerbTLD}
   sshexit="$?"
-  if [ ! -f "/opt/rink/tmp/waiton.${namespace}.${VerbTLD}" ]; then
-    echo "/usr/bin/ssh -o StrictHostKeyChecking=yes -o ConnectTimeout=4 ${sshCall} \"exit 0\""
-    echo waiton file does not exist 1: /opt/rink/tmp/waiton.${namespace}.${VerbTLD}
-    exit 4
-  fi
   /usr/bin/grep -q 'key' /opt/rink/tmp/waiton.${namespace}.${VerbTLD}
   greptest="$?"
   count=0
@@ -76,11 +71,6 @@ if [ "${isIP4}" = "true" ]; then
     sleep 2
     /usr/bin/ssh -o StrictHostKeyChecking=yes -o ConnectTimeout=3 ${sshCall} "exit 0" 1> /opt/rink/tmp/waiton.${namespace}.${VerbTLD} 2> /opt/rink/tmp/waiton.${namespace}.${VerbTLD}
     sshexit="$?"
-      if [ ! -f "/opt/rink/tmp/waiton.${namespace}.${VerbTLD}" ]; then
-    echo "/usr/bin/ssh -o StrictHostKeyChecking=yes -o ConnectTimeout=4 ${sshCall} \"exit 0\""
-    echo waiton file does not exist 2: /opt/rink/tmp/waiton.${namespace}.${VerbTLD}
-    exit 4
-  fi
     /usr/bin/grep -q 'key' /opt/rink/tmp/waiton.${namespace}.${VerbTLD}
     greptest="$?"
     ### If a fast test, fail after a short time
