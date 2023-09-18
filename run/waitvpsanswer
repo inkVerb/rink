@@ -61,7 +61,9 @@ IPv4="$(/usr/bin/vultr-cli instance ipv4 list ${VultrInstanceID} | /usr/bin/grep
 isIP4 ${IPv4}
 if [ "${isIP4}" = "true" ]; then
   sshCall="root@${IPv4} -p ${VerbPort} -i /root/.ssh/${SSHKey}"
+  echo "1: /usr/bin/ssh -o StrictHostKeyChecking=yes -o ConnectTimeout=4 ${sshCall} "exit 0" 1> /opt/rink/tmp/waiton.${namespace}.${VerbTLD} 2> /opt/rink/tmp/waiton.${namespace}.${VerbTLD}"
   /usr/bin/ssh -o StrictHostKeyChecking=yes -o ConnectTimeout=4 ${sshCall} "exit 0" 1> /opt/rink/tmp/waiton.${namespace}.${VerbTLD} 2> /opt/rink/tmp/waiton.${namespace}.${VerbTLD}
+  cat /opt/rink/tmp/waiton.${namespace}.${VerbTLD}
   sshexit="$?"
   /usr/bin/grep -q 'key' /opt/rink/tmp/waiton.${namespace}.${VerbTLD}
   greptest="$?"
@@ -69,7 +71,9 @@ if [ "${isIP4}" = "true" ]; then
   # Loop
   while [ "${greptest}" != "0" ] && [ "${sshexit}" != "0" ]; do
     sleep 2
+    echo "2: /usr/bin/ssh -o StrictHostKeyChecking=yes -o ConnectTimeout=3 ${sshCall} "exit 0" 1> /opt/rink/tmp/waiton.${namespace}.${VerbTLD} 2> /opt/rink/tmp/waiton.${namespace}.${VerbTLD}"
     /usr/bin/ssh -o StrictHostKeyChecking=yes -o ConnectTimeout=3 ${sshCall} "exit 0" 1> /opt/rink/tmp/waiton.${namespace}.${VerbTLD} 2> /opt/rink/tmp/waiton.${namespace}.${VerbTLD}
+    cat /opt/rink/tmp/waiton.${namespace}.${VerbTLD}
     sshexit="$?"
     /usr/bin/grep -q 'key' /opt/rink/tmp/waiton.${namespace}.${VerbTLD}
     greptest="$?"
@@ -83,7 +87,7 @@ if [ "${isIP4}" = "true" ]; then
           sleep 15
         fi
     ### If we have been trying 10 minutes, restart
-    else 
+    else
       if [ "$count" -gt "60" ]; then
         /opt/rink/run/powercycle ${namespace} ${VerbTLD}
         count=0
@@ -102,7 +106,9 @@ isIP6 ${IPv6}
 if [ "${isIP6}" = "true" ]; then
   ## Prep loop
   sshCall="root@${IPv6} -p ${VerbPort} -i /root/.ssh/${SSHKey}"
+  echo "3: /usr/bin/ssh -o StrictHostKeyChecking=yes -o ConnectTimeout=4 ${sshCall} "exit 0" 1> /opt/rink/tmp/waiton.${namespace}.${VerbTLD} 2> /opt/rink/tmp/waiton.${namespace}.${VerbTLD}"
   /usr/bin/ssh -o StrictHostKeyChecking=yes -o ConnectTimeout=4 ${sshCall} "exit 0" 1> /opt/rink/tmp/waiton.${namespace}.${VerbTLD} 2> /opt/rink/tmp/waiton.${namespace}.${VerbTLD}
+  cat /opt/rink/tmp/waiton.${namespace}.${VerbTLD}
   sshexit="$?"
   /usr/bin/grep -q 'key' /opt/rink/tmp/waiton.${namespace}.${VerbTLD}
   greptest="$?"
@@ -110,7 +116,9 @@ if [ "${isIP6}" = "true" ]; then
   # Loop
   while [ "${greptest}" != "0" ] && [ "${sshexit}" != "0" ]; do
     sleep 2
+    echo "4: /usr/bin/ssh -o StrictHostKeyChecking=yes -o ConnectTimeout=3 ${sshCall} "exit 0" 1> /opt/rink/tmp/waiton.${namespace}.${VerbTLD} 2> /opt/rink/tmp/waiton.${namespace}.${VerbTLD}"
     /usr/bin/ssh -o StrictHostKeyChecking=yes -o ConnectTimeout=3 ${sshCall} "exit 0" 1> /opt/rink/tmp/waiton.${namespace}.${VerbTLD} 2> /opt/rink/tmp/waiton.${namespace}.${VerbTLD}
+    cat /opt/rink/tmp/waiton.${namespace}.${VerbTLD}
     sshexit="$?"
     /usr/bin/grep -q 'key' /opt/rink/tmp/waiton.${namespace}.${VerbTLD}
     greptest="$?"
