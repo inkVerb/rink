@@ -63,4 +63,6 @@ done
 # Destroy VPS when done?
 if [ -n "$3" ] && [ "$3" = "--killwhendone" ]; then
   /opt/rink/run/simplevpskill ${vpsnickname}
+else
+  /usr/bin/vultr-cli instance start ${VultrInstanceID}
 fi
