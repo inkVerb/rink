@@ -19,30 +19,32 @@ if [ ! -f  "/opt/rink/inst/setup" ]; then
   exit 0
 fi
 
-APIKEY="$1"
+APIkey="$1"
 
 # Runner permissions
-/bin/chmod 750 /opt/rink/run/*
+/usr/bin/chmod 750 /opt/rink/run/*
 
 # Prepare the directories
 /usr/bin/mkdir -p /opt/rink/tmp
 /usr/bin/mkdir -p /opt/rink/conf/verbers
 /usr/bin/mkdir -p /opt/rink/conf/drives
 /usr/bin/mkdir -p /opt/rink/conf/snapshots
+/usr/bin/mkdir -p /opt/rink/conf/simple
 /usr/bin/mkdir -p /opt/rink/conf/verbers.destroyed
+/usr/bin/mkdir -p /opt/rink/conf/simple.destroyed
 /usr/bin/mkdir -p /opt/rink/conf/drives.smashed
 /usr/bin/mkdir -p /opt/rink/ns
 /usr/bin/mkdir -p /opt/rink
 /usr/bin/mkdir -p /opt/rink/snapshotid
-/bin/ln -sfn /opt/rink ~/
+/usr/bin/ln -sfn /opt/rink ~/
 
 # API settings
 /usr/bin/pacman -S vultr-cli --noconfirm
 /usr/bin/cat <<EOF > /root/.vultr-cli.yaml
-api-key: $APIKEY
+api-key: ${APIkey}
 EOF
 /usr/bin/vultr-cli instance list --config /root/.vultr-cli.yaml
-export VULTR_API_KEY="$APIKEY"
+export VULTR_API_KEY="${APIkey}"
 
 # .ssh/config
 /usr/bin/cat <<EOF >> /root/.ssh/config

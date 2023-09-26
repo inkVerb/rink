@@ -70,7 +70,7 @@ if [ -f "/opt/rink/conf/snapshots/${vuser}.${namespace}.${VerbTLD}.${nickname}.r
     exit 4
   fi
 else
-  /usr/bin/echo "VPS output file does not exist, start over."
+  /usr/bin/echo "Snapshot output file does not exist, start over."
   exit 4
 fi
 snapshotID="$(/usr/bin/cat /opt/rink/conf/snapshots/${vuser}.${namespace}.${VerbTLD}.${nickname}.raw | /usr/bin/sed '/^ID/d' | /usr/bin/sed 's/\s.*//')"

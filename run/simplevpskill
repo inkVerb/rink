@@ -1,0 +1,46 @@
+#!/bin/bash
+#inkVerbRunner! verb.ink
+
+# This destroys a simple VPS created with simplevps
+
+# How to use:
+## ./simplevpskill [vps nickname]
+
+# Eg:
+## ./simplevpskill vpsnickname
+
+
+if [ -z "$1" ]; then
+  /usr/bin/echo "Needs nickname argument, I quit."
+  exit 0
+fi
+
+nickname="$1"
+
+if [ ! -f "/opt/rink/conf/simple/${nickname}.vps" ]; then
+  /usr/bin/echo "Simple VPS '${nickname}' does not exist! I quit."
+  exit 0
+fi
+
+
+# Config
+. /opt/rink/conf/simple/${nickname}.vps
+
+# Remove SSH entries
+/usr/bin/sed -i "/Include \/opt\/rink\/conf\/simple\/${nickname}.ssh/d" /root/.ssh/config
+/usr/bin/rm -f /opt/rink/conf/simple/${nickname}.ssh
+
+# Move old conf files to archives
+datestamp="$(/usr/bin/date +%Y-%m-%d_%T)"
+/usr/bin/mv /opt/rink/conf/simple/${nickname}.vps /opt/rink/conf/simple.destroyed/${vuser}.${namespace}.${VerbTLD}.${datestamp}.vrb
+/usr/bin/mv /opt/rink/conf/simple/${nickname}.raw /opt/rink/conf/simple.destroyed/${vuser}.${namespace}.${VerbTLD}.${datestamp}.raw
+/usr/bin/mv /opt/rink/conf/simple/${nickname}.srv /opt/rink/conf/simple.destroyed/${vuser}.${namespace}.${VerbTLD}.${datestamp}.srv
+
+# Remove all SSH identity keys based on our comment system (not necessary, but removes junk)
+/usr/bin/sed -i "/${VerbIPv4}/d" /root/.ssh/known_hosts
+/usr/bin/sed -i "/${VerbIPv6}/d" /root/.ssh/known_hosts
+/usr/bin/sed -i "/^#${nickname}/,/###${nickname}/d" /root/.ssh/known_hosts
+
+
+# Destroy it
+/usr/bin/vultr-cli instance delete ${VultrInstanceID}

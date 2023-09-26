@@ -1,0 +1,66 @@
+#!/bin/bash
+#inkVerbRunner! verb.ink
+
+# This creates a new snapshot from a simple VPS created with simplevps
+## This will overwrite any pre-existing snapshot ID nickname in rink/snapshotid/
+
+# How to use:
+## ./simplevpssnap [vps nickname] [snapshot nickname] ['--killwhendone' optional to destroy simple VPS after snapshot is complete]
+
+# Eg:
+## ./simplevpssnap vpsnickname snapshotnickname
+## ./simplevpssnap vpsnickname snapshotnickname --killwhendone
+
+
+if [ -z "$2" ]; then
+  /usr/bin/echo "Needs two nickname arguments, I quit."
+  exit 0
+fi
+
+
+vpsnickname="$1"
+snapshotnickname="$2"
+
+
+# Check to see if VPS exists by this name
+if [ ! -f /opt/rink/conf/simple/${vpsnickname}.vps ]; then
+  /usr/bin/echo "No such VPS with nickname '${vpsnickname}' exists."
+  exit 5
+fi
+
+# Config
+. /opt/rink/conf/simple/${vpsnickname}.vps
+
+# Poweroff
+/usr/bin/ssh ${vpsnickname} poweroff
+/usr/bin/vultr-cli instance stop ${VultrInstanceID}
+
+# Create the snapshot
+/usr/bin/vultr-cli sn create -i ${VultrInstanceID} -d "${snapshotnickname}" > /opt/rink/snapshotid/${snapshotnickname}.${vpsnickname}.raw
+# Did it work?
+if [ -f "/opt/rink/snapshotid/${snapshotnickname}.${vpsnickname}.raw" ]; then
+  if ! /usr/bin/grep -q ^ID /opt/rink/snapshotid/${snapshotnickname}.${vpsnickname}.raw; then
+    /usr/bin/echo "Snapshot output file is not correct, start over."
+    exit 4
+  fi
+else
+  /usr/bin/echo "Snapshot output file does not exist, start over."
+  exit 4
+fi
+snapshotID="$(/usr/bin/cat /opt/rink/snapshotid/${snapshotnickname}.${vpsnickname}.raw | /usr/bin/sed '/^ID/d' | /usr/bin/sed 's/\s.*//')"
+/usr/bin/echo "SnapshotID=\"${snapshotID}\"
+FromVPSnickname=\"${vpsnickname}\"
+SNcreateDate=\"${datestamp}\"" > /opt/rink/snapshotid/${vpsnickname}
+
+# Loop status check
+/usr/bin/vultr-cli sn get "${snapshotID}" | /usr/bin/grep "${snapshotID}" | /usr/bin/grep -q "[[:space:]]complete[[:space:]]"
+while [ "$?" != "0" ]; do
+  /usr/bin/sleep 10
+  /usr/bin/vultr-cli sn get "${snapshotID}" | /usr/bin/grep "${snapshotID}" | /usr/bin/grep -q "[[:space:]]complete[[:space:]]"
+done
+/usr/bin/rm -f /opt/rink/snapshotid/${snapshotnickname}.${vpsnickname}.raw
+
+# Destroy VPS when done?
+if [ -n "$3" ] && [ "$3" = "--killwhendone" ]; then
+  /opt/rink/run/simplevpskill ${vpsnickname}
+fi

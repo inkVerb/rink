@@ -7,7 +7,7 @@
 ##DEV the noip4 argument is in development and not yet supported by vultr-cli
 
 # How to use:
-## ./newvps [verb-namespace] [tld] [user] [vultr-plan (1gb shortcut for lowest, 2gb shortcut for second-lowest: vc2-1c-2gb)] [snapshot-nickname] [vultr-region] [PHP-timezone - optional; "-" placeholder] [turn-off IPv4 - optional DEV]
+## ./newvps [verb-namespace] [tld] [user] [vultr-plan (1gb shortcut for lowest, 2gb shortcut for second-lowest: vc2-1c-2gb)] [snapshot-nickname] [vultr-region] [PHP-timezone - optional; "-" placeholder] [ 'noip4' turn-off IPv4 - optional DEV]
 
 # Eg:
 ## ./newvps name ink john 1gb laemp
@@ -115,13 +115,13 @@ fi
 if [ -f "/opt/rink/conf/verbers/${namespace}.${VerbTLD}.raw" ]; then
   if ! /usr/bin/grep -q ^ID /opt/rink/conf/verbers/${namespace}.${VerbTLD}.raw; then
     /usr/bin/echo "VPS output file is not correct, start over."
-    /usr/bin/rm -f "${namespace}.${VerbTLD}.*"
+    /usr/bin/rm -f "/opt/rink/conf/verbers/${namespace}.${VerbTLD}.*"
     /usr/bin/sed -i "/${namespace}.${VerbTLD}.ssh/d" /root/.ssh/config
     exit 4
   fi
 else
   /usr/bin/echo "VPS output file does not exist, start over."
-  /usr/bin/rm -f "${namespace}.${VerbTLD}.*"
+  /usr/bin/rm -f "/opt/rink/conf/verbers/${namespace}.${VerbTLD}.*"
   /usr/bin/sed -i "/${namespace}.${VerbTLD}.ssh/d" /root/.ssh/config
   exit 4
 fi

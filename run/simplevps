@@ -1,0 +1,395 @@
+#!/bin/bash
+#inkVerbRunner! verb.ink
+
+# This creates a new Vultr VPS, sending the output to a config file that can be read, creating other configs based on output
+## Tertiary Warning: This is run by other scripts and should not be run by itself
+## Used by: addvps and setuprinkns
+##DEV the noip4 argument is in development and not yet supported by vultr-cli
+
+# How to use:
+## ./simplevps [vps nickname] [vultr-plan (1gb shortcut for lowest, 2gb shortcut for second-lowest: vc2-1c-2gb)] [snapshot-nickname] [vultr-region] [ 'noip4' turn-off IPv4 - optional DEV]
+
+# Eg:
+## ./simplevps nick 1gb laemp
+## ./simplevps fast 2gb laemp sjc
+## ./simplevps fast 1gb laemp sjc noip4
+
+
+if [ -z "$3" ]; then
+  /usr/bin/echo "Needs nickname, user plan & snapshot arguments, I quit."
+  exit 0
+fi
+
+
+nickname="$1"
+vultrplan="$2"
+snapnick="$3"
+if [ -n "$4" ] && /usr/bin/vultr-cli regions list | /usr/bin/grep -q "^$6"; then
+  VultrRegion="$4" # Overrides region from rinknames
+fi
+
+
+# IP
+if [ -z "$9" ]; then
+  ip46statement="--ipv6 true"
+elif [ "$9" = "noip4" ]; then
+  ip46statement="--ipv6 true --ipv4 false"
+fi
+
+# Check to see if VPS already exists by this name
+if [ -f /opt/rink/conf/simple/${nickname}.vps ]; then
+  /usr/bin/echo "Simple VPS with nickname '${nickname}' already exists."
+  exit 5
+fi
+
+# Spin up the VPS
+if [ -f "/opt/rink/snapshotid/${snapnick}" ]; then
+  . /opt/rink/snapshotid/${snapnick}
+  if ! /usr/bin/vultr-cli snapshot list | /usr/bin/grep -q "^${SnapshotID}"; then
+    /usr/bin/echo "Listed snapshot does not exist. I quit."
+    exit 5
+  fi
+else
+  /usr/bin/echo "Snapshot not listed. I quit."
+  exit 5
+fi
+
+if [ "${vultrplan}" = "1gb" ]; then
+  vultrplan="vc2-1c-1gb"
+elif [ "${vultrplan}" = "2gb" ]; then
+  vultrplan="vc2-1c-2gb"
+fi
+
+# Get $Port
+. /opt/rink/portnum
+
+# Create the instance
+#DEV at a later date, I will complete this thought, but I don't know what I was going to do initially. If you are the intern who found this line, you win. Inform your supervisor to inform Jesse ASAP!
+/usr/bin/vultr-cli instance create --region "${VultrRegion}" --plan "${vultrplan}" --snapshot "${SnapshotID}" --label "${nickname}" ${ip46statement} > /opt/rink/conf/simple/${nickname}.raw
+
+# Exit status?
+e="$?"; if [ "$e" != "0" ]; then
+  /usr/bin/echo "VPS creation failed"
+  exit "$e"
+fi
+
+# Did it work?
+if [ -f "/opt/rink/conf/simple/${nickname}.raw" ]; then
+  if ! /usr/bin/grep -q ^ID /opt/rink/conf/simple/${nickname}.raw; then
+    /usr/bin/echo "VPS output file is not correct, start over."
+    /usr/bin/rm -f "/opt/rink/conf/simple/${nickname}.*"
+    /usr/bin/sed -i "/${nickname}.ssh/d" /root/.ssh/config
+    exit 4
+  fi
+else
+  /usr/bin/echo "VPS output file does not exist, start over."
+  /usr/bin/rm -f "/opt/rink/conf/simple/${nickname}.*"
+  /usr/bin/sed -i "/${nickname}.ssh/d" /root/.ssh/config
+  exit 4
+fi
+
+# Get the VPS instance ID
+VultrInstanceID="$(/usr/bin/cat /opt/rink/conf/simple/${nickname}.raw | /usr/bin/grep ^ID | /usr/bin/sed s"/ID\t\t\t//")"
+datestamp="$(/usr/bin/date +%Y-%m-%d_%T)"
+/usr/bin/cat <<EOF > /opt/rink/conf/simple/${nickname}.vps
+VultrInstanceID="${VultrInstanceID}"
+VultrPlan="${vultrplan}"
+DateCreated="${datestamp}"
+VerbPort="${Port}"
+EOF
+
+# Get the first IP addresses
+firstIPv4PLACEHOLDER="$(/usr/bin/vultr-cli instance ipv4 list ${VultrInstanceID} | /usr/bin/grep main_ip | /usr/bin/sed 's/\s.*$//')"
+firstIPv6PLACEHOLDER="$(/usr/bin/vultr-cli instance ipv6 list ${VultrInstanceID} | /usr/bin/grep main_ip | /usr/bin/sed 's/\s.*$//')"
+
+# IP address
+/usr/bin/echo "New VPS instance ${nickname} initiated. Waiting a few seconds for details to populate..."
+/usr/bin/sleep 5
+
+## Check the IPv4 (Default until set: 0.0.0.0)
+faillimit=0
+IPv4="$(/usr/bin/vultr-cli instance ipv4 list ${VultrInstanceID} | /usr/bin/grep main_ip | /usr/bin/sed 's/\s.*$//')"
+while [ "${IPv4}" = "0.0.0.0" ] || [ "${IPv4}" = "$firstIPv4PLACEHOLDER" ]; do
+  IPv4="$(/usr/bin/vultr-cli instance ipv4 list ${VultrInstanceID} | /usr/bin/grep main_ip | /usr/bin/sed 's/\s.*$//')"
+  /usr/bin/sleep 1
+  ### Fail proof
+  if [ "$faillimit" -gt "405" ]; then
+    /opt/rink/run/purgevps ${namespace} ${VerbTLD} ${vuser}
+    e="$?"; [[ "$e" = "0" ]] || exit "$e"
+    /usr/bin/echo "Awe, snap! Could not create ${nickname} properly, likely due to brief backend down time. Try again now or within a few minutes."
+    exit 4
+  fi
+  ((faillimit++))
+done
+
+## IP processing
+### Compress IPv6
+hex2dec(){
+    [ "$1" != "" ] && printf "%d" "$(( 0x$1 ))"
+}
+compress_ipv6() {
+    ip=$1
+
+    blocks=$(/bin/echo $ip | /bin/grep -o "[0-9a-f]\+")
+    set $blocks
+
+    # compress leading zeros
+    ip=$(printf "%x:%x:%x:%x:%x:%x:%x:%x\n" \
+        $(hex2dec $1) \
+        $(hex2dec $2) \
+        $(hex2dec $3) \
+        $(hex2dec $4) \
+        $(hex2dec $5) \
+        $(hex2dec $6) \
+        $(hex2dec $7) \
+        $(hex2dec $8)
+    )
+
+    # prepend : for easier matching
+    ip=:$ip
+
+    # :: must compress the longest chain
+    for pattern in :0:0:0:0:0:0:0:0 \
+            :0:0:0:0:0:0:0 \
+            :0:0:0:0:0:0 \
+            :0:0:0:0:0 \
+            :0:0:0:0 \
+            :0:0; do
+        if /bin/echo $ip | /bin/grep -qs $pattern; then
+            ip=$(/bin/echo $ip | sed "s/$pattern/::/")
+            # if the substitution occured before the end, we have :::
+            ip=$(/bin/echo $ip | sed 's/:::/::/')
+            break # only one substitution
+        fi
+    done
+
+    # remove prepending : if necessary
+    /bin/echo $ip | /bin/grep -qs "^:[^:]" && ip=$(echo $ip | sed 's/://')
+
+    /bin/echo $ip
+}
+### Expand IPv6
+expand_ipv6() {
+    ip=$1
+
+    # prepend 0 if we start with :
+    /bin/echo $ip | /bin/grep -qs "^:" && ip="0${ip}"
+
+    # expand ::
+    if /bin/echo $ip | /bin/grep -qs "::"; then
+        colons=$(/bin/echo $ip | sed 's/[^:]//g')
+        missing=$(/bin/echo ":::::::::" | sed "s/$colons//")
+        expanded=$(/bin/echo $missing | sed 's/:/:0/g')
+        ip=$(/bin/echo $ip | sed "s/::/$expanded/")
+    fi
+
+    blocks=$(/bin/echo $ip | /bin/grep -o "[0-9a-f]\+")
+    set $blocks
+
+    printf "%04x:%04x:%04x:%04x:%04x:%04x:%04x:%04x\n" \
+        $(hex2dec $1) \
+        $(hex2dec $2) \
+        $(hex2dec $3) \
+        $(hex2dec $4) \
+        $(hex2dec $5) \
+        $(hex2dec $6) \
+        $(hex2dec $7) \
+        $(hex2dec $8)
+}
+### Reverse IPv6
+rarpa_ipv6() {
+  local idx s=${1//:}
+  for (( idx=${#s} - 1; idx>=0; idx-- )); do
+    printf '%s.' "${s:$idx:1}"
+  done
+  printf 'ip6.arpa\n'
+}
+
+# Wait for powerup
+/usr/bin/echo "Waiting for preparation and power up..."
+count=0
+powerstatus="$(/usr/bin/vultr-cli instance get ${VultrInstanceID} | /usr/bin/grep '^POWER STATUS' | /usr/bin/sed s"/POWER STATUS\t\t//")"
+while [ "${powerstatus}" != "running" ]; do
+  sleep 5
+  powerstatus="$(/usr/bin/vultr-cli instance get ${VultrInstanceID} | /usr/bin/grep '^POWER STATUS' | /usr/bin/sed s"/POWER STATUS\t\t//")"
+    # If we have been trying 10 minutes, restart
+  if [ "$count" -gt "60" ]; then
+    /usr/bin/vultr-cli instance restart ${VultrInstanceID}
+    count=0
+  fi
+  ((count++))
+done
+
+# Check the IPv6 (Default until set is empty; a temp IPv6 is set when the final IPv4 is set, found with ${firstIPv6PLACEHOLDER} and ${secondIPv6PLACEHOLDER})
+IPv6final="$(/usr/bin/vultr-cli instance ipv6 list ${VultrInstanceID} | /usr/bin/grep main_ip | /usr/bin/sed 's/\s.*$//')"
+counter=1
+while [ "${IPv6final}" = "${firstIPv6PLACEHOLDER}" ] && [ "${counter}" -lt "15" ]; do
+  IPv6final="$(/usr/bin/vultr-cli instance ipv6 list ${VultrInstanceID} | /usr/bin/grep main_ip | /usr/bin/sed 's/\s.*$//')"
+  /usr/bin/sleep 1
+  counter=$[${counter} +1]
+done
+
+# START VPS answer
+# IP check functions
+## IP4
+isIP4() {
+local ip4="$1"
+local vvar="$2"
+local validregex="^([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})"
+if [[ "${ip4}" =~ ${validregex} ]]; then
+isIP4="true"; else
+isIP4="false"; fi
+}
+## IP6
+### Expanded or compressed IPv6 formats both work
+isIP6() {
+local ip6="$1"
+local vvar="$2"
+local validregex="(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:)|fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(ffff(:0{1,4}){0,1}:){0,1}((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])|([0-9a-fA-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]))"
+if [[ "${ip6}" =~ ${validregex} ]]; then
+isIP6="true"; else
+isIP6="false"; fi
+}
+
+# Wait for powerup on IPv4
+## Prep loop
+IPv4="$(/usr/bin/vultr-cli instance ipv4 list ${VultrInstanceID} | /usr/bin/grep main_ip | /usr/bin/sed 's/\s.*$//')"
+isIP4 ${IPv4}
+if [ "${isIP4}" = "true" ]; then
+  sshCall="root@${IPv4} -p ${VerbPort} -i /root/.ssh/${SSHKey}"
+  /usr/bin/ssh -o StrictHostKeyChecking=yes -o ConnectTimeout=5 ${sshCall} "exit 0" 1> /opt/rink/tmp/waiton.simplevps.${nickname} 2> /opt/rink/tmp/waiton.simplevps.${nickname}
+  sshexit="$?"
+  /usr/bin/grep -q 'key' /opt/rink/tmp/waiton.simplevps.${nickname}
+  greptest="$?"
+  count=0
+  # Loop
+  while [ "${greptest}" != "0" ] && [ "${sshexit}" != "0" ]; do
+    sleep 2
+    /usr/bin/ssh -o StrictHostKeyChecking=yes -o ConnectTimeout=5 ${sshCall} "exit 0" 1> /opt/rink/tmp/waiton.simplevps.${nickname} 2> /opt/rink/tmp/waiton.simplevps.${nickname}
+    sshexit="$?"
+    /usr/bin/grep -q 'key' /opt/rink/tmp/waiton.simplevps.${nickname}
+    greptest="$?"
+    ### If a fast test, fail after a short time
+    if [ -n "${poweronce}" ] && [ "${poweronce}" = "true" ]; then
+        if [ "$count" -gt "7" ]; then
+          fail="true"
+          break
+        elif [ "$count" -gt "5" ]; then
+          /usr/bin/vultr-cli instance restart ${VultrInstanceID}
+          sleep 15
+        fi
+    ### If we have been trying 10 minutes, restart
+    else
+      if [ "$count" -gt "60" ]; then
+        /usr/bin/vultr-cli instance restart ${VultrInstanceID}
+        count=0
+      fi
+    fi
+    ((count++))
+  done
+  ## Cleanup
+  /usr/bin/rm -f /opt/rink/tmp/waiton.simplevps.${nickname}
+fi
+# Wait for powerup on IPv4
+## Keep checking the IPv6 (because it keeps changing in spinup)
+IPv6="$(/usr/bin/vultr-cli instance ipv6 list ${VultrInstanceID} | /usr/bin/grep main_ip | /usr/bin/sed 's/\s.*$//')"
+isIP6 ${IPv6}
+if [ "${isIP6}" = "true" ]; then
+  ## Prep loop
+  sshCall="root@${IPv6} -p ${VerbPort} -i /root/.ssh/${SSHKey}"
+  /usr/bin/ssh -o StrictHostKeyChecking=yes -o ConnectTimeout=5 ${sshCall} "exit 0" 1> /opt/rink/tmp/waiton.simplevps.${nickname} 2> /opt/rink/tmp/waiton.simplevps.${nickname}
+  sshexit="$?"
+  /usr/bin/grep -q 'key' /opt/rink/tmp/waiton.simplevps.${nickname}
+  greptest="$?"
+  count=0
+  # Loop
+  while [ "${greptest}" != "0" ] && [ "${sshexit}" != "0" ]; do
+    sleep 2
+    /usr/bin/ssh -o StrictHostKeyChecking=yes -o ConnectTimeout=5 ${sshCall} "exit 0" 1> /opt/rink/tmp/waiton.simplevps.${nickname} 2> /opt/rink/tmp/waiton.simplevps.${nickname}
+    sshexit="$?"
+    /usr/bin/grep -q 'key' /opt/rink/tmp/waiton.simplevps.${nickname}
+    greptest="$?"
+    ### Keep checking the IPv6 (because it keeps changing in spinup)
+    IPv6="$(/usr/bin/vultr-cli instance ipv6 list ${VultrInstanceID} | /usr/bin/grep main_ip | /usr/bin/sed 's/\s.*$//')"
+    sshCall="root@${IPv6} -p ${VerbPort} -i /root/.ssh/${SSHKey}"
+        ### If a fast test, fail after a short time
+    if [ -n "${poweronce}" ] && [ "${poweronce}" = "true" ]; then
+        if [ "$count" -gt "7" ]; then
+          fail="true"
+          break
+        elif [ "$count" -gt "5" ]; then
+          /usr/bin/vultr-cli instance restart ${VultrInstanceID}
+          sleep 15
+        fi
+    ### If we have been trying 10 minutes, restart
+    else
+      if [ "$count" -gt "60" ]; then
+        /usr/bin/vultr-cli instance restart ${VultrInstanceID}
+        count=0
+      fi
+    fi
+    ((count++))
+  done
+fi
+
+# Poweronce test?
+if [ -n "${poweronce}" ] && [ "${poweronce}" = "true" ] && [ "${fail}" = "true" ]; then
+  ## Leave waiton file in tact
+  datestamp="$(/usr/bin/date +%Y-%m-%d_%T)"
+  /usr/bin/mv /opt/rink/tmp/waiton.simplevps.${nickname} /opt/rink/tmp/waiton.simplevps.${nickname}.${datestamp}
+  /usr/bin/echo "Verber is NR."
+  exit 6
+else
+  ## Cleanup
+  /usr/bin/rm -f /opt/rink/tmp/waiton.simplevps.${nickname}
+fi
+## END VPS answer
+
+## Finalize the IPv6 (because it keeps changing in spinup)
+IPv6Raw="$(/usr/bin/vultr-cli instance ipv6 list ${VultrInstanceID} | /usr/bin/grep main_ip | /usr/bin/sed 's/\s.*$//')"
+IPv6Cmp=$(compress_ipv6 ${IPv6Raw})
+IPv6Exp=$(expand_ipv6 ${IPv6Raw})
+IPv4ARPA=$(/usr/bin/echo ${IPv4} | /usr/bin/sed -r 's/^([0-9]{1,3}).([0-9]{1,3}).([0-9]{1,3}).([0-9]{1,3})$/\4.\3.\2.\1.in-addr.arpa/')
+IPv6ARPA=$(rarpa_ipv6 ${IPv6Exp})
+
+## Remove the local server finkerfprint
+/usr/bin/sed -i "/${IPv4}/d" /root/.ssh/known_hosts
+/usr/bin/sed -i "/${IPv6Cmp}/d" /root/.ssh/known_hosts
+/usr/bin/sed -i "/${IPv6Exp}/d" /root/.ssh/known_hosts
+
+## Append IP addresses to config
+/usr/bin/cat <<EOF >> /opt/rink/conf/simple/${nickname}.vps
+VerbIPv4="${IPv4}"
+VerbIPv6="${IPv6Cmp}"
+VerbIPv6Exp="${IPv6Exp}"
+VerbARPAIPv4="${IPv4ARPA}"
+VerbARPAIPv6="${IPv6ARPA}"
+EOF
+
+## Rebuild the ssh config to include both IPv4 and IPv6
+. /opt/rink/sshkey
+### Delete any pre-existing entry (shouldn't be needed, but to avoid redundancy)
+/usr/bin/sed -i "/${nickname}.ssh/d" /root/.ssh/config
+### Add and create the new entry
+/usr/bin/echo "Include /opt/rink/conf/verbers/${nickname}.ssh" >> /root/.ssh/config
+/usr/bin/cat <<EOF > /opt/rink/conf/verbers/${nickname}.ssh
+Host ${nickname}
+Hostname ${IPv4}
+Hostname ${IPv6Cmp}
+User root
+Port ${Port}
+IdentityFile /root/.ssh/${SSHKey}
+EOF
+
+# Scan the key
+/usr/bin/echo "#${nickname}" >> /root/.ssh/known_hosts
+/usr/bin/echo "$(/usr/bin/ssh-keyscan -H -p ${VerbPort} ${VerbIPv4})" >> /root/.ssh/known_hosts
+/usr/bin/echo "$(/usr/bin/ssh-keyscan -H -p ${VerbPort} ${VerbIPv6})" >> /root/.ssh/known_hosts
+/usr/bin/echo "###${nickname}" >> /root/.ssh/known_hosts
+
+# Now IPv6 is ready and IPv4 is also tested
+## Finish
+/usr/bin/echo "VPS is live!"
+/usr/bin/echo "IPv4: ${IPv4}"
+/usr/bin/echo "IPv6: ${IPv6Cmp}" 
+

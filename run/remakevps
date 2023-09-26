@@ -46,7 +46,7 @@ fi
 # Confirm a drive is attached
 /usr/bin/ssh -T ${namespace}.${VerbTLD} <<EOF
 # Make sure we're not already done here
-if [ -f /mnt/${DriveDefault}/verbconf.txz"" ] && [ -f "/opt/inkdrive.txz" ]; then exit 0; then
+if [ -f /mnt/${DriveDefault}/verbconf.txz"" ] && [ -f "/opt/inkdrive.txz" ]; then exit 0; fi
 
 # Make sure a drive is attached
 if [ ! -f "/opt/verb/conf/inkdrive/inkdriveinfo" ]; then
@@ -106,15 +106,6 @@ if [ -n "${ssdMount}" ] && [ -z "${hddMount}" ]; then
     /opt/verb/serfs/inkdrivesvc vmail
     e="\$?"; [[ "\$e" = "0" ]] || exit 4
   fi
-elif [ -n "${hddMount}" ] && [ -z "${ssdMount}" ]; then
-  if [ "$(/usr/bin/readlink -f /srv/www)" != "/mnt/${hddMount}/www/www" ]; then
-    /opt/verb/serfs/inkdrivesvc www
-    e="\$?"; [[ "\$e" = "0" ]] || exit 4
-  fi
-  if [ "$(/usr/bin/readlink -f /srv/vmail)" != "/mnt/${hddMount}/vmail/vmail" ]; then
-    /opt/verb/serfs/inkdrivesvc vmail
-    e="\$?"; [[ "\$e" = "0" ]] || exit 4
-  fi
 elif [ -n "${hddMount}" ] && [ -n "${ssdMount}" ]; then
   if [ "$(/usr/bin/readlink -f /srv/www)" != "/mnt/${ssdMount}/www/www" ] && [ "$(/usr/bin/readlink -f /srv/www)" != "/mnt/${hddMount}/www/www" ]; then
     /opt/verb/serfs/inkdrivesvc www
@@ -124,6 +115,9 @@ elif [ -n "${hddMount}" ] && [ -n "${ssdMount}" ]; then
     /opt/verb/serfs/inkdrivesvc vmail
     e="\$?"; [[ "\$e" = "0" ]] || exit 4
   fi
+elif [ -z "${ssdMount}" ]; then
+  /usr/bin/echo "No SSD mounted. Do that first!"
+  exit 8
 fi
 
 # Confirm health of any InkDriveWP sites
@@ -171,7 +165,7 @@ e="\$?"; [[ "\$e" = "0" ]] || exit 4
 exit 0  
 EOF
 if [ "$?" != "0" ]; then
-  /usr/bin/echo "Not ready to remake. First get SSD attched and mounted, then try again."
+  /usr/bin/echo "Not ready to remake."
   exit 8
 fi
 
@@ -362,6 +356,9 @@ e="$?"; [[ "$e" = "0" ]] || exit "$e"
 /usr/bin/ssh ${namespace}.${VerbTLD} /opt/verb/serfs/inkdrivereplugall
 e="$?"; [[ "$e" = "0" ]] || exit "$e"
 
+## Re-link folders
+
+
 # Replace all original configs from the recently-mounted drive they were stored on
 ## NOTE verb/inst/ is still in place and ready to run setup
 
@@ -448,6 +445,7 @@ if ! /usr/bin/grep -q 'RinkKeys="DONE"' "/opt/rink/conf/verbers/${namespace}.${V
 fi
 if ! /usr/bin/grep -q 'RinkVerbsNSListed="DONE"' "/opt/rink/conf/verbers/${namespace}.${VerbTLD}.vrb"; then
   /usr/bin/ssh ${namespace}.${VerbTLD} /opt/verb/serfs/rinkupdateallverbs
+  /usr/bin/ssh ${namespace}.${VerbTLD} /opt/verb/serfs/rinkupdatealldomains
   e="$?"; [[ "$e" = "0" ]] || exit "$e"
   if [ "$?" = "0" ]; then
     /usr/bin/echo 'RinkVerbsNSListed="DONE"' >> /opt/rink/conf/verbers/${namespace}.${VerbTLD}.vrb

@@ -33,7 +33,7 @@ fi
 . /opt/rink/ns/${VerbNameServersConfig}
 
 # Remove SSH entries
-/usr/bin/sed -i "/Include \/opt\/rink\/conf\/${namespace}.${VerbTLD}.ssh/d" /root/.ssh/config
+/usr/bin/sed -i "/Include \/opt\/rink\/conf\/verbers\/${namespace}.${VerbTLD}.ssh/d" /root/.ssh/config
 /usr/bin/rm -f /opt/rink/conf/verbers/${namespace}.${VerbTLD}.ssh
 
 # Move old conf files to archives
