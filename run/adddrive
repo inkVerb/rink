@@ -137,7 +137,7 @@ if /usr/bin/grep -q vdb /opt/rink/tmp/${drivenickname}.${vuser}.drive && ! /usr/
 elif /usr/bin/grep -q vdc /opt/rink/tmp/${drivenickname}.${vuser}.drive && ! /usr/bin/grep -q vdc1 /opt/rink/tmp/${drivenickname}.${vuser}.drive; then
   DriveDev="vdc"
 elif /usr/bin/grep -q vdd /opt/rink/tmp/${drivenickname}.${vuser}.drive && ! /usr/bin/grep -q vdd1 /opt/rink/tmp/${drivenickname}.${vuser}.drive; then
-  DriveDev="vddf"
+  DriveDev="vdd"
 elif /usr/bin/grep -q vde /opt/rink/tmp/${drivenickname}.${vuser}.drive && ! /usr/bin/grep -q vde1 /opt/rink/tmp/${drivenickname}.${vuser}.drive; then
   DriveDev="vde"
 elif /usr/bin/grep -q vdf /opt/rink/tmp/${drivenickname}.${vuser}.drive && ! /usr/bin/grep -q vdf1 /opt/rink/tmp/${drivenickname}.${vuser}.drive; then
