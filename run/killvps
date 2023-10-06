@@ -42,6 +42,7 @@ if [ "$?" != "0" ]; then
 fi
 
 # Make sure it is running
+count=0
 powerstatus="$(/usr/bin/vultr-cli instance get ${VultrInstanceID} | /usr/bin/grep '^POWER STATUS' | /usr/bin/sed s"/POWER STATUS\t\t//")"
 while [ "${powerstatus}" != "running" ]; do
   sleep 5
