@@ -54,6 +54,7 @@ while [ "${powerstatus}" != "running" ]; do
   fi
   ((count++))
 done
+/opt/rink/run/waitvpsanswer ${namespace} ${VerbTLD}
 
 # De-list the NS records
 #DEV obsolete, see killdns notes
