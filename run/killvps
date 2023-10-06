@@ -41,6 +41,19 @@ if [ "$?" != "0" ]; then
   exit 0
 fi
 
+# Make sure it is running
+powerstatus="$(/usr/bin/vultr-cli instance get ${VultrInstanceID} | /usr/bin/grep '^POWER STATUS' | /usr/bin/sed s"/POWER STATUS\t\t//")"
+while [ "${powerstatus}" != "running" ]; do
+  sleep 5
+  powerstatus="$(/usr/bin/vultr-cli instance get ${VultrInstanceID} | /usr/bin/grep '^POWER STATUS' | /usr/bin/sed s"/POWER STATUS\t\t//")"
+    # If we have been trying 10 minutes, restart
+  if [ "$count" -gt "60" ]; then
+    /opt/rink/run/powercycle ${namespace} ${VerbTLD}
+    count=0
+  fi
+  ((count++))
+done
+
 # De-list the NS records
 #DEV obsolete, see killdns notes
 #/opt/rink/run/killdns ${namespace} ${VerbTLD} ${vuser}
