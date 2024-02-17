@@ -150,3 +150,7 @@ cd rink/run
   - This should update the `rink/rinknames` file's `$NameServersConfig` setting to reflect the new pair
   - Theoretically, this should replace all code it inherited from setuprinkns by simply being run in place of that code
 - This will also update `/opt/rink/inkdnsnameservers`, which is added to each new and imported verber
+
+___
+
+Licensing disclaimer: This is distributed "as is" and may install third party software. By using this, you fully accept any related licensing responsibility and/or obligation(s) that of any software and related agreements of whatever may be consequently installed.
