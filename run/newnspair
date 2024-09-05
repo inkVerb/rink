@@ -35,7 +35,6 @@ newVultrRegion2="$8"
 newNameServersConfig="${newNS1}${newNS2}"
 /usr/bin/sed -i "s/NewNameServersConfig=.*/NewNameServersConfig=\"${newNameServersConfig}\"/"/opt/rink/rinknames
 
-
 # Configs
 . /opt/rink/rinknames
 . /opt/rink/ns/${newNameServersConfig}
@@ -214,7 +213,7 @@ fi
 ## Dirs used by inkdnsaddslave
 ### Rink on NS1
 /usr/bin/ssh -T ${NS1Name}.${RinkVerbTLD} <<EOS
-/usr/bin/mkdir -p /srv/sns/killed /srv/sns/${RinkName}-${RinkVerbTLD}/domains
+/usr/bin/mkdir -p /srv/sns/killed /srv/sns/domains /srv/sns/${RinkName}-${RinkVerbTLD}/domains /srv/sns/${RinkName}-${RinkVerbTLD}/calls
 /usr/bin/cat <<EOF > /srv/sns/${RinkName}-${RinkVerbTLD}/conf
 VerbHostID="${ServerHost}"
 VerbName="${ServerName}"
@@ -229,7 +228,7 @@ EOS
 ### NS2 on NS1
 . /opt/rink/conf/verbers/${NS2Name}.${RinkVerbTLD}.vrb
 /usr/bin/ssh -T ${NS1Name}.${RinkVerbTLD} <<EOS
-/usr/bin/mkdir -p /srv/sns/killed /srv/sns/${NS2Name}-${RinkVerbTLD}/domains
+/usr/bin/mkdir -p /srv/sns/${NS2Name}-${RinkVerbTLD}/domains /srv/sns/${NS2Name}-${RinkVerbTLD}/calls
 /usr/bin/cat <<EOF > /srv/sns/${NS2Name}-${RinkVerbTLD}/conf
 VerbHostID="${VerbHostID}"
 VerbName="${VerbName}"
@@ -243,7 +242,7 @@ EOF
 EOS
 ### Rink on NS2
 /usr/bin/ssh -T ${NS2Name}.${RinkVerbTLD} <<EOS
-/usr/bin/mkdir -p /srv/sns/${RinkName}-${RinkVerbTLD}/domains /srv/sns/${RinkName}-${RinkVerbTLD}/calls
+/usr/bin/mkdir -p /srv/sns/killed /srv/sns/domains /srv/sns/${RinkName}-${RinkVerbTLD}/domains /srv/sns/${RinkName}-${RinkVerbTLD}/calls
 /usr/bin/cat <<EOF > /srv/sns/${RinkName}-${RinkVerbTLD}/conf
 VerbHostID="${ServerHost}"
 VerbName="${ServerName}"
@@ -270,6 +269,8 @@ VerbARPAIPv4="${VerbARPAIPv4}"
 VerbARPAIPv6="${VerbARPAIPv6}"
 EOF
 EOS
+### Rink dirs on this localk Rink
+/usr/bin/mkdir -p /srv/sns/killed /srv/sns/domains
 ### NS1 on this local Rink
 . /opt/rink/conf/verbers/${NS1Name}.${RinkVerbTLD}.vrb
 /usr/bin/mkdir -p /srv/sns/${NS1Name}-${RinkVerbTLD}/domains /srv/sns/${NS1Name}-${RinkVerbTLD}/calls

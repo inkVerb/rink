@@ -73,6 +73,40 @@ e="$?"; [[ "$e" = "0" ]] || exit "$e"
 /opt/rink/run/killverberrecords ${namespace} ${VerbTLD} ${vuser}
 e="$?"; [[ "$e" = "0" ]] || exit "$e"
 
+# NS authority
+## Rink settings (mainly for reference, may never be used)
+cd /opt/rink/conf/domains/
+for dom in *; do
+  if /usr/bin/grep -q "${namespace}.${VerbTLD}" $dom; then
+    /usr/bin/rm -f $dom
+  fi
+done
+## Set on Rink & NS servers
+cd /srv/sns/domains/
+for dom in *; do
+  if /usr/bin/grep -q "${namespace}-${VerbTLD}" $dom; then
+    /usr/bin/rm -f $dom
+  fi
+done
+### NS1
+/usr/bin/ssh -T ${NS1Name}.${RinkVerbTLD} <<EOS
+cd /srv/sns/domains/
+for dom in *; do
+  if /usr/bin/grep -q "${namespace}-${VerbTLD}" \$dom; then
+    /usr/bin/rm -f \$dom
+  fi
+done
+EOS
+### NS2
+/usr/bin/ssh -T ${NS2Name}.${RinkVerbTLD} <<EOS
+cd /srv/sns/domains/
+for dom in *; do
+  if /usr/bin/grep -q "${namespace}-${VerbTLD}" \$dom; then
+    /usr/bin/rm -f \$dom
+  fi
+done
+EOS
+
 # Refresh nameservers
 /usr/bin/ssh ${NS1Name}.${RinkVerbTLD} /opt/verb/serfs/inkdnsrefreshbind
 /usr/bin/ssh ${NS2Name}.${RinkVerbTLD} /opt/verb/serfs/inkdnsrefreshbind

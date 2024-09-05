@@ -1,0 +1,59 @@
+#!/bin/bash
+#inkVerbRunner! verb.ink
+
+# This sets the authoritative verber for a domain
+## In the event of a domain entry on multiple verbers, such as during a migration, this will tell the rink which to use
+
+# How to use:
+## ./setdomauthority [domain] [verb-namespace] [tld] [user]
+
+# Eg:
+## ./setdomauthority inkisaverb.com name ink john
+
+
+if [ -z "$4" ]; then
+  /usr/bin/echo "Needs domain, verb namespace, tld, and user. I quit."
+  exit 0
+fi
+
+Domain="$1"
+namespace="$2"
+VerbTLD="$3"
+vuser="$4"
+
+# Check if user's verber exists
+if [ ! -f "/opt/rink/conf/verbers/${namespace}.${VerbTLD}.vrb" ]; then
+  echo "Verber does not exist!"
+  exit 8
+elif ! /usr/bin/grep -q VerbUser=\"$vuser\" "/opt/rink/conf/verbers/${namespace}.${VerbTLD}.vrb"; then
+  echo "Verber not owned by that user!"
+  exit 5
+else
+  . "/opt/rink/conf/verbers/${namespace}.${VerbTLD}.vrb"
+fi
+
+# Configs
+. /opt/rink/rinknames
+. /opt/rink/ns/${VerbNameServersConfig}
+
+# Rink settings (mainly for reference, may never be used)
+/usr/bin/cat <<EOF > /opt/rink/conf/domains/"${Domain}"
+${namespace}.${VerbTLD}
+EOF
+
+# Set on Rink & NS servers
+/usr/bin/cat <<EOF > /srv/sns/domains/"${Domain}"
+${namespace}-${VerbTLD}
+EOF
+## NS1
+/usr/bin/ssh -T ${NS1Name}.${RinkVerbTLD} <<EOS
+/usr/bin/cat <<EOF > /srv/sns/domains/"${Domain}"
+${namespace}-${VerbTLD}
+EOF
+EOS
+## NS2
+/usr/bin/ssh -T ${NS2Name}.${RinkVerbTLD} <<EOS
+/usr/bin/cat <<EOF > /srv/sns/domains/"${Domain}"
+${namespace}-${VerbTLD}
+EOF
+EOS
