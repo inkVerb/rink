@@ -146,22 +146,7 @@ EOF
 /usr/bin/echo "New VPS instance ${namespace}.${VerbTLD} initiated. Waiting a few seconds for details to populate..."
 /usr/bin/sleep 5
 
-# Make sure that the IPv4 is not 0.0.0.0
-faillimit=0
-IPv4nozero="$(/usr/bin/vultr-cli instance ipv4 list ${VultrInstanceID} | /usr/bin/grep main_ip | /usr/bin/sed 's/\s.*$//')"
-while [ "${IPv4nozero}" = "0.0.0.0" ]; do
-  IPv4nozero="$(/usr/bin/vultr-cli instance ipv4 list ${VultrInstanceID} | /usr/bin/grep main_ip | /usr/bin/sed 's/\s.*$//')"
-  /usr/bin/sleep 1
-  ### Fail proof
-  if [ "$faillimit" -gt "405" ]; then
-    /opt/rink/run/purgevps ${namespace} ${VerbTLD} ${vuser}
-    e="$?"; [[ "$e" = "0" ]] || exit "$e"
-    /usr/bin/echo "Awe, snap! Could not create ${namespace}.${VerbTLD} properly, likely due to brief backend down time. Try again now or within a few minutes."
-    exit 4
-  fi
-  ((faillimit++))
-done
-
+#DEV kept for reference, but not necessary since all purposes are handled elsewhere
 # Wait for IPv4 to populate (Default until set: 0.0.0.0)
 # firstIPv4PLACEHOLDER="$(/usr/bin/vultr-cli instance ipv4 list ${VultrInstanceID} | /usr/bin/grep main_ip | /usr/bin/sed 's/\s.*$//')"
 # faillimit=0
@@ -178,6 +163,7 @@ done
 #   fi
 #   ((faillimit++))
 # done
+# Above could change depending on the spinup workflow and whether IPv4 is still available
 
 ## Check the IPv6 (Default until set is empty; a temp IPv6 is set when the final IPv4 is set, found with ${firstIPv6PLACEHOLDER} and ${secondIPv6PLACEHOLDER})
 # firstIPv6PLACEHOLDER="$(/usr/bin/vultr-cli instance ipv6 list ${VultrInstanceID} | /usr/bin/grep main_ip | /usr/bin/sed 's/\s.*$//')"
@@ -309,7 +295,8 @@ IPv6Exp=$(expand_ipv6 ${IPv6Raw})
 IPv4ARPA=$(/usr/bin/echo ${IPv4} | /usr/bin/sed -r 's/^([0-9]{1,3}).([0-9]{1,3}).([0-9]{1,3}).([0-9]{1,3})$/\4.\3.\2.\1.in-addr.arpa/')
 IPv6ARPA=$(rarpa_ipv6 ${IPv6Exp})
 
-## Remove the local server finkerfprint
+## Remove the local server fingerfprint
+### We have been approving into a new VPS with a stock host RSA key (on the snapshot); it needs to be removed from our local known_hosts check
 /usr/bin/sed -i "/${IPv4}/d" /root/.ssh/known_hosts
 /usr/bin/sed -i "/${IPv6Cmp}/d" /root/.ssh/known_hosts
 /usr/bin/sed -i "/${IPv6Exp}/d" /root/.ssh/known_hosts
