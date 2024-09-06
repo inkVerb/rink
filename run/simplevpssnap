@@ -2,6 +2,7 @@
 #inkVerbRunner! verb.ink
 
 # This creates a new snapshot from a simple VPS created with simplevps
+##DEV may be depreciated
 ## This will overwrite any pre-existing snapshot ID nickname in rink/snapshotid/
 
 # How to use:

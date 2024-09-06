@@ -142,19 +142,15 @@ VerbPort="${Port}"
 VerbNameServersConfig="${NameServersConfig}"
 EOF
 
-# Get the first IP addresses
-firstIPv4PLACEHOLDER="$(/usr/bin/vultr-cli instance ipv4 list ${VultrInstanceID} | /usr/bin/grep main_ip | /usr/bin/sed 's/\s.*$//')"
-firstIPv6PLACEHOLDER="$(/usr/bin/vultr-cli instance ipv6 list ${VultrInstanceID} | /usr/bin/grep main_ip | /usr/bin/sed 's/\s.*$//')"
-
 # IP address
 /usr/bin/echo "New VPS instance ${namespace}.${VerbTLD} initiated. Waiting a few seconds for details to populate..."
 /usr/bin/sleep 5
 
-## Check the IPv4 (Default until set: 0.0.0.0)
+# Make sure that the IPv4 is not 0.0.0.0
 faillimit=0
-IPv4="$(/usr/bin/vultr-cli instance ipv4 list ${VultrInstanceID} | /usr/bin/grep main_ip | /usr/bin/sed 's/\s.*$//')"
-while [ "${IPv4}" = "0.0.0.0" ] || [ "${IPv4}" = "$firstIPv4PLACEHOLDER" ]; do
-  IPv4="$(/usr/bin/vultr-cli instance ipv4 list ${VultrInstanceID} | /usr/bin/grep main_ip | /usr/bin/sed 's/\s.*$//')"
+IPv4nozero="$(/usr/bin/vultr-cli instance ipv4 list ${VultrInstanceID} | /usr/bin/grep main_ip | /usr/bin/sed 's/\s.*$//')"
+while [ "${IPv4nozero}" = "0.0.0.0" ]; do
+  IPv4nozero="$(/usr/bin/vultr-cli instance ipv4 list ${VultrInstanceID} | /usr/bin/grep main_ip | /usr/bin/sed 's/\s.*$//')"
   /usr/bin/sleep 1
   ### Fail proof
   if [ "$faillimit" -gt "405" ]; then
@@ -166,7 +162,25 @@ while [ "${IPv4}" = "0.0.0.0" ] || [ "${IPv4}" = "$firstIPv4PLACEHOLDER" ]; do
   ((faillimit++))
 done
 
+# Wait for IPv4 to populate (Default until set: 0.0.0.0)
+# firstIPv4PLACEHOLDER="$(/usr/bin/vultr-cli instance ipv4 list ${VultrInstanceID} | /usr/bin/grep main_ip | /usr/bin/sed 's/\s.*$//')"
+# faillimit=0
+# IPv4="$(/usr/bin/vultr-cli instance ipv4 list ${VultrInstanceID} | /usr/bin/grep main_ip | /usr/bin/sed 's/\s.*$//')"
+# while [ "${IPv4}" = "0.0.0.0" ] || [ "${IPv4}" = "$firstIPv4PLACEHOLDER" ]; do
+#   IPv4="$(/usr/bin/vultr-cli instance ipv4 list ${VultrInstanceID} | /usr/bin/grep main_ip | /usr/bin/sed 's/\s.*$//')"
+#   /usr/bin/sleep 1
+#   ### Fail proof
+#   if [ "$faillimit" -gt "405" ]; then
+#     /opt/rink/run/purgevps ${namespace} ${VerbTLD} ${vuser}
+#     e="$?"; [[ "$e" = "0" ]] || exit "$e"
+#     /usr/bin/echo "Awe, snap! Could not create ${namespace}.${VerbTLD} properly, likely due to brief backend down time. Try again now or within a few minutes."
+#     exit 4
+#   fi
+#   ((faillimit++))
+# done
+
 ## Check the IPv6 (Default until set is empty; a temp IPv6 is set when the final IPv4 is set, found with ${firstIPv6PLACEHOLDER} and ${secondIPv6PLACEHOLDER})
+# firstIPv6PLACEHOLDER="$(/usr/bin/vultr-cli instance ipv6 list ${VultrInstanceID} | /usr/bin/grep main_ip | /usr/bin/sed 's/\s.*$//')"
 # secondIPv6PLACEHOLDER="$(/usr/bin/vultr-cli instance ipv6 list ${VultrInstanceID} | /usr/bin/grep main_ip | /usr/bin/sed 's/\s.*$//')"
 # IPv6third="$(/usr/bin/vultr-cli instance ipv6 list ${VultrInstanceID} | /usr/bin/grep main_ip | /usr/bin/sed 's/\s.*$//')"
 # counter=1
@@ -179,6 +193,7 @@ done
 
 # /usr/bin/echo "IPv4: ${IPv4}" #DEV do this after we check the connection for answer
 # /usr/bin/echo "IPv6: ${IPv6}" #DEV This could change, let's wait until after we process it
+
 
 ## IP processing
 ### Compress IPv6
@@ -286,7 +301,8 @@ if [ "$e" != "0" ]; then
 fi
 # Process IPs to list for keyscan
 
-## Finalize the IPv6 (because it keeps changing in spinup)
+## Finalize the IP addresses (because they keep changing in spinup)
+IPv4="$(/usr/bin/vultr-cli instance ipv4 list ${VultrInstanceID} | /usr/bin/grep main_ip | /usr/bin/sed 's/\s.*$//')"
 IPv6Raw="$(/usr/bin/vultr-cli instance ipv6 list ${VultrInstanceID} | /usr/bin/grep main_ip | /usr/bin/sed 's/\s.*$//')"
 IPv6Cmp=$(compress_ipv6 ${IPv6Raw})
 IPv6Exp=$(expand_ipv6 ${IPv6Raw})

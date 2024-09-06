@@ -2,8 +2,9 @@
 #inkVerbRunner! verb.ink
 
 # This creates a new Vultr VPS, sending the output to a config file that can be read, creating other configs based on output
-## Tertiary Warning: This is run by other scripts and should not be run by itself
-## Used by: addvps and setuprinkns
+## Tertiary Warning: This is intended to be run by other scripts and should not be run by itself
+## Formerly used by: addvps and setuprinkns
+##DEV may be depreciated
 ##DEV the noip4 argument is in development and not yet supported by vultr-cli
 
 # How to use:

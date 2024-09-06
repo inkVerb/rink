@@ -2,6 +2,7 @@
 #inkVerbRunner! verb.ink
 
 # This destroys a simple VPS created with simplevps
+##DEV may be depreciated
 
 # How to use:
 ## ./simplevpskill [vps nickname]
