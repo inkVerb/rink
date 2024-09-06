@@ -20,7 +20,7 @@ fi
 namespace="$1"
 VerbTLD="$2"
 
-if [ -f /opt/rink/conf/verbers/${namespace}.${VerbTLD}.vrb ]; then
+if [ -f "/opt/rink/conf/verbers/${namespace}.${VerbTLD}.vrb" ]; then
   . /opt/rink/conf/verbers/${namespace}.${VerbTLD}.vrb
   . /opt/rink/ns/${VerbNameServersConfig}
   # Re-scanning?

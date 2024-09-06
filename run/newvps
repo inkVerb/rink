@@ -293,7 +293,7 @@ rarpa_ipv6() {
 # Wait for powerup
 /usr/bin/echo "Waiting for preparation and power up..."
 /opt/rink/run/waitvpson ${namespace} ${VerbTLD}
-/opt/rink/run/waitvpsanswer ${namespace} ${VerbTLD}
+#/opt/rink/run/waitvpsanswer ${namespace} ${VerbTLD} #DEV too much, the server may not be ready for such heavy interaction yet
 e="$?"
 if [ "$e" != "0" ]; then
   /usr/bin/echo "VPS cannot be accessed. It is possible that the keys are not installed. Make sure that they key '${SSHKey}' is properly installed on this VPS, then try again."
@@ -389,7 +389,7 @@ done
 # Add the hashed key
 sleep 10 # The server needs to start its reboot
 /opt/rink/run/waitvpson ${namespace} ${VerbTLD}
-/opt/rink/run/waitvpsanswer ${namespace} ${VerbTLD}
+#/opt/rink/run/waitvpsanswer ${namespace} ${VerbTLD}
 
 # Ensure that make-verber is done and setup is ready
 /usr/bin/ssh -o StrictHostKeyChecking=no -o ConnectTimeout=5 -q -T ${namespace}.${VerbTLD} <<EOS
