@@ -312,7 +312,7 @@ IPv4="$(/usr/bin/vultr-cli instance ipv4 list ${VultrInstanceID} 2> /dev/null | 
 echo $IPv4 #DEV
 echo "vultr-cli instance ipv6 list ${VultrInstanceID}" #DEV
 IPv6Raw=$(/usr/bin/vultr-cli instance ipv6 list ${VultrInstanceID} 2> /dev/null | /usr/bin/grep main_ip | /usr/bin/sed 's/\s.*$//')
-echo $IPv6Raw #DEV
+echo "IPv6: $IPv6Raw" #DEV
 IPv6Cmp=$(compress_ipv6 ${IPv6Raw})
 echo $IPv6Cmp #DEV
 IPv6Exp=$(expand_ipv6 ${IPv6Raw})
