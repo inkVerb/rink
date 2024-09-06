@@ -95,47 +95,48 @@ if [ "${isIP4}" = "true" ]; then
   /usr/bin/rm -f /opt/rink/tmp/waiton.${namespace}.${VerbTLD}
 fi
 
-# Wait for powerup on IPv4
-## Keep checking the IPv6 (because it keeps changing in spinup)
-IPv6="$(/usr/bin/vultr-cli instance ipv6 list ${VultrInstanceID} | /usr/bin/grep main_ip | /usr/bin/sed 's/\s.*$//')"
-isIP6 ${IPv6}
-if [ "${isIP6}" = "true" ]; then
-  ## Prep loop
-  sshCall="root@${IPv6} -p ${VerbPort} -i /root/.ssh/${SSHKey}"
-  /usr/bin/ssh -o StrictHostKeyChecking=yes -o ConnectTimeout=5 ${sshCall} "exit 0" 1> /opt/rink/tmp/waiton.${namespace}.${VerbTLD} 2> /opt/rink/tmp/waiton.${namespace}.${VerbTLD}
-  sshexit="$?"
-  /usr/bin/grep -q 'key' /opt/rink/tmp/waiton.${namespace}.${VerbTLD}
-  greptest="$?"
-  count=0
-  # Loop
-  while [ "${greptest}" != "0" ] && [ "${sshexit}" != "0" ]; do
-    sleep 2
-    /usr/bin/ssh -o StrictHostKeyChecking=yes -o ConnectTimeout=5 ${sshCall} "exit 0" 1> /opt/rink/tmp/waiton.${namespace}.${VerbTLD} 2> /opt/rink/tmp/waiton.${namespace}.${VerbTLD}
-    sshexit="$?"
-    /usr/bin/grep -q 'key' /opt/rink/tmp/waiton.${namespace}.${VerbTLD}
-    greptest="$?"
-    ### Keep checking the IPv6 (because it keeps changing in spinup)
-    IPv6="$(/usr/bin/vultr-cli instance ipv6 list ${VultrInstanceID} | /usr/bin/grep main_ip | /usr/bin/sed 's/\s.*$//')"
-    sshCall="root@${IPv6} -p ${VerbPort} -i /root/.ssh/${SSHKey}"
-        ### If a fast test, fail after a short time
-    if [ -n "${poweronce}" ] && [ "${poweronce}" = "true" ]; then
-        if [ "$count" -gt "7" ]; then
-          fail="true"
-          break
-        elif [ "$count" -gt "5" ]; then
-          /opt/rink/run/powercycle ${namespace} ${VerbTLD}
-          sleep 15
-        fi
-    ### If we have been trying 10 minutes, restart
-    else
-      if [ "$count" -gt "60" ]; then
-        /opt/rink/run/powercycle ${namespace} ${VerbTLD}
-        count=0
-      fi
-    fi
-    ((count++))
-  done
-fi
+#DEV KEEP THIS! It was temporarily giving a "no route to host" error
+# # Wait for powerup on IPv4
+# ## Keep checking the IPv6 (because it keeps changing in spinup)
+# IPv6="$(/usr/bin/vultr-cli instance ipv6 list ${VultrInstanceID} | /usr/bin/grep main_ip | /usr/bin/sed 's/\s.*$//')"
+# isIP6 ${IPv6}
+# if [ "${isIP6}" = "true" ]; then
+#   ## Prep loop
+#   sshCall="root@${IPv6} -p ${VerbPort} -i /root/.ssh/${SSHKey}"
+#   /usr/bin/ssh -o StrictHostKeyChecking=yes -o ConnectTimeout=5 ${sshCall} "exit 0" 1> /opt/rink/tmp/waiton.${namespace}.${VerbTLD} 2> /opt/rink/tmp/waiton.${namespace}.${VerbTLD}
+#   sshexit="$?"
+#   /usr/bin/grep -q 'key' /opt/rink/tmp/waiton.${namespace}.${VerbTLD}
+#   greptest="$?"
+#   count=0
+#   # Loop
+#   while [ "${greptest}" != "0" ] && [ "${sshexit}" != "0" ]; do
+#     sleep 2
+#     /usr/bin/ssh -o StrictHostKeyChecking=yes -o ConnectTimeout=5 ${sshCall} "exit 0" 1> /opt/rink/tmp/waiton.${namespace}.${VerbTLD} 2> /opt/rink/tmp/waiton.${namespace}.${VerbTLD}
+#     sshexit="$?"
+#     /usr/bin/grep -q 'key' /opt/rink/tmp/waiton.${namespace}.${VerbTLD}
+#     greptest="$?"
+#     ### Keep checking the IPv6 (because it keeps changing in spinup)
+#     IPv6="$(/usr/bin/vultr-cli instance ipv6 list ${VultrInstanceID} | /usr/bin/grep main_ip | /usr/bin/sed 's/\s.*$//')"
+#     sshCall="root@${IPv6} -p ${VerbPort} -i /root/.ssh/${SSHKey}"
+#         ### If a fast test, fail after a short time
+#     if [ -n "${poweronce}" ] && [ "${poweronce}" = "true" ]; then
+#         if [ "$count" -gt "7" ]; then
+#           fail="true"
+#           break
+#         elif [ "$count" -gt "5" ]; then
+#           /opt/rink/run/powercycle ${namespace} ${VerbTLD}
+#           sleep 15
+#         fi
+#     ### If we have been trying 10 minutes, restart
+#     else
+#       if [ "$count" -gt "60" ]; then
+#         /opt/rink/run/powercycle ${namespace} ${VerbTLD}
+#         count=0
+#       fi
+#     fi
+#     ((count++))
+#   done
+# fi
 
 # Poweronce test?
 if [ -n "${poweronce}" ] && [ "${poweronce}" = "true" ] && [ "${fail}" = "true" ]; then
