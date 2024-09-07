@@ -359,11 +359,11 @@ e="\$?"; [[ "\$e" = "0" ]] || exit 4
 e="\$?"; [[ "\$e" = "0" ]] || exit 4
 /usr/bin/reboot
 EOS
+# That might need some time, make sure we aren't getting a 255 just because it needs a few seconds...
 sshresetstatus="$?"
 count=0
 faillimit=0
 while [ "$sshresetstatus" != "0" ] && [ "$sshresetstatus" != "255" ]; do
-  #/usr/bin/echo "newvps ssh-keygen loop reboot error: $sshresetstatus #DEBUG This echos a 255 while the server is still being prepared, use this for debugging only
   /usr/bin/echo "Waiting, then trying again..."
   sleep 3
   /usr/bin/ssh -o StrictHostKeyChecking=no -o ConnectTimeout=5 -q -T ${namespace}.${VerbTLD} <<EOS
@@ -389,6 +389,7 @@ EOS
   fi
   ((faillimit++))
 done
+/usr/bin/echo "Re-keyed the locks, now checking that they work..."
 
 # Add the hashed key
 sleep 10 # The server needs to start its reboot
@@ -406,11 +407,11 @@ else
   exit 8
 fi
 EOS
+# That might need some time, make sure we aren't getting a 255 just because it needs a few seconds...
 sshresetstatus="$?"
 count=0
 faillimit=0
 while [ "$sshresetstatus" != "0" ] && [ "$sshresetstatus" != "255" ]; do
-  #/usr/bin/echo "newvps ssh-keygen loop reboot error: $sshresetstatus #DEBUG This echos a 255 while the server is still being prepared, use this for debugging only
   /usr/bin/echo "Waiting, then trying again..."
   sleep 3
   /usr/bin/ssh -o StrictHostKeyChecking=no -o ConnectTimeout=5 -q -T ${namespace}.${VerbTLD} <<EOS
