@@ -98,7 +98,7 @@ if [ "$IMPort" != "true" ]; then
   # Create the VPS
   if [ ! -f "/opt/rink/conf/verbers/${namespace}.${VerbTLD}.raw" ]; then
     /opt/rink/run/newvps "${namespace}" "${VerbTLD}" "${vuser}" "${vultrplan}" "${snapnick}" "${VultrRegion}" "${TimeZone}" "${hostname}"
-    e="$?"; [[ "$e" = "0" ]] || echo "VPS setup failed!"; exit "$e"
+    e="$?"; [[ "$e" = "0" ]] || (echo "VPS setup failed!"; exit "$e")
   fi
 
   # Check if finished right

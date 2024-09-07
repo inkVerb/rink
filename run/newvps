@@ -440,10 +440,15 @@ EOS
   ((faillimit++))
 done
 
+# Remove any records from the new VPS in our known_hosts
+/usr/bin/sed -i "/${IPv4}/d" /root/.ssh/known_hosts
+/usr/bin/sed -i "/${IPv6Cmp}/d" /root/.ssh/known_hosts
+/usr/bin/sed -i "/${IPv6Exp}/d" /root/.ssh/known_hosts
+
 # Keyscan
 /usr/bin/echo "Adding the new VPS to our security records..."
 /opt/rink/run/keyscan ${namespace} ${VerbTLD}
-e="$?"; [[ "$e" = "0" ]] || /usr/bin/echo "Security scan unsuccessful."; exit "$e"
+e="$?"; [[ "$e" = "0" ]] || ( /usr/bin/echo "Security scan unsuccessful."; exit "$e")
 
 # Last ID (Only when we got this far)
 if [ -z "$8" ]; then
