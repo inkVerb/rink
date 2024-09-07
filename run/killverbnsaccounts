@@ -86,11 +86,11 @@ e="$?"; [[ "$e" = "0" ]] || exit "$e"
 # Delete verber accounts on the NS rinks (created with newverbrinkkeys)
 /usr/bin/ssh -T -o StrictHostKeyChecking=yes ${NS1Name}.${RinkVerbTLD} <<EOS
 /usr/bin/userdel ${namespace}-${VerbTLD}
-#/usr/bin/groupdel ${namespace}-${VerbTLD}
+#/usr/bin/groupdel ${namespace}-${VerbTLD} # redundant from userdel
 EOS
 e="$?"; [[ "$e" = "0" ]] || exit "$e"
 /usr/bin/ssh -T -o StrictHostKeyChecking=yes ${NS2Name}.${RinkVerbTLD} <<EOS
 /usr/bin/userdel ${namespace}-${VerbTLD}
-#/usr/bin/groupdel ${namespace}-${VerbTLD}
+#/usr/bin/groupdel ${namespace}-${VerbTLD} # redundant from userdel
 EOS
 e="$?"; [[ "$e" = "0" ]] || exit "$e"

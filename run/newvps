@@ -294,21 +294,10 @@ rarpa_ipv6() {
   printf 'ip6.arpa\n'
 }
 
-# # Create the .ssh/config entry
-# . /opt/rink/sshkey
-# /usr/bin/echo "Include /opt/rink/conf/verbers/${namespace}.${VerbTLD}.ssh" >> /root/.ssh/config
-# /usr/bin/cat <<EOF > /opt/rink/conf/verbers/${namespace}.${VerbTLD}.ssh
-# Host ${namespace}.${VerbTLD}
-# Hostname ${IPv4}
-# User root
-# Port ${Port}
-# IdentityFile /root/.ssh/${SSHKey}
-# EOF
-
 # Wait for powerup
 /usr/bin/echo "Waiting for preparation and power up..."
 /opt/rink/run/waitvpson ${namespace} ${VerbTLD}
-#/opt/rink/run/waitvpsanswer ${namespace} ${VerbTLD} #DEV too much, the server may not be ready for such heavy interaction yet
+/opt/rink/run/waitvpsanswer ${namespace} ${VerbTLD} #DEV remove if breaks
 e="$?"
 if [ "$e" != "0" ]; then
   /usr/bin/echo "VPS cannot be accessed. It is possible that the keys are not installed. Make sure that they key '${SSHKey}' is properly installed on this VPS, then try again."
@@ -400,15 +389,11 @@ EOS
   fi
   ((faillimit++))
 done
-# # Remove any records from the new VPS in our known_hosts after using ssh -o StrictHostKeyChecking=no
-# /usr/bin/sed -i "/${IPv4}/d" /root/.ssh/known_hosts
-# /usr/bin/sed -i "/${IPv6Cmp}/d" /root/.ssh/known_hosts
-# /usr/bin/sed -i "/${IPv6Exp}/d" /root/.ssh/known_hosts
 
 # Add the hashed key
 sleep 10 # The server needs to start its reboot
 /opt/rink/run/waitvpson ${namespace} ${VerbTLD}
-#/opt/rink/run/waitvpsanswer ${namespace} ${VerbTLD}
+/opt/rink/run/waitvpsanswer ${namespace} ${VerbTLD} #DEV remove if breaks
 
 # Ensure that make-verber is done and setup is ready
 /usr/bin/echo "Checking that the VPS is ready to install..."
