@@ -325,7 +325,7 @@ IPv6Exp=$(expand_ipv6 ${IPv6Raw})
 IPv4ARPA=$(/usr/bin/echo ${IPv4} | /usr/bin/sed -r 's/^([0-9]{1,3}).([0-9]{1,3}).([0-9]{1,3}).([0-9]{1,3})$/\4.\3.\2.\1.in-addr.arpa/')
 IPv6ARPA=$(rarpa_ipv6 ${IPv6Exp})
 
-## Remove the local server fingerfprint
+## Remove the new VPS record from our known_hosts
 ### We have been approving into a new VPS with a stock host RSA key (on the snapshot); it needs to be removed from our local known_hosts check
 /usr/bin/sed -i "/${IPv4}/d" /root/.ssh/known_hosts
 /usr/bin/sed -i "/${IPv6Cmp}/d" /root/.ssh/known_hosts
@@ -377,6 +377,10 @@ while [ "$sshresetstatus" != "0" ] && [ "$sshresetstatus" != "255" ]; do
   #/usr/bin/echo "newvps ssh-keygen loop reboot error: $sshresetstatus #DEBUG This echos a 255 while the server is still being prepared, use this for debugging only
   /usr/bin/echo "Waiting, then trying again..."
   sleep 3
+  # ## Remove any records from the new VPS in our known_hosts after using ssh -o StrictHostKeyChecking=no
+  # /usr/bin/sed -i "/${IPv4}/d" /root/.ssh/known_hosts
+  # /usr/bin/sed -i "/${IPv6Cmp}/d" /root/.ssh/known_hosts
+  # /usr/bin/sed -i "/${IPv6Exp}/d" /root/.ssh/known_hosts
   /usr/bin/ssh -o StrictHostKeyChecking=no -o ConnectTimeout=5 -q -T ${namespace}.${VerbTLD} <<EOS
 /usr/bin/rm -f /etc/ssh/ssh_host_*
 e="\$?"; [[ "\$e" = "0" ]] || exit 4
@@ -400,6 +404,10 @@ EOS
   fi
   ((faillimit++))
 done
+# # Remove any records from the new VPS in our known_hosts after using ssh -o StrictHostKeyChecking=no
+# /usr/bin/sed -i "/${IPv4}/d" /root/.ssh/known_hosts
+# /usr/bin/sed -i "/${IPv6Cmp}/d" /root/.ssh/known_hosts
+# /usr/bin/sed -i "/${IPv6Exp}/d" /root/.ssh/known_hosts
 
 # Add the hashed key
 sleep 10 # The server needs to start its reboot
@@ -407,6 +415,7 @@ sleep 10 # The server needs to start its reboot
 #/opt/rink/run/waitvpsanswer ${namespace} ${VerbTLD}
 
 # Ensure that make-verber is done and setup is ready
+echo "Checking that the VPS is ready to install..."
 /usr/bin/ssh -o StrictHostKeyChecking=no -o ConnectTimeout=5 -q -T ${namespace}.${VerbTLD} <<EOS
 if [ ! -f "/opt/verb/inst/make-verber-laemp" ] && [ -f "/opt/verb/inst/setup" ]; then
   /usr/bin/echo "Linux web stack is ready..."
@@ -417,8 +426,13 @@ else
 fi
 EOS
 e="$?"; [[ "$e" = "0" ]] || exit "$e"
+# # Remove any records from the new VPS in our known_hosts after using ssh -o StrictHostKeyChecking=no
+# /usr/bin/sed -i "/${IPv4}/d" /root/.ssh/known_hosts
+# /usr/bin/sed -i "/${IPv6Cmp}/d" /root/.ssh/known_hosts
+# /usr/bin/sed -i "/${IPv6Exp}/d" /root/.ssh/known_hosts
 
 # Keyscan
+echo "Adding the new VPS to our security records..."
 /opt/rink/run/keyscan ${namespace} ${VerbTLD}
 e="$?"; [[ "$e" = "0" ]] || exit "$e"
 
