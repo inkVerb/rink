@@ -253,7 +253,7 @@ compress_ipv6() {
     done
 
     # remove prepending : if necessary
-    /bin/echo $ip | /bin/grep -qs "^:[^:]" && ip=$(echo $ip | sed 's/://')
+    /bin/echo $ip | /bin/grep -qs "^:[^:]" && ip=$(/usr/bin/echo $ip | sed 's/://')
 
     /bin/echo $ip
 }
@@ -377,10 +377,6 @@ while [ "$sshresetstatus" != "0" ] && [ "$sshresetstatus" != "255" ]; do
   #/usr/bin/echo "newvps ssh-keygen loop reboot error: $sshresetstatus #DEBUG This echos a 255 while the server is still being prepared, use this for debugging only
   /usr/bin/echo "Waiting, then trying again..."
   sleep 3
-  # ## Remove any records from the new VPS in our known_hosts after using ssh -o StrictHostKeyChecking=no
-  # /usr/bin/sed -i "/${IPv4}/d" /root/.ssh/known_hosts
-  # /usr/bin/sed -i "/${IPv6Cmp}/d" /root/.ssh/known_hosts
-  # /usr/bin/sed -i "/${IPv6Exp}/d" /root/.ssh/known_hosts
   /usr/bin/ssh -o StrictHostKeyChecking=no -o ConnectTimeout=5 -q -T ${namespace}.${VerbTLD} <<EOS
 /usr/bin/rm -f /etc/ssh/ssh_host_*
 e="\$?"; [[ "\$e" = "0" ]] || exit 4
@@ -415,7 +411,7 @@ sleep 10 # The server needs to start its reboot
 #/opt/rink/run/waitvpsanswer ${namespace} ${VerbTLD}
 
 # Ensure that make-verber is done and setup is ready
-echo "Checking that the VPS is ready to install..."
+/usr/bin/echo "Checking that the VPS is ready to install..."
 /usr/bin/ssh -o StrictHostKeyChecking=no -o ConnectTimeout=5 -q -T ${namespace}.${VerbTLD} <<EOS
 if [ ! -f "/opt/verb/inst/make-verber-laemp" ] && [ -f "/opt/verb/inst/setup" ]; then
   /usr/bin/echo "Linux web stack is ready..."
@@ -425,16 +421,43 @@ else
   exit 8
 fi
 EOS
-e="$?"; [[ "$e" = "0" ]] || exit "$e"
-# # Remove any records from the new VPS in our known_hosts after using ssh -o StrictHostKeyChecking=no
-# /usr/bin/sed -i "/${IPv4}/d" /root/.ssh/known_hosts
-# /usr/bin/sed -i "/${IPv6Cmp}/d" /root/.ssh/known_hosts
-# /usr/bin/sed -i "/${IPv6Exp}/d" /root/.ssh/known_hosts
+sshresetstatus="$?"
+count=0
+faillimit=0
+while [ "$sshresetstatus" != "0" ] && [ "$sshresetstatus" != "255" ]; do
+  #/usr/bin/echo "newvps ssh-keygen loop reboot error: $sshresetstatus #DEBUG This echos a 255 while the server is still being prepared, use this for debugging only
+  /usr/bin/echo "Waiting, then trying again..."
+  sleep 3
+  /usr/bin/ssh -o StrictHostKeyChecking=no -o ConnectTimeout=5 -q -T ${namespace}.${VerbTLD} <<EOS
+if [ ! -f "/opt/verb/inst/make-verber-laemp" ] && [ -f "/opt/verb/inst/setup" ]; then
+  /usr/bin/echo "Linux web stack is ready..."
+  exit 0
+else
+  /usr/bin/echo "No Linux web stack! Can't continue."
+  exit 8
+fi
+EOS
+  sshresetstatus="$?"
+  ### If we have been trying 10 minutes, restart
+  if [ "$count" -gt "200" ]; then
+    /opt/rink/run/powercycle ${namespace} ${VerbTLD}
+    count=0
+  fi
+  ((count++))
+  ### Fail proof
+  if [ "$faillimit" -gt "405" ]; then
+    /opt/rink/run/purgevps ${namespace} ${VerbTLD} ${vuser}
+    e="$?"; [[ "$e" = "0" ]] || exit "$e"
+    /usr/bin/echo "Awe, snap! Could not verify that ${namespace}.${VerbTLD} that the VPS is ready to install, likely due to brief backend down time. Try again now or within a few minutes."
+    exit 4
+  fi
+  ((faillimit++))
+done
 
 # Keyscan
-echo "Adding the new VPS to our security records..."
+/usr/bin/echo "Adding the new VPS to our security records..."
 /opt/rink/run/keyscan ${namespace} ${VerbTLD}
-e="$?"; [[ "$e" = "0" ]] || exit "$e"
+e="$?"; [[ "$e" = "0" ]] || /usr/bin/echo "Security scan unsuccessful."; exit "$e"
 
 # Last ID (Only when we got this far)
 if [ -z "$8" ]; then
