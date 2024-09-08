@@ -405,8 +405,8 @@ fi
 # PTR records with the hosting service
 . /opt/rink/conf/verbers/${namespace}.${VerbTLD}.vrb
 . /opt/rink/conf/verbers/svr.${namespace}.${VerbTLD}.conf
-/usr/bin/vultr-cli instance reverse-dns set-ipv4 "${VultrInstanceID}" -e "${hostURI}" -i "${ServerIPv4}"
-/usr/bin/vultr-cli instance reverse-dns set-ipv6 "${VultrInstanceID}" -e "${hostURI}" -i "${ServerIPv6}"
+/usr/bin/vultr-cli instance reverse-dns set-ipv4 "${VultrInstanceID}" "${ServerIPv4}" -e "${hostURI}"
+/usr/bin/vultr-cli instance reverse-dns set-ipv6 "${VultrInstanceID}" "${ServerExpIPv6}" -e "${hostURI}"
 
 # Remove the import permission
 /usr/bin/ssh ${namespace}.${VerbTLD} "/usr/bin/rm -f /opt/verb/conf/.importme"

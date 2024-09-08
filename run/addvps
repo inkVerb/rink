@@ -228,8 +228,8 @@ fi
 # PTR records with the hosting service
 . /opt/rink/conf/verbers/${namespace}.${VerbTLD}.vrb
 . /opt/rink/conf/verbers/${namespace}.${VerbTLD}.srv
-/usr/bin/vultr-cli instance reverse-dns set-ipv4 "${VultrInstanceID}" -e "${hostURI}" -i "${ServerIPv4}"
-/usr/bin/vultr-cli instance reverse-dns set-ipv6 "${VultrInstanceID}" -e "${hostURI}" -i "${ServerExpIPv6}"
+/usr/bin/vultr-cli instance reverse-dns set-ipv4 "${VultrInstanceID}" "${ServerIPv4}" -e "${hostURI}"
+/usr/bin/vultr-cli instance reverse-dns set-ipv6 "${VultrInstanceID}" "${ServerExpIPv6}" -e "${hostURI}"
 
 # Restart the new Verber
 /usr/bin/echo "Rebooting the VPS..."
@@ -249,3 +249,5 @@ if [ -n "${MailPath}" ]; then
   /usr/bin/echo "When DNS listings finish populating, inkCert should obtain SSL certs automatically.
 If not, manually run inkCert for verb domains ('ink cert do -ma' or 'serfs/inkcertdole-all-verbs')"
 fi
+
+/usr/bin/echo "Done. Verber is ready for you to start inking."
