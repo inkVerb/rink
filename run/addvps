@@ -12,6 +12,8 @@
 ### Custom mail path is preferred and the web UI should ask for this at creation
 ### The auto-host naming is preferred and should be mandatory when managed through a web UI
 ### Specifying a custom host name is only for verbers not managed or accessible from the web UI
+## inkMaddyMail is installed by default
+### To install inkvmail (postfix vmail w/ Dovecot and PostfixAdmin), use hyphen - in the mailpath place, then run serfs/installinkvmail manually on the verber later
 
 # Eg:
 ## ./addvps name ink someuser vhf-1c-1gb laemp ord America/Chicago
@@ -245,7 +247,7 @@ fi
 # inkVmail initiated?
 if [ -n "${MailPath}" ]; then
   /usr/bin/echo "Installing mail server..."
-  /usr/bin/ssh ${namespace}.${VerbTLD} /opt/verb/serfs/installinkvmail ${MailPath}
+  /usr/bin/ssh ${namespace}.${VerbTLD} /opt/verb/serfs/installinkmaddymail ${MailPath}
   /usr/bin/echo "When DNS listings finish populating, inkCert should obtain SSL certs automatically.
 If not, manually run inkCert for verb domains ('ink cert do -ma' or 'serfs/inkcertdole-all-verbs')"
 fi

@@ -131,9 +131,9 @@ if [ -n "${InkDriveWP}" ]; then
     fi
   done
 fi
-# Confirm health of any InkDriveNC
-if [ -n "${InkDriveNC}" ] && [ $(/usr/bin/readlink -f /srv/www/vapps/nextcloud/data) != "/mnt/${InkDriveNC}/nextcloud/data" ]; then
-  /usr/bin/echo "Nextcloud's data folder should be mounted to the ${InkDriveNC} drive, but it can't be found. Remaking would be detrimental!"
+# Confirm health of any InkDriveCloud
+if [ -n "${InkDriveCloud}" ] && [ $(/usr/bin/readlink -f /srv/www/vapps/nextcloud/data) != "/mnt/${InkDriveCloud}/nextcloud/data" ]; then
+  /usr/bin/echo "Nextcloud's data folder should be mounted to the ${InkDriveCloud} drive, but it can't be found. Remaking would be detrimental!"
   exit 6
 fi
 
