@@ -75,12 +75,12 @@ else
   if [ -n "${10}" ]; then
     UpdateRepo="${10}" # Overrides update repo from rinknames
   else
-    UpdateRepo=""
+    UpdateRepo="verb-update" # Don't leave empty, don't break if next arg
   fi
   if [ -n "${11}" ]; then
     UpdateOrg="${11}" # Overrides update org from rinknames
   else
-    UpdateOrg=""
+    UpdateOrg="inkverb" # Don't leave empty, don't break if next arg
   fi
   if [ -n "${12}" ] && [ "${12}" != "-" ]; then
     OverrideVerbNameServersConfig="${12}"
