@@ -41,20 +41,21 @@ if [ "$?" != "0" ]; then
   exit 0
 fi
 
-# Make sure it is running
-count=0
-powerstatus="$(/usr/bin/vultr-cli instance get ${VultrInstanceID} | /usr/bin/grep '^POWER STATUS' | /usr/bin/sed s"/POWER STATUS\t\t//")"
-while [ "${powerstatus}" != "running" ]; do
-  sleep 5
-  powerstatus="$(/usr/bin/vultr-cli instance get ${VultrInstanceID} | /usr/bin/grep '^POWER STATUS' | /usr/bin/sed s"/POWER STATUS\t\t//")"
-    # If we have been trying 10 minutes, restart
-  if [ "$count" -gt "60" ]; then
-    /opt/rink/run/powercycle ${namespace} ${VerbTLD}
-    count=0
-  fi
-  ((count++))
-done
-/opt/rink/run/waitvpsanswer ${namespace} ${VerbTLD}
+#DEV Why!? We have what we need to remove it
+# # Make sure it is running
+# count=0
+# powerstatus="$(/usr/bin/vultr-cli instance get ${VultrInstanceID} | /usr/bin/grep '^POWER STATUS' | /usr/bin/sed s"/POWER STATUS\t\t//")"
+# while [ "${powerstatus}" != "running" ]; do
+#   sleep 5
+#   powerstatus="$(/usr/bin/vultr-cli instance get ${VultrInstanceID} | /usr/bin/grep '^POWER STATUS' | /usr/bin/sed s"/POWER STATUS\t\t//")"
+#     # If we have been trying 10 minutes, restart
+#   if [ "$count" -gt "60" ]; then
+#     /opt/rink/run/powercycle ${namespace} ${VerbTLD}
+#     count=0
+#   fi
+#   ((count++))
+# done
+# /opt/rink/run/waitvpsanswer ${namespace} ${VerbTLD}
 
 # De-list the NS records
 #DEV obsolete, see killdns notes

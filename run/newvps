@@ -153,7 +153,7 @@ while [ "${IPv4nozero}" = "0.0.0.0" ] || [ "${IPv4nozero}" = "" ]; do
   IPv4nozero="$(/usr/bin/vultr-cli instance ipv4 list ${VultrInstanceID} 2> /dev/null | /usr/bin/grep main_ip | /usr/bin/sed 's/\s.*$//' 2> /dev/null)"
   /usr/bin/sleep 1
   ### Fail proof
-  if [ "$faillimit" -gt "405" ]; then
+  if [ "$faillimit" -gt "15" ]; then
     /opt/rink/run/purgevps ${namespace} ${VerbTLD} ${vuser}
     e="$?"; [[ "$e" = "0" ]] || exit "$e"
     /usr/bin/echo "Awe, snap! Could not create ${namespace}.${VerbTLD} properly, likely due to brief backend down time. Try again now or within a few minutes."

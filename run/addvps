@@ -191,7 +191,9 @@ if [ "$IMPort" != "true" ]; then
     ## Run setup
     /usr/bin/echo "Setting-up the VPS to know its name..."
     /usr/bin/ssh ${namespace}.${VerbTLD} /opt/verb/serfs/setup ${namespace} ink email vip ${VerbHostID} ${VerbIPv4} ${VerbIPv6} cb@${RinkDomain} 100 1000 ${TimeZone} ${Port} boss "$(/usr/bin/pwgen -s -1 16)" ${UpdateRepo} ${UpdateOrg}
-       
+    ### Update verber (not inside setup)
+    /usr/bin/ssh ${namespace}.${VerbTLD} /opt/verb/serfs/updateverb
+
     e="$?"; [[ "$e" = "0" ]] || exit "$e"
     if [ "$?" = "0" ]; then
       /usr/bin/echo 'SetupVerber="DONE"' >> /opt/rink/conf/verbers/${namespace}.${VerbTLD}.vrb
