@@ -191,35 +191,34 @@ if [ "$IMPort" != "true" ]; then
     ## Run setup
     /usr/bin/echo "Setting-up the VPS to know its name..."
     /usr/bin/ssh ${namespace}.${VerbTLD} /opt/verb/serfs/setup ${namespace} ink email vip ${VerbHostID} ${VerbIPv4} ${VerbIPv6} cb@${RinkDomain} 100 1000 ${TimeZone} ${Port} boss "$(/usr/bin/pwgen -s -1 16)" ${UpdateRepo} ${UpdateOrg}
+    ### Wait for sshd to reload (from the end of setup)
+    /opt/rink/run/waitvpsanswer ${namespace} ${VerbTLD}
     ### Update verber (not inside setup)
-    /usr/bin/ssh ${namespace}.${VerbTLD} /opt/verb/serfs/updateverb
+    /usr/bin/ssh ${namespace}.${VerbTLD} /opt/verb/serfs/updateverber
 
     e="$?"; [[ "$e" = "0" ]] || exit "$e"
-    if [ "$?" = "0" ]; then
-      /usr/bin/echo 'SetupVerber="DONE"' >> /opt/rink/conf/verbers/${namespace}.${VerbTLD}.vrb
-    fi
+    /usr/bin/echo 'SetupVerber="DONE"' >> /opt/rink/conf/verbers/${namespace}.${VerbTLD}.vrb
 
-    # Keyscan again
-    /opt/rink/run/keyscan ${namespace} ${VerbTLD}
+    #DEV the following rejects the scan because it is already done; delete if it works without this block
+    # # Keyscan again
+    # /opt/rink/run/keyscan ${namespace} ${VerbTLD}
   fi
 
-  # Wait for sshd to reload (from the end of setup)
-  /usr/bin/sleep 3
-  /opt/rink/run/waitvpsanswer ${namespace} ${VerbTLD}
 fi
 
 # Update to latest NS servers
 /usr/bin/echo "Informing the network of the new VPS presence..."
-if ! /usr/bin/grep -q 'RinkKeys="DONE"' "/opt/rink/conf/verbers/${namespace}.${VerbTLD}.vrb"; then
+## Rink keys should already be done; update them
+if /usr/bin/grep -q 'RinkKeys="DONE"' "/opt/rink/conf/verbers/${namespace}.${VerbTLD}.vrb"; then
   /usr/bin/ssh ${namespace}.${VerbTLD} /opt/verb/serfs/rinkupdatekeys
   e="$?"; [[ "$e" = "0" ]] || exit "$e"
 fi
+## Rink should not yet be listed; list them now
 if ! /usr/bin/grep -q 'RinkVerbsNSListed="DONE"' "/opt/rink/conf/verbers/${namespace}.${VerbTLD}.vrb"; then
   /usr/bin/ssh ${namespace}.${VerbTLD} /opt/verb/serfs/rinkupdateallverbs
   e="$?"; [[ "$e" = "0" ]] || exit "$e"
-  if [ "$?" = "0" ]; then
-    /usr/bin/echo 'RinkVerbsNSListed="DONE"' >> /opt/rink/conf/verbers/${namespace}.${VerbTLD}.vrb
-  fi
+  /usr/bin/echo 'RinkVerbsNSListed="DONE"' >> /opt/rink/conf/verbers/${namespace}.${VerbTLD}.vrb
+  e="$?"; [[ "$e" = "0" ]] || exit "$e"
 fi
 
 # Verber info
