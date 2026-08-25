@@ -212,7 +212,7 @@ EOF
 EOS
 ### Rink on NS2
 /usr/bin/ssh -T ${NS2Name}.${RinkVerbTLD} <<EOS
-/usr/bin/mkdir -p /srv/sns/${RinkName}-${RinkVerbTLD}/domains /srv/sns/${RinkName}-${RinkVerbTLD}/calls
+/usr/bin/mkdir -p /srv/sns/killed /srv/sns/${RinkName}-${RinkVerbTLD}/domains /srv/sns/${RinkName}-${RinkVerbTLD}/calls
 /usr/bin/cat <<EOF > /srv/sns/${RinkName}-${RinkVerbTLD}/conf
 VerbHostID="${ServerHost}"
 VerbName="${ServerName}"
@@ -227,7 +227,7 @@ EOS
 ### NS1 on NS2
 . /opt/rink/conf/verbers/${NS1Name}.${RinkVerbTLD}.vrb
 /usr/bin/ssh -T ${NS2Name}.${RinkVerbTLD} <<EOS
-/usr/bin/mkdir -p /srv/sns/${NS1Name}-${RinkVerbTLD}/domains /srv/sns/${NS1Name}-${RinkVerbTLD}/calls
+/usr/bin/mkdir -p /srv/sns/killed /srv/sns/${NS1Name}-${RinkVerbTLD}/domains /srv/sns/${NS1Name}-${RinkVerbTLD}/calls
 /usr/bin/cat <<EOF > /srv/sns/${NS1Name}-${RinkVerbTLD}/conf
 VerbHostID="${VerbHostID}"
 VerbName="${VerbName}"
@@ -241,7 +241,7 @@ EOF
 EOS
 ### NS1 on this local Rink
 . /opt/rink/conf/verbers/${NS1Name}.${RinkVerbTLD}.vrb
-/usr/bin/mkdir -p /srv/sns/${NS1Name}-${RinkVerbTLD}/domains /srv/sns/${NS1Name}-${RinkVerbTLD}/calls
+/usr/bin/mkdir -p /srv/sns/killed /srv/sns/${NS1Name}-${RinkVerbTLD}/domains /srv/sns/${NS1Name}-${RinkVerbTLD}/calls
 /usr/bin/cat <<EOF > /srv/sns/${NS1Name}-${RinkVerbTLD}/conf
 VerbHostID="${VerbHostID}"
 VerbName="${VerbName}"
