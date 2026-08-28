@@ -26,5 +26,4 @@ if [ ! -x /opt/rink/run/sshrun ]; then
 fi
 
 /opt/rink/run/sshrun "${namespace}" "${VerbTLD}" "${vuser}" "/opt/verb/serfs/newverbadmin ${verbuser} ${atype} ${email}"
-e="$?"
-exit "$e"
+e="$?"; exit "$e"
