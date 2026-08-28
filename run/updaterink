@@ -1,0 +1,192 @@
+#!/bin/bash
+#inkVerbRunner! verb.ink
+
+# This updates the rink engine the same way verb-update/update upgrades a verber.
+## Runners, felt, help, dispatcher, actions.pb, and web UI source are refreshed from GitHub.
+## Sequential version patches follow. conf/, ns/, snapshotid/, tmp/, and rinknames are never replaced.
+## Do not clone into /opt/rink/rink — that path is the dispatcher file.
+
+# How to use:
+## ./updaterink
+## rink update rink
+
+# To call a changelog for a specific version: echo "$v09001"
+
+minVerNo="0.90.00"
+RinkUpdateOrg="inkverb"
+RinkUpdateRepo="rink"
+
+if [ "$(id -u)" -ne 0 ]; then
+  /usr/bin/echo "The 'rink' command must be run with sudo or as root."
+  exit 0
+fi
+
+# Clone first and re-exec the fresh copy so we never overwrite a running script
+if [ "${RINK_UPDATE_INNER}" != "1" ]; then
+  /usr/bin/rm -rf /opt/rink/u_tmp
+  /usr/bin/mkdir -p /opt/rink/u_tmp
+  cd /opt/rink/u_tmp || exit 6
+  /usr/bin/git clone "https://github.com/${RinkUpdateOrg}/${RinkUpdateRepo}"
+  if [ "$?" != "0" ]; then
+    /usr/bin/echo "git clone failed, I quit."
+    /usr/bin/rm -rf /opt/rink/u_tmp
+    exit 4
+  fi
+  if [ ! -x /opt/rink/u_tmp/${RinkUpdateRepo}/run/updaterink ]; then
+    /usr/bin/echo "Cloned tree has no updaterink. I quit."
+    /usr/bin/rm -rf /opt/rink/u_tmp
+    exit 4
+  fi
+  export RINK_UPDATE_INNER=1
+  /bin/chmod 750 /opt/rink/u_tmp/${RinkUpdateRepo}/run/updaterink
+  exec /opt/rink/u_tmp/${RinkUpdateRepo}/run/updaterink
+fi
+
+src="/opt/rink/u_tmp/${RinkUpdateRepo}"
+if [ ! -d "${src}/run" ]; then
+  /usr/bin/echo "Clone missing at ${src}"
+  exit 6
+fi
+
+## Sample version updater (same skeleton as verb-update/update):
+#upgradePatchVerno=0.90.01
+#if [ $(/usr/bin/echo ${upgradePatchVerno} | /usr/bin/sed -e "s/\.//g" | /usr/bin/sed -e "s/^0*//g") -gt $(/usr/bin/echo ${RinkVerno} | /usr/bin/sed -e "s/\.//g" | /usr/bin/sed -e "s/^0*//g") ] ; then
+#cleanPatchVerno=$(/usr/bin/echo $upgradePatchVerno | /usr/bin/sed -e "s/\.//g")
+#PCLdoc="$(/usr/bin/cat <<UPCL
+#Patch ${upgradePatchVerno} Changelog:
+### Patch Notes Here...
+#UPCL
+#)"
+#/usr/bin/echo "$PCLdoc"
+#eval "v$cleanPatchVerno='$(/usr/bin/echo "$PCLdoc")'"
+#if [ -d "${src}/update/${upgradePatchVerno}/" ]; then
+#cd "${src}/update/${upgradePatchVerno}/"; fi
+###### SCRIPTS GO HERE #####
+###### END SCRIPTS #########
+#/usr/bin/sed -i "s/RinkVerno=.*/RinkVerno=\"${upgradePatchVerno}\"/g" /opt/rink/conf/rinkverno
+#. /opt/rink/conf/rinkverno
+#/usr/bin/echo "Rink upgraded to v${RinkVerno}"
+#else
+#/usr/bin/echo "${upgradePatchVerno} patch not necessary..."
+#fi
+###############END#UPGRADE#PATCH#
+
+
+# Refresh engine files (never conf/, ns/, snapshotid/, tmp/, rinknames)
+
+# Runners
+/usr/bin/rm -f /opt/rink/run/*
+/usr/bin/cp -f "${src}/run/"* /opt/rink/run/
+/bin/chmod 750 /opt/rink/run/*
+/usr/bin/echo "Runners updated."
+
+# Felt
+/usr/bin/mkdir -p /opt/rink/felt
+/usr/bin/rm -f /opt/rink/felt/*
+if /usr/bin/ls "${src}/felt/"* >/dev/null 2>&1; then
+  /usr/bin/cp -f "${src}/felt/"* /opt/rink/felt/
+  /bin/chmod 750 /opt/rink/felt/*
+fi
+/usr/bin/echo "Felt updated."
+
+# Help
+/usr/bin/mkdir -p /opt/rink/help
+/usr/bin/rm -f /opt/rink/help/*
+if /usr/bin/ls "${src}/help/"* >/dev/null 2>&1; then
+  /usr/bin/cp -f "${src}/help/"* /opt/rink/help/
+fi
+/usr/bin/echo "Help updated."
+
+# Dispatcher + actions (file, not a git checkout directory)
+/usr/bin/cp -f "${src}/rink" /opt/rink/rink
+/bin/chmod 750 /opt/rink/rink
+/usr/bin/ln -sfn /opt/rink/rink /usr/bin/rink
+/usr/bin/cp -f "${src}/actions.pb" /opt/rink/actions.pb
+/usr/bin/echo "rink CLI updated."
+
+# Web UI source; keep a compiled binary if one exists
+binbak=""
+if [ -f /opt/rink/webui/bin/rinkwebui ]; then
+  binbak="/opt/rink/u_tmp/rinkwebui.bin.bak"
+  /usr/bin/mkdir -p "${binbak}"
+  /usr/bin/cp -a /opt/rink/webui/bin/. "${binbak}/"
+fi
+/usr/bin/rm -rf /opt/rink/webui
+/usr/bin/cp -a "${src}/webui" /opt/rink/webui
+if [ -n "${binbak}" ] && [ -d "${binbak}" ]; then
+  /usr/bin/mkdir -p /opt/rink/webui/bin
+  /usr/bin/cp -a "${binbak}/." /opt/rink/webui/bin/
+fi
+/bin/chmod 755 /opt/rink/webui/pam-auth 2>/dev/null || true
+/usr/bin/echo "Web UI source updated."
+
+# Region lists
+if [ -f "${src}/HighPerfRegions" ]; then /usr/bin/cp -f "${src}/HighPerfRegions" /opt/rink/; fi
+if [ -f "${src}/VultrRegions" ]; then /usr/bin/cp -f "${src}/VultrRegions" /opt/rink/; fi
+
+# Version file
+/usr/bin/mkdir -p /opt/rink/conf
+if [ ! -f /opt/rink/conf/rinkverno ]; then
+  /usr/bin/echo 'RinkVerno="0.90.00"' > /opt/rink/conf/rinkverno
+fi
+. /opt/rink/conf/rinkverno
+
+if [ "$(/usr/bin/echo "${minVerNo}" | /usr/bin/sed -e "s/\.//g" | /usr/bin/sed -e "s/^0*//g")" -gt "$(/usr/bin/echo ${RinkVerno} | /usr/bin/sed -e "s/\.//g" | /usr/bin/sed -e "s/^0*//g")" ]; then
+  /usr/bin/echo "Current rink version is ${RinkVerno}, minimum ${minVerNo} to use this updater."
+  /usr/bin/rm -rf /opt/rink/u_tmp
+  exit 0
+fi
+
+
+# Run version-by-version updates
+
+
+upgradePatchVerno=0.90.01
+if [ $(/usr/bin/echo ${upgradePatchVerno} | /usr/bin/sed -e "s/\.//g" | /usr/bin/sed -e "s/^0*//g") -gt $(/usr/bin/echo ${RinkVerno} | /usr/bin/sed -e "s/\.//g" | /usr/bin/sed -e "s/^0*//g") ] ; then
+cleanPatchVerno="$(/usr/bin/echo $upgradePatchVerno | /usr/bin/sed -e "s/\.//g")"
+PCLdoc="$(/usr/bin/cat <<UPCL
+Patch ${upgradePatchVerno} Changelog:
+- rink CLI (felt/help/actions), branded web UI source, PAM dual-group admins
+- adminrink / adminverb; addvps still does not create PAM users
+- Rebuild rinkwebui when the systemd unit is already installed
+UPCL
+)"
+/usr/bin/echo "$PCLdoc"
+eval "v$cleanPatchVerno='$(/usr/bin/echo "$PCLdoc")'"
+
+if [ -d "${src}/update/${upgradePatchVerno}/" ]; then
+cd "${src}/update/${upgradePatchVerno}/"; fi
+
+###### SCRIPTS GO HERE #####
+/usr/bin/ln -sfn /opt/rink/rink /usr/bin/rink
+/bin/chmod 750 /opt/rink/run/* /opt/rink/rink
+/bin/chmod 750 /opt/rink/felt/* 2>/dev/null || true
+if [ -f /etc/systemd/system/rinkwebui.service ]; then
+  if ! /usr/bin/command -v go >/dev/null 2>&1; then
+    /usr/bin/echo "Go is not installed; web UI source is refreshed, binary not rebuilt. It should have been installed by make-verber (lamp/lemp/laemp)."
+  else
+    cd /opt/rink/webui || exit 6
+    /usr/bin/mkdir -p bin
+    /usr/bin/go build -o bin/rinkwebui ./cmd/rinkwebui
+    e="$?"; [[ "$e" = "0" ]] || /usr/bin/echo "rinkwebui rebuild failed (${e})."
+    /usr/bin/systemctl daemon-reload
+    if /usr/bin/systemctl is-enabled --quiet rinkwebui.service 2>/dev/null; then
+      /usr/bin/systemctl restart rinkwebui.service || true
+    fi
+    /usr/bin/echo "rinkwebui rebuilt."
+  fi
+fi
+###### END SCRIPTS #########
+/usr/bin/sed -i "s/RinkVerno=.*/RinkVerno=\"${upgradePatchVerno}\"/g" /opt/rink/conf/rinkverno
+. /opt/rink/conf/rinkverno
+/usr/bin/echo "Rink upgraded to v${RinkVerno}"
+else
+/usr/bin/echo "${upgradePatchVerno} patch not necessary..."
+fi
+###############END#UPGRADE#PATCH#
+
+
+# Finish
+. /opt/rink/conf/rinkverno
+/usr/bin/echo "Rink at v${RinkVerno} from ${RinkUpdateOrg}/${RinkUpdateRepo}."
+/usr/bin/rm -rf /opt/rink/u_tmp

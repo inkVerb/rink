@@ -25,7 +25,11 @@ read -rs adminpass
 read -r listen
 listen="${listen:-127.0.0.1:8090}"
 
-/usr/bin/pacman -S --noconfirm --needed go sqlite python-pam 2>/dev/null || true
+if ! /usr/bin/command -v go >/dev/null 2>&1; then
+  /usr/bin/echo "Go is not installed. It should have been installed by make-verber (lamp/lemp/laemp)."
+  exit 6
+fi
+/usr/bin/pacman -S --noconfirm --needed sqlite python-pam 2>/dev/null || true
 
 /usr/bin/cat > /etc/pam.d/inkadmin <<'EOF'
 auth     required  pam_unix.so

@@ -24,6 +24,7 @@ Examples:
   rink admin rink -u jesse -t admin -e you@domain.tld
   rink admin verb -n name -l ink -r someuser -u jesse -t admin -e you@domain.tld
   rink install rinkwebui
+  rink update rink
 "
   exit 0
 fi

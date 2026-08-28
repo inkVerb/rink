@@ -84,9 +84,8 @@ cd /opt/rink/run
 The advertised product is the branded domain, not “Rink”. Rink is the engine.
 
 ```console
-cd /opt/rink/run
-./installrinkwebui
-# or: rink install rinkwebui
+rink install rinkwebui
+# or: /opt/rink/run/installrinkwebui
 ```
 
 Interactive: first admin username, email, password. PAM users are nologin, no home, no sudo.
@@ -99,6 +98,26 @@ rink admin verb -n name -l ink -r someuser -u jesse -t admin -e you@domain.tld
 
 `addvps` is unchanged and does **not** create PAM users. The web UI (and `rink admin verb`) provision the verb user after the box exists.
 
+Point Nginx at `127.0.0.1:8090` (or the listen address you chose).
+
+## Update this rink
+
+`updaterun` is gone. It cloned into `/opt/rink/rink`, which is the dispatcher file.
+
+```console
+rink update rink
+# or: /opt/rink/run/updaterink
+```
+
+That clones inkVerb/rink to a temp dir, refreshes runners/felt/help/web UI source, then runs version patches like `verb-update/update`. `conf/`, `ns/`, and `rinknames` stay put.
+
+First time on a box that still has the old `updaterun`:
+
+```console
+cd /tmp && git clone https://github.com/inkverb/rink && /tmp/rink/run/updaterink
+```
+
+After that, `rink update rink` is enough.
 ## Finalize installation
 ```
 cd rink/run

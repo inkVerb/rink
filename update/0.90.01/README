@@ -1,0 +1,2 @@
+rink CLI / web UI patch. Logic lives in ../run/updaterink (0.90.01 block).
+Rebuilds rinkwebui when the systemd unit is already installed.
