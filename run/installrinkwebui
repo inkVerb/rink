@@ -1,0 +1,86 @@
+#!/bin/bash
+#inkVerbRunner! verb.ink
+
+# Interactive installer for the branded control-panel web UI on this rink
+## Prompts for the first admin username, password, and email
+## Builds the Go UI, PAM service, sqlite meta, systemd unit
+## addvps is not changed
+
+set -e
+
+if [ "$(id -u)" -ne 0 ]; then
+  /usr/bin/echo "Run as root."; exit 1
+fi
+
+/usr/bin/echo "Install the control-panel web UI on this rink."
+/usr/bin/echo "This is not named Rink in the product UI."
+/bin/echo -n "Admin username: "
+read -r adminuser
+/bin/echo -n "Admin email: "
+read -r adminemail
+/bin/echo -n "Admin password (leave empty to autogenerate a one-time password): "
+read -rs adminpass
+/usr/bin/echo
+/bin/echo -n "Listen address [127.0.0.1:8090]: "
+read -r listen
+listen="${listen:-127.0.0.1:8090}"
+
+/usr/bin/pacman -S --noconfirm --needed go sqlite python-pam 2>/dev/null || true
+
+/usr/bin/cat > /etc/pam.d/inkadmin <<'EOF'
+auth     required  pam_unix.so
+account  required  pam_unix.so
+EOF
+
+/usr/bin/chmod 755 /opt/rink/webui/pam-auth /opt/rink/run/adminrink /opt/rink/run/adminverb /opt/rink/rink
+/usr/bin/ln -sfn /opt/rink/rink /usr/bin/rink
+
+cd /opt/rink/webui
+/usr/bin/mkdir -p bin
+/usr/bin/go build -o bin/rinkwebui ./cmd/rinkwebui
+
+sso="$(/usr/bin/pwgen -s -1 32)"
+/usr/bin/mkdir -p /opt/rink/conf
+/usr/bin/cat > /opt/rink/conf/webui.conf <<EOF
+listen=${listen}
+product=rink
+db=/opt/rink/conf/webadmin/users.db
+sso_secret=${sso}
+inkmail_url=
+EOF
+/usr/bin/chmod 640 /opt/rink/conf/webui.conf
+
+/usr/bin/cat > /etc/systemd/system/rinkwebui.service <<EOF
+[Unit]
+Description=Rink branded control-panel web UI
+After=network.target
+
+[Service]
+Type=simple
+User=root
+Group=root
+WorkingDirectory=/opt/rink/webui
+ExecStart=/opt/rink/webui/bin/rinkwebui -config /opt/rink/conf/webui.conf
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+/opt/rink/run/adminrink "${adminuser}" admin "${adminemail}"
+if [ -n "${adminpass}" ]; then
+  echo "${adminuser}:${adminpass}" | /usr/sbin/chpasswd
+  /usr/bin/sqlite3 /opt/rink/conf/webadmin/users.db "UPDATE users SET password_changed=0 WHERE username='${adminuser}';"
+fi
+
+/usr/bin/systemctl daemon-reload
+/usr/bin/systemctl enable --now rinkwebui.service
+
+/usr/bin/echo "
+Control-panel UI is running on ${listen}.
+Point your product domain's Nginx to that port.
+First login must change the password (unless you already intend to), confirm email, and enroll Authenticator or Passkey.
+Create more rink users with:  rink admin rink -u NAME -t admin|customer -e EMAIL
+Create verb users with:       rink admin verb ...
+addvps is unchanged and does not create PAM users.
+"

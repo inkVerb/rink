@@ -1,0 +1,30 @@
+#!/bin/bash
+#inkVerbRunner! verb.ink
+
+# This creates a verb web-UI PAM user on an existing VPS via SSH
+## Does NOT run from addvps. The rink UI (and rink CLI) call this after the box exists.
+## Username follows the rink addvps USERNAME convention (the vuser / VerbUser).
+## Type on the verber: admin (rink customer becomes verb admin) or supervisor.
+
+# How to use:
+## ./adminverb [ verb-namespace ] [ tld ] [ rink-user ] [ verb-username ] [ admin | supervisor ] [ email ]
+
+if [ -z "$6" ]; then
+  /usr/bin/echo "Needs namespace, tld, rink-user, verb-username, type, email. I quit."
+  exit 0
+fi
+
+namespace="$1"
+VerbTLD="$2"
+vuser="$3"
+verbuser="$4"
+atype="$5"
+email="$6"
+
+if [ ! -x /opt/rink/run/sshrun ]; then
+  /usr/bin/echo "sshrun missing."; exit 8
+fi
+
+/opt/rink/run/sshrun "${namespace}" "${VerbTLD}" "${vuser}" "/opt/verb/serfs/newverbadmin ${verbuser} ${atype} ${email}"
+e="$?"
+exit "$e"

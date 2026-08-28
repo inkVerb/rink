@@ -1,0 +1,55 @@
+#!/bin/bash
+#inkVerbInk! verb.ink
+if [ "$(id -u)" -ne 0 ]; then echo "The 'rink' command must be run with sudo or as root."; exit 0; fi
+
+# Dispatcher modeled on /usr/bin/ink
+## ink action schema → felt/action${schema}.ink → run/${action}${schema} or a named runner
+
+export RinkRoot=/opt/rink
+export Felt="${RinkRoot}/felt"
+export Run="${RinkRoot}/run"
+
+action="${1}"
+schema="${2}"
+helpopt="${3}"
+shift 2 2>/dev/null || true
+allargs="$*"
+
+if [ -z "${action}" ] || [ "${action}" = "-h" ] || [ "${action}" = "--help" ]; then
+  /usr/bin/echo "rink action schema [flags]
+Actions:"
+  if [ -f "${RinkRoot}/actions.pb" ]; then /usr/bin/cat "${RinkRoot}/actions.pb"; fi
+  /usr/bin/echo "
+Examples:
+  rink admin rink -u jesse -t admin -e you@domain.tld
+  rink admin verb -n name -l ink -r someuser -u jesse -t admin -e you@domain.tld
+  rink install rinkwebui
+"
+  exit 0
+fi
+
+if [ "${schema}" = "-h" ] || [ "${schema}" = "--help" ]; then
+  [ -f "${RinkRoot}/help/${action}.md" ] && /usr/bin/cat "${RinkRoot}/help/${action}.md"
+  exit 0
+fi
+if [ "${helpopt}" = "-h" ] || [ "${helpopt}" = "--help" ]; then
+  if [ -f "${Felt}/${action}${schema}.ink" ]; then
+    "${Felt}/${action}${schema}.ink" -h
+  fi
+  [ -f "${RinkRoot}/help/${action}${schema}.md" ] && /usr/bin/cat "${RinkRoot}/help/${action}${schema}.md"
+  exit 0
+fi
+
+if [ -f "${Felt}/${action}${schema}.ink" ]; then
+  "${Felt}/${action}${schema}.ink" ${allargs}
+  exit $?
+fi
+
+# Fallback: run/actionschema if the felt has not been written yet
+if [ -x "${Run}/${action}${schema}" ]; then
+  "${Run}/${action}${schema}" ${allargs}
+  exit $?
+fi
+
+/usr/bin/echo "Unknown rink ${action} ${schema}. Try: rink -h"
+exit 1

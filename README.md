@@ -79,6 +79,26 @@ cd /opt/rink/run
 ./setrinknames inkisaverb.com rink ns1 ns2 444.444.444.444 11:0:0:11 rink rink1 rink2 America/Chicago ord
 ```
 
+## Control-panel web UI
+
+The advertised product is the branded domain, not “Rink”. Rink is the engine.
+
+```console
+cd /opt/rink/run
+./installrinkwebui
+# or: rink install rinkwebui
+```
+
+Interactive: first admin username, email, password. PAM users are nologin, no home, no sudo.
+Groups: `rink` + `admin`|`customer`. SQL meta is a redundant cross-check.
+
+```
+rink admin rink -u jesse -t admin -e you@domain.tld
+rink admin verb -n name -l ink -r someuser -u jesse -t admin -e you@domain.tld
+```
+
+`addvps` is unchanged and does **not** create PAM users. The web UI (and `rink admin verb`) provision the verb user after the box exists.
+
 ## Finalize installation
 ```
 cd rink/run

@@ -23,6 +23,9 @@ APIkey="$1"
 
 # Runner permissions
 /usr/bin/chmod 750 /opt/rink/run/*
+/usr/bin/chmod 750 /opt/rink/rink /opt/rink/felt/* 2>/dev/null || true
+/usr/bin/ln -sfn /opt/rink/rink /usr/bin/rink
+
 
 # Prepare the directories
 /usr/bin/mkdir -p /opt/rink/tmp

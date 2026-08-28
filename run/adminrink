@@ -1,0 +1,87 @@
+#!/bin/bash
+#inkVerbRunner! verb.ink
+
+# This creates a rink web-UI PAM user (nologin, no home, no sudo)
+## Product group: rink
+## Type group:    admin | customer
+## SQL meta at /opt/rink/conf/webadmin/users.db is a redundant cross-check
+## Only this runner (rink admin rink / installrinkwebui) may create rink web users
+## The web UI cannot create other admins
+
+# How to use:
+## ./adminrink [ username ] [ admin | customer ] [ email ]
+
+if [ -z "$3" ]; then
+  /usr/bin/echo "Needs username, type (admin|customer), and email. I quit."
+  exit 0
+fi
+
+username="$1"
+atype="$2"
+email="$3"
+
+case "${atype}" in
+  admin|customer) ;;
+  *) /usr/bin/echo "Type must be admin or customer."; exit 5 ;;
+esac
+
+/usr/bin/getent group rink >/dev/null || /usr/sbin/groupadd --system rink
+/usr/bin/getent group admin >/dev/null || /usr/sbin/groupadd --system admin
+/usr/bin/getent group customer >/dev/null || /usr/sbin/groupadd --system customer
+
+if /usr/bin/id -u "${username}" >/dev/null 2>&1; then
+  /usr/bin/echo "Linux user ${username} already exists."
+  exit 7
+fi
+
+/usr/sbin/useradd -M -N -r -s /usr/sbin/nologin -g rink -G "${atype}" "${username}"
+e="$?"; [[ "$e" = "0" ]] || exit "$e"
+
+otpass="$(/usr/bin/pwgen -s -1 20)"
+echo "${username}:${otpass}" | /usr/sbin/chpasswd
+
+/usr/bin/mkdir -p /opt/rink/conf/webadmin/ot
+db="/opt/rink/conf/webadmin/users.db"
+/usr/bin/sqlite3 "${db}" <<SQL
+CREATE TABLE IF NOT EXISTS users (
+  username TEXT PRIMARY KEY,
+  email TEXT NOT NULL,
+  account_type TEXT NOT NULL,
+  password_changed INTEGER NOT NULL DEFAULT 0,
+  email_confirmed INTEGER NOT NULL DEFAULT 0,
+  totp_secret TEXT,
+  totp_confirmed INTEGER NOT NULL DEFAULT 0,
+  email_2fa INTEGER NOT NULL DEFAULT 0,
+  passkey_confirmed INTEGER NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS passkeys (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  username TEXT NOT NULL,
+  cred_id TEXT NOT NULL,
+  public_key TEXT NOT NULL,
+  name TEXT,
+  created_at TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS oauth (
+  username TEXT NOT NULL,
+  provider TEXT NOT NULL,
+  subject TEXT NOT NULL,
+  PRIMARY KEY (username, provider)
+);
+CREATE TABLE IF NOT EXISTS email_codes (
+  username TEXT NOT NULL,
+  code TEXT NOT NULL,
+  purpose TEXT NOT NULL,
+  expires_at INTEGER NOT NULL
+);
+INSERT OR REPLACE INTO users (username, email, account_type, password_changed, email_confirmed, created_at)
+VALUES ('${username}', '${email}', '${atype}', 0, 0, datetime('now'));
+SQL
+/usr/bin/chmod 640 "${db}"
+/usr/bin/echo "${otpass}" > "/opt/rink/conf/webadmin/ot/${username}"
+/usr/bin/chmod 600 "/opt/rink/conf/webadmin/ot/${username}"
+
+/usr/bin/echo "Created rink web UI user ${username} (${atype}).
+One-time password (must be changed, then email + Authenticator or Passkey):
+${otpass}"
