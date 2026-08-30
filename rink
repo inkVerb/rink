@@ -25,6 +25,7 @@ Examples:
   rink admin verb -n name -l ink -r someuser -u jesse -t admin -e you@domain.tld
   rink install rinkwebui
   rink update rink
+  rink show rinklog
 "
   exit 0
 fi
@@ -41,15 +42,36 @@ if [ "${helpopt}" = "-h" ] || [ "${helpopt}" = "--help" ]; then
   exit 0
 fi
 
+# Output log (rink had none; tee so live terminal output stays)
+LogDir="${RinkRoot}/log"
+/usr/bin/mkdir -p "${LogDir}"
+/usr/bin/touch "${LogDir}/rinklog" "${LogDir}/outputlog"
+/usr/bin/echo "$(/usr/bin/date) ::rink# ${action} ${schema} ${allargs}" >> "${LogDir}/rinklog"
+/usr/bin/date >> "${LogDir}/outputlog"
+/usr/bin/echo "::rink# ${action} ${schema} ${allargs}" >> "${LogDir}/outputlog"
+
+rink_run() {
+  if [ "${action}${schema}" = "showrinklog" ]; then
+    "$@"
+    return "$?"
+  fi
+  set -o pipefail
+  "$@" 2>&1 | /usr/bin/tee -a "${LogDir}/outputlog"
+  e="$?"; set +o pipefail
+  return "$e"
+}
+
 if [ -f "${Felt}/${action}${schema}.ink" ]; then
-  "${Felt}/${action}${schema}.ink" ${allargs}
-  exit $?
+  rink_run "${Felt}/${action}${schema}.ink" ${allargs}
+  e="$?"; [[ "$e" = "0" ]] || exit "$e"
+  exit 0
 fi
 
 # Fallback: run/actionschema if the felt has not been written yet
 if [ -x "${Run}/${action}${schema}" ]; then
-  "${Run}/${action}${schema}" ${allargs}
-  exit $?
+  rink_run "${Run}/${action}${schema}" ${allargs}
+  e="$?"; [[ "$e" = "0" ]] || exit "$e"
+  exit 0
 fi
 
 /usr/bin/echo "Unknown rink ${action} ${schema}. Try: rink -h"

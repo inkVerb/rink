@@ -1,0 +1,29 @@
+#!/bin/bash
+#inkVerbRunner! verb.ink
+
+# This pages the rink CLI raw runner output log (journalctl-style: space page down, q quit)
+## The rink dispatcher tees run/felt STDOUT/STDERR to rink/log/outputlog
+
+# How to use:
+## ./showrinklog
+## rink show rinklog
+
+
+logfile="/opt/rink/log/outputlog"
+if [ ! -f "${logfile}" ]; then
+  logfile="/var/log/rink/outputlog"
+fi
+if [ ! -f "${logfile}" ]; then
+  /usr/bin/echo "No rink output log yet. Run a rink command first."
+  exit 6
+fi
+
+if [ -c /dev/tty ]; then
+  if [ -x /usr/bin/less ]; then
+    /usr/bin/less -R +G -- "${logfile}" </dev/tty >/dev/tty
+  else
+    /usr/bin/more -- "${logfile}" </dev/tty >/dev/tty
+  fi
+else
+  /usr/bin/cat -- "${logfile}"
+fi

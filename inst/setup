@@ -29,6 +29,9 @@ APIkey="$1"
 
 # Prepare the directories
 /usr/bin/mkdir -p /opt/rink/tmp
+/usr/bin/mkdir -p /opt/rink/log
+/usr/bin/touch /opt/rink/log/rinklog /opt/rink/log/outputlog
+/usr/bin/ln -sfn /opt/rink/log /var/log/rink
 /usr/bin/mkdir -p /opt/rink/conf/verbers
 /usr/bin/mkdir -p /opt/rink/conf/domains
 /usr/bin/mkdir -p /opt/rink/conf/drives

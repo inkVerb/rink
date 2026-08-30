@@ -104,6 +104,11 @@ fi
 /usr/bin/cp -f "${src}/actions.pb" /opt/rink/actions.pb
 /usr/bin/echo "rink CLI updated."
 
+# Output log (existing rinks)
+/usr/bin/mkdir -p /opt/rink/log
+/usr/bin/touch /opt/rink/log/rinklog /opt/rink/log/outputlog
+/usr/bin/ln -sfn /opt/rink/log /var/log/rink
+
 # Web UI source; keep a compiled binary if one exists
 binbak=""
 if [ -f /opt/rink/webui/bin/rinkwebui ]; then
